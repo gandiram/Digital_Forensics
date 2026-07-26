@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit I — Digital Forensics Fundamentals, Technology &amp; Data Recovery</title>
+<meta name="description" content="A complete plain-language guide to Unit I of Digital Forensics (20CS41020): forensics fundamentals, use in law enforcement and HR, forensic services, military/law-enforcement/business forensic technology, and data recovery.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================= TOKENS ================= */
+:root{
+  --paper:#EDF0F3; --panel:#FFFFFF; --panel2:#F6F8FA; --panel3:#E3E9EF;
+  --ink:#0F1620; --ink2:#374350; --ink3:#5A6673;
+  --rule:#D4DBE2; --rule2:#BEC8D3;
+  --custody:#23456E; --custody2:#35618F; --custodybg:#E9EEF5; --custodyline:#C3D2E3;
+  --seal:#AE202A; --sealbg:#FBEDEE; --sealline:#E9C5C8;
+  --verify:#0B6E5A; --verifybg:#E7F3F0; --verifyline:#B7DBD2;
+  --tag:#8F6206; --tagbg:#FCF3DE; --tagline:#E8D5A4;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --rail:274px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.2rem;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;font-optical-sizing:auto}
+img,svg{max-width:100%;display:block}
+a{color:var(--custody);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--custody2);outline-offset:2px;border-radius:2px}
+p{margin:0 0 .9rem}
+strong{font-weight:600}
+
+/* ================= LAYOUT ================= */
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:.7rem 1rem;z-index:300;font-family:var(--sans);font-weight:600}
+.skip:focus{left:.5rem;top:.5rem}
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);max-width:1520px;margin:0 auto}
+.main{min-width:0;padding:0 clamp(1rem,3.2vw,3rem) 6rem}
+.wrap{max-width:900px;margin:0 auto}
+
+/* ================= CUSTODY RAIL (signature) ================= */
+.rail{position:sticky;top:0;height:100vh;background:var(--ink);color:#C7D2DE;display:flex;flex-direction:column;z-index:60}
+.railhead{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid #222B36;flex:0 0 auto}
+.railkick{font-family:var(--mono);font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#96A5B6}
+.railtitle{font-family:var(--sans);font-weight:800;font-size:1rem;letter-spacing:-.01em;color:#fff;margin:.35rem 0 .2rem;line-height:1.22}
+.railsub{font-family:var(--mono);font-size:.64rem;color:#8595A6;letter-spacing:.03em}
+.railseal{margin-top:.75rem;display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase}
+.railseal .dot{width:.5rem;height:.5rem;border-radius:50%;background:#2FA98A;box-shadow:0 0 0 3px rgba(47,169,138,.18)}
+.railseal .txt{color:#57C0A4}
+body.broken .railseal .dot{background:#E0525C;box-shadow:0 0 0 3px rgba(224,82,92,.2)}
+body.broken .railseal .txt{color:#F08A92}
+.railscroll{overflow-y:auto;padding:.85rem .5rem 3rem 1.2rem;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:#2B3644 transparent}
+.railscroll::-webkit-scrollbar{width:6px}
+.railscroll::-webkit-scrollbar-thumb{background:#2B3644;border-radius:3px}
+.railpart{font-family:var(--mono);font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:#8595A6;margin:1.15rem 0 .45rem;padding-left:1.5rem}
+.railpart:first-of-type{margin-top:.15rem}
+.chain{list-style:none;margin:0;padding:0;position:relative}
+.chain::before{content:"";position:absolute;left:.43rem;top:.6rem;bottom:.6rem;width:2px;background:#222C38}
+.chain li{position:relative}
+.chain a{display:flex;gap:.5rem;align-items:baseline;padding:.3rem .5rem .3rem 1.5rem;text-decoration:none;color:#AAB8C7;font-family:var(--sans);font-size:.79rem;line-height:1.32;font-weight:500;border-radius:4px;transition:color .18s,background .18s}
+.chain a:hover{color:#fff;background:#1A222C}
+.chain a::before{content:"";position:absolute;left:.18rem;top:.6rem;width:.52rem;height:.52rem;border:2px solid #35414E;background:var(--ink);border-radius:1px;transition:background .22s,border-color .22s}
+.chain a .n{font-family:var(--mono);font-size:.62rem;color:#8595A6;flex:0 0 auto}
+.chain li.seen > a::before{background:#3C6E93;border-color:#4E86AE}
+.chain li.here > a{color:#fff;background:#1B242F}
+.chain li.here > a::before{background:#E9B949;border-color:#E9B949}
+.chain li.here > a .n{color:#E9B949}
+body.broken .chain li.seen > a::before{background:#8A3038;border-color:#A83E47}
+
+/* mobile nav */
+.mobar{display:none;position:sticky;top:0;z-index:70;background:var(--ink);color:#fff;align-items:center;gap:.7rem;padding:.6rem .9rem;border-bottom:1px solid #222B36}
+.mobar b{font-family:var(--sans);font-size:.86rem;font-weight:700;letter-spacing:-.01em}
+.mobar small{font-family:var(--mono);font-size:.62rem;color:#96A5B6;letter-spacing:.08em;text-transform:uppercase}
+.menubtn{margin-left:auto;background:#1D2733;color:#fff;border:1px solid #2E3A48;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .7rem;border-radius:3px;cursor:pointer}
+.progress{position:fixed;top:0;left:0;height:3px;background:#E9B949;width:0;z-index:90;transition:width .1s linear}
+
+/* ================= HERO / CASE FILE ================= */
+.hero{background:var(--ink);color:#E7EDF3;margin:0 calc(-1*clamp(1rem,3.2vw,3rem));padding:clamp(2rem,5vw,3.6rem) clamp(1rem,3.2vw,3rem) clamp(2rem,4vw,3rem);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px);pointer-events:none}
+.hero-in{max-width:900px;margin:0 auto;position:relative;z-index:1}
+.filebar{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#A2B0C0;border-bottom:1px solid #26303C;padding-bottom:.8rem;margin-bottom:1.6rem}
+.filebar .stamp{color:#0F1620;background:#E9B949;padding:.2rem .5rem;border-radius:2px;font-weight:600;letter-spacing:.1em}
+.hero h1{font-family:var(--sans);font-weight:800;font-size:clamp(2rem,5.4vw,3.5rem);line-height:1.03;letter-spacing:-.028em;margin:0 0 1rem;color:#fff;text-wrap:balance}
+.hero h1 em{font-style:normal;color:#E9B949}
+.hero .lede{font-size:clamp(1.02rem,1.7vw,1.18rem);color:#B7C4D2;max-width:60ch;margin:0 0 1.8rem}
+.herometa{display:flex;flex-wrap:wrap;gap:.5rem}
+.pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;padding:.35rem .65rem;border:1px solid #2E3A48;border-radius:2px;color:#AEBCCB;background:#161E28}
+
+/* case timeline */
+.tl{margin:2.2rem 0 0;border-top:1px solid #26303C;padding-top:1.5rem}
+.tl h2{font-family:var(--mono);font-size:.66rem;letter-spacing:.17em;text-transform:uppercase;color:#A2B0C0;font-weight:500;margin:0 0 1rem}
+.tlgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:tl}
+.tlstep{position:relative;padding:.9rem .8rem .9rem 0;border-top:2px solid #2E3A48}
+.tlstep:nth-child(1){border-top-color:#E9B949}
+.tlstep::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;background:#2E3A48;border-radius:1px}
+.tlstep:nth-child(1)::before{background:#E9B949}
+.tltime{font-family:var(--mono);font-size:.78rem;color:#E9B949;font-weight:500;display:block;margin-bottom:.25rem}
+.tltxt{font-size:.86rem;line-height:1.4;color:#AEBCCB;font-family:var(--sans)}
+@media (max-width:820px){.tlgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.tlgrid{grid-template-columns:1fr}}
+
+/* ================= SECTION / TOPIC ================= */
+.partbreak{margin:4.5rem 0 2.5rem;padding-top:2rem;border-top:3px solid var(--ink)}
+.partbreak .pk{font-family:var(--mono);font-size:.66rem;letter-spacing:.19em;text-transform:uppercase;color:var(--seal);font-weight:600}
+.partbreak h2{font-family:var(--sans);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.15rem);letter-spacing:-.022em;margin:.5rem 0 .5rem;line-height:1.12}
+.partbreak p{color:var(--ink2);max-width:62ch;margin:0}
+
+.topic{scroll-margin-top:1.2rem;padding:2.6rem 0 0;border-top:1px solid var(--rule);margin-top:2.6rem}
+.topic:first-of-type{border-top:0;margin-top:0}
+.exhibit{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin-bottom:.85rem}
+.exno{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.1em;background:var(--tagbg);color:var(--tag);border:1px solid var(--tagline);padding:.24rem .55rem;border-radius:2px}
+.exsrc{font-family:var(--mono);font-size:.66rem;color:var(--ink3);letter-spacing:.03em}
+.topic h3{font-family:var(--sans);font-weight:700;font-size:clamp(1.42rem,3vw,2rem);letter-spacing:-.022em;line-height:1.14;margin:0 0 .7rem;text-wrap:balance}
+.lede{font-size:1.06rem;color:var(--ink2);max-width:66ch;margin:0 0 1.4rem}
+h4{font-family:var(--sans);font-weight:700;font-size:1.02rem;letter-spacing:-.008em;margin:1.8rem 0 .7rem}
+h5{font-family:var(--sans);font-weight:700;font-size:.85rem;letter-spacing:.02em;margin:0 0 .5rem;text-transform:none}
+
+/* ================= PANELS & CARDS ================= */
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.25rem;margin:1.1rem 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media (max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.05rem 1.1rem}
+.card h5{font-size:.95rem;margin-bottom:.4rem}
+.card p{font-size:.94rem;margin:0;color:var(--ink2)}
+.card .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:.4rem}
+.card--risk{background:var(--sealbg);border-color:var(--sealline)}
+.card--risk h5{color:var(--seal)}
+.card--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.card--safe h5{color:var(--verify)}
+.card--cust{background:var(--custodybg);border-color:var(--custodyline)}
+.card--cust h5{color:var(--custody)}
+.card--dark{background:var(--ink);border-color:var(--ink)}
+.card--dark h5{color:#E9B949}
+.card--dark p,.card--dark li{color:#C2CEDA}
+.card--dark .k{color:#A2B0C0}
+
+/* notes */
+.note{border-radius:6px;padding:1rem 1.1rem 1rem 1.15rem;margin:1.2rem 0;border:1px solid;font-size:.95rem}
+.note .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:.35rem}
+.note p:last-child{margin-bottom:0}
+.note--case{background:var(--custodybg);border-color:var(--custodyline)}
+.note--case .nk{color:var(--custody)}
+.note--real{background:var(--tagbg);border-color:var(--tagline)}
+.note--real .nk{color:var(--tag)}
+.note--risk{background:var(--sealbg);border-color:var(--sealline)}
+.note--risk .nk{color:var(--seal)}
+.note--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.note--safe .nk{color:var(--verify)}
+
+/* exam pointer */
+.exam{display:flex;gap:.8rem;align-items:flex-start;margin:1.3rem 0 .3rem;padding:.75rem .95rem;background:var(--panel2);border-left:3px solid var(--ink);border-radius:0 4px 4px 0;font-size:.92rem}
+.exam b{font-family:var(--mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);flex:0 0 auto;padding-top:.16rem}
+.exam span{color:var(--ink2)}
+
+/* lists */
+ul.clean,ol.clean{margin:.4rem 0 1rem;padding-left:1.15rem}
+ul.clean li,ol.clean li{margin-bottom:.42rem;font-size:.97rem}
+ul.clean li::marker{color:var(--custody2)}
+ol.clean li::marker{font-family:var(--mono);font-size:.82rem;color:var(--custody2)}
+ul.ticks{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.ticks li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.ticks li::before{content:"";position:absolute;left:0;top:.52em;width:.62rem;height:.62rem;border:2px solid var(--verify);border-radius:1px}
+ul.crosses{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.crosses li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.crosses li::before{content:"\00d7";position:absolute;left:.06rem;top:-.05em;color:var(--seal);font-weight:700;font-size:1.1rem}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:1.1rem 0;font-size:.93rem;background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.tbl th{font-family:var(--sans);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;text-align:left;background:var(--ink);color:#DCE4EC;padding:.6rem .8rem;font-weight:600}
+.tbl td{padding:.65rem .8rem;border-top:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+.tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--ink);font-size:.9rem}
+.tbl tr:nth-child(even) td{background:var(--panel2)}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* mono chip */
+.mono{font-family:var(--mono);font-size:.86em;background:var(--panel3);padding:.1em .38em;border-radius:3px;color:var(--ink)}
+.hash{font-family:var(--mono);font-size:.8rem;letter-spacing:.02em}
+
+/* pull quote */
+.pull{border-left:3px solid var(--tag);padding:.3rem 0 .3rem 1.1rem;margin:1.4rem 0;font-size:1.1rem;line-height:1.5;color:var(--ink);font-style:italic}
+.pull cite{display:block;font-style:normal;font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:.5rem}
+</style>
+<style>
+/* ================= UNIT I COMPONENTS ================= */
+
+/* hero stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#26303C;
+  border:1px solid #26303C;border-radius:6px;overflow:hidden;margin:2rem 0 0}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:#141C26;padding:1rem .95rem}
+.stat .v{font-family:var(--sans);font-weight:800;font-size:clamp(1.3rem,3vw,1.85rem);
+  color:#E9B949;letter-spacing:-.02em;line-height:1.05;display:block}
+.stat .l{font-size:.8rem;color:#AEBCCB;line-height:1.35;display:block;margin-top:.35rem;font-family:var(--sans)}
+
+/* tab switcher (roles of a computer, backup architectures) */
+.tabs{margin:1.2rem 0}
+.tablist{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:-1px;position:relative;z-index:2}
+.tab{font-family:var(--sans);font-weight:600;font-size:.83rem;padding:.5rem .9rem;
+  border:1px solid var(--rule);border-bottom-color:transparent;background:var(--panel2);
+  color:var(--ink2);border-radius:5px 5px 0 0;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--panel);color:var(--custody);
+  border-color:var(--rule);box-shadow:inset 0 3px 0 var(--custody)}
+.tabpanel{background:var(--panel);border:1px solid var(--rule);border-radius:0 6px 6px 6px;padding:1.15rem 1.25rem}
+.tabpanel[hidden]{display:none}
+
+/* schematic diagram blocks */
+.schem{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:.9rem 0;justify-content:center}
+.node{background:var(--panel2);border:1.5px solid var(--rule2);border-radius:5px;
+  padding:.5rem .7rem;font-family:var(--sans);font-size:.8rem;font-weight:600;text-align:center;line-height:1.25}
+.node small{display:block;font-weight:400;font-size:.7rem;color:var(--ink3);font-family:var(--mono)}
+.node.pri{background:var(--custody);border-color:var(--custody);color:#fff}
+.node.pri small{color:#B7C4D2}
+.node.tape{background:#F0EAF6;border-color:#5B3E7A;color:#5B3E7A}
+.node.disk{background:var(--verifybg);border-color:var(--verify);color:var(--verify)}
+.node.warn{background:var(--sealbg);border-color:var(--seal);color:var(--seal)}
+.node.wide{flex:1 1 100%;max-width:24rem}
+.link{font-family:var(--mono);color:var(--ink3);font-size:1rem;flex:0 0 auto}
+.bottleneck{background:var(--sealbg);border:1px solid var(--sealline);border-radius:4px;
+  padding:.45rem .7rem;font-size:.83rem;color:var(--seal);margin-top:.7rem;font-weight:600;text-align:center}
+.goodnote{background:var(--verifybg);border:1px solid var(--verifyline);border-radius:4px;
+  padding:.45rem .7rem;font-size:.83rem;color:var(--verify);margin-top:.7rem;font-weight:600;text-align:center}
+
+/* slack space visualiser */
+.slackbox{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.2rem 1.25rem;margin:1.2rem 0}
+.blockbar{display:flex;height:3.2rem;border:2px solid var(--ink);border-radius:4px;overflow:hidden;margin:.9rem 0 .5rem}
+.bfile{background:var(--custody);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-size:.78rem;font-weight:700;transition:width .25s;min-width:0;overflow:hidden;white-space:nowrap}
+.bslack{background:repeating-linear-gradient(45deg,#FCF3DE 0 8px,#F2E4C2 8px 16px);
+  color:var(--tag);display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-size:.78rem;font-weight:700;transition:width .25s,background .25s;min-width:0;overflow:hidden;white-space:nowrap}
+.bslack.filled{background:repeating-linear-gradient(45deg,#FBEDEE 0 8px,#F3D7D9 8px 16px);color:var(--seal)}
+.blocklabels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.66rem;color:var(--ink3)}
+.slackctl{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;margin-top:1rem}
+.slackctl label{font-family:var(--sans);font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.6rem}
+input[type=range]{accent-color:var(--custody);width:11rem}
+.readout{font-family:var(--mono);font-size:.8rem;background:var(--panel3);
+  padding:.25rem .5rem;border-radius:3px;min-width:5.2rem;text-align:center;display:inline-block}
+.fscheck{margin-top:.9rem;padding:.75rem .9rem;border-radius:5px;font-size:.9rem;
+  background:var(--verifybg);border:1px solid var(--verifyline);color:var(--verify)}
+.fscheck.alert{background:var(--sealbg);border-color:var(--sealline);color:var(--seal)}
+.fscheck b{font-family:var(--mono);font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;display:block;margin-bottom:.25rem}
+
+/* numbered step list */
+.steps{counter-reset:st;list-style:none;margin:1rem 0;padding:0}
+.steps li{counter-increment:st;position:relative;padding:.7rem 0 .7rem 3rem;border-top:1px solid var(--rule);font-size:.96rem}
+.steps li:first-child{border-top:0}
+.steps li::before{content:counter(st);position:absolute;left:0;top:.72rem;
+  width:1.85rem;height:1.85rem;border-radius:50%;background:var(--custody);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.82rem;font-weight:600}
+.steps li b{font-family:var(--sans);display:block;font-size:.95rem;margin-bottom:.15rem}
+
+/* case study grid */
+.cases{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin:1.1rem 0}
+@media (max-width:860px){.cases{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.cases{grid-template-columns:1fr}}
+.casec{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:.95rem 1rem}
+.casec .cn{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tag)}
+.casec h5{font-family:var(--sans);font-size:.98rem;margin:.3rem 0 .35rem}
+.casec p{font-size:.87rem;color:var(--ink2);margin:0}
+
+/* service list */
+.svc{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin:1rem 0}
+@media (max-width:660px){.svc{grid-template-columns:1fr}}
+.svci{display:flex;gap:.7rem;background:var(--panel);border:1px solid var(--rule);
+  border-radius:5px;padding:.7rem .85rem}
+.svci .sx{flex:0 0 1.6rem;height:1.6rem;border-radius:4px;background:var(--custodybg);
+  color:var(--custody);display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:.72rem;font-weight:600}
+.svci b{font-family:var(--sans);font-size:.9rem;display:block;margin-bottom:.1rem}
+.svci span{font-size:.84rem;color:var(--ink2);line-height:1.4}
+
+/* ===== shared components (same as Unit II) ===== */
+/* flow diagram */
+.flow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:stretch;margin:1.1rem 0}
+.fstep{flex:1 1 8rem;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:.65rem .7rem;position:relative}
+.fstep .fn{font-family:var(--mono);font-size:.6rem;color:var(--custody2);letter-spacing:.1em}
+.fstep b{display:block;font-family:var(--sans);font-size:.86rem;font-weight:700;margin:.2rem 0 .18rem;line-height:1.2}
+.fstep span{font-size:.8rem;color:var(--ink3);line-height:1.35;display:block}
+.fstep--dark{background:var(--ink);border-color:var(--ink)}
+.fstep--dark b{color:#fff}.fstep--dark span{color:#AEBCCB}.fstep--dark .fn{color:#E9B949}
+/* quiz */
+.quiz{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.2rem 0}
+.q{border-top:1px solid var(--rule);padding-top:1.1rem;margin-top:1.1rem}
+.q:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.q p.qt{font-family:var(--sans);font-weight:600;font-size:.98rem;margin-bottom:.6rem}
+.q p.qt .qn{font-family:var(--mono);font-size:.72rem;color:var(--custody2);margin-right:.4rem}
+.opts{display:flex;flex-direction:column;gap:.35rem}
+.opt{text-align:left;font-family:inherit;font-size:.92rem;padding:.5rem .7rem;border:1px solid var(--rule);border-radius:4px;background:var(--panel2);cursor:pointer;transition:background .15s,border-color .15s;color:var(--ink2)}
+.opt:hover{background:var(--custodybg);border-color:var(--custodyline)}
+.opt.right{background:var(--verifybg);border-color:var(--verify);color:var(--verify);font-weight:600}
+.opt.wrong{background:var(--sealbg);border-color:var(--seal);color:var(--seal)}
+.qfb{font-size:.88rem;color:var(--ink2);margin-top:.55rem;padding-left:.7rem;border-left:2px solid var(--rule2);display:none}
+.qfb.show{display:block}
+.score{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;color:var(--ink3);margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--rule)}
+/* summary table */
+.sumcard{background:var(--ink);border-radius:8px;padding:1.4rem 1.5rem;margin:1.3rem 0;color:#DCE4EC}
+.sumcard h4{color:#fff;margin-top:0}
+.sumrow{display:grid;grid-template-columns:1.5rem 11rem 1fr;gap:.7rem;padding:.6rem 0;border-top:1px solid #232C38;align-items:baseline}
+.sumrow:first-of-type{border-top:0}
+.sumrow .sn{font-family:var(--mono);font-size:.7rem;color:#E9B949}
+.sumrow .st{font-family:var(--sans);font-weight:600;font-size:.86rem;color:#E9B949}
+.sumrow .sd{font-size:.88rem;color:#BCC9D6;line-height:1.45}
+@media (max-width:700px){.sumrow{grid-template-columns:1.5rem 1fr}.sumrow .sd{grid-column:2}}
+/* footer */
+.foot{margin:5rem calc(-1*clamp(1rem,3.2vw,3rem)) 0;background:var(--ink);color:#A2B0C0;padding:2.4rem clamp(1rem,3.2vw,3rem)}
+.foot-in{max-width:900px;margin:0 auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;line-height:1.8}
+.foot b{color:#DCE4EC;font-weight:500}
+
+/* print */
+@media print{
+  .rail,.mobar,.progress,.cocbtn,.btn,.quiz{display:none!important}
+  .shell{grid-template-columns:1fr}
+  body{background:#fff;font-size:11pt}
+  .hero,.foot{background:#fff;color:#000;margin:0;padding:0 0 1rem}
+  .hero h1{color:#000}.hero .lede{color:#333}
+  .topic{break-inside:avoid;page-break-inside:avoid}
+  .volitem .why{display:block!important}
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);transform:translateX(-102%);transition:transform .28s ease;box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .rail.open{transform:none}
+  .mobar{display:flex}
+  .scrim{position:fixed;inset:0;background:rgba(6,10,15,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.on{opacity:1;pointer-events:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="prog"></div>
+
+<div class="mobar">
+  <div><small>Digital Forensics</small><br><b>Unit I — Fundamentals &amp; Data Recovery</b></div>
+  <button class="menubtn" id="menubtn" aria-expanded="false" aria-controls="rail">Contents</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Unit I contents">
+  <div class="railhead">
+    <div class="railkick">20CS41020 · Unit I</div>
+    <div class="railtitle">Digital Forensics Fundamentals</div>
+    <div class="railsub">B.Tech CSE (AIML) · AR22</div>
+    <div class="railseal"><span class="dot"></span><span class="txt" id="sealtxt">0 / 13 sections</span></div>
+  </div>
+  <div class="railscroll">
+    <div class="railpart">Part A · Fundamentals</div>
+    <ul class="chain" id="chain">
+      <li><a href="#t01"><span class="n">01</span><span>Digital Forensics Defined</span></a></li>
+      <li><a href="#t02"><span class="n">02</span><span>Use in Law Enforcement</span></a></li>
+      <li><a href="#t03"><span class="n">03</span><span>Assistance to HR &amp; Employment</span></a></li>
+      <li><a href="#t04"><span class="n">04</span><span>Digital Forensics Services</span></a></li>
+      <li><a href="#t05"><span class="n">05</span><span>Benefits of Professional Methodology</span></a></li>
+      <li><a href="#t06"><span class="n">06</span><span>Steps Taken by Specialists</span></a></li>
+    </ul>
+    <div class="railpart">Part B · Types of Technology</div>
+    <ul class="chain">
+      <li><a href="#t07"><span class="n">07</span><span>Military Forensic Technology</span></a></li>
+      <li><a href="#t08"><span class="n">08</span><span>Law Enforcement Forensic Technology</span></a></li>
+      <li><a href="#t09"><span class="n">09</span><span>Business Forensic Technology</span></a></li>
+    </ul>
+    <div class="railpart">Part C · Evidence &amp; Capture</div>
+    <ul class="chain">
+      <li><a href="#t10"><span class="n">10</span><span>Data Recovery Defined</span></a></li>
+      <li><a href="#t11"><span class="n">11</span><span>Data Back-up and Recovery</span></a></li>
+      <li><a href="#t12"><span class="n">12</span><span>The Role of Back-up in Data Recovery</span></a></li>
+      <li><a href="#t13"><span class="n">13</span><span>The Data Recovery Solution</span></a></li>
+    </ul>
+    <div class="railpart">Revision</div>
+    <ul class="chain">
+      <li><a href="#summary"><span class="n">S</span><span>One-line Summary of All 13</span></a></li>
+      <li><a href="#quiz"><span class="n">Q</span><span>Check Yourself</span></a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main" id="main">
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="filebar">
+      <span class="stamp">Case File</span>
+      <span>Ref: DF/U-I/AR22</span>
+      <span>Subject: 20CS41020 Digital Forensics</span>
+      <span>Source: Vacca, Ch. 1–2, 5</span>
+    </div>
+    <h1>The average bank robbery nets $6,900.<br>The average computer crime nets <em>$900,000.</em></h1>
+    <p class="lede">That gap is why this subject exists. Unit I answers four questions: what digital forensics actually is, who uses it and why, what technology the military, police and business each bring to it, and how data everyone assumed was destroyed gets recovered anyway.</p>
+    <div class="herometa">
+      <span class="pill">13 topics</span>
+      <span class="pill">Textbook figures rebuilt</span>
+      <span class="pill">Real incidents</span>
+      <span class="pill">Exam pointers</span>
+      <span class="pill">Interactive diagrams</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="v">74%</span><span class="l">of the FBI's computer forensic workload is white-collar crime</span></div>
+      <div class="stat"><span class="v">~10,000</span><span class="l">FBI cases in 2003, up from near zero in 1985</span></div>
+      <div class="stat"><span class="v">899</span><span class="l">FBI personnel in the field, up from two part-time scientists</span></div>
+      <div class="stat"><span class="v">59%</span><span class="l">of surveyed organisations had employees with unauthorised access to corporate information</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="partbreak">
+  <div class="pk">Part A · Chapter 1</div>
+  <h2>Digital Forensics Fundamentals</h2>
+  <p>Computer crime is widespread and has infiltrated areas unimaginable a few years ago. Part A covers what the discipline is, who its evidence serves, what a forensics professional actually does for a client, and the eight steps a specialist takes on every machine.</p>
+</div>
+
+<!-- ============ 01 ============ -->
+<section class="topic" id="t01">
+  <div class="exhibit"><span class="exno">EX-01</span><span class="exsrc">Vacca Ch. 1 · pp. 5–8, 19–23</span></div>
+  <h3>Digital Forensics Defined</h3>
+  <p class="lede">Digital forensics is the discovery, analysis and reconstruction of evidence extracted from any element of computer systems, computer networks, computer media and computer peripherals that allows investigators to solve a crime.</p>
+
+  <div class="card card--dark">
+    <span class="k">The objective</span>
+    <p style="font-size:1.05rem;color:#fff">To recover, analyse and present computer-based material in such a way that it is <strong>useable as evidence in a court of law.</strong></p>
+    <p style="margin-top:.5rem">That last phrase is the whole game. It is essential that none of the equipment or procedures used during the examination obviate it.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card card--risk">
+      <span class="k">The priority</span><h5>Accuracy, not speed</h5>
+      <p>Digital forensics is concerned primarily with forensic procedures, rules of evidence and legal processes. It is only <em>secondarily</em> concerned with computers. So in contrast to every other area of computing, where speed is the main concern, here the absolute priority is <strong>accuracy</strong>. You complete work as efficiently as possible — as fast as possible <em>without sacrificing accuracy</em>.</p>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Two components</span><h5>Computer forensics vs network forensics</h5>
+      <p><strong>Computer forensics</strong> gathers evidence from media seized at the crime scene — imaging storage, recovering deleted files, searching slack and free space.</p>
+      <p style="margin-top:.5rem"><strong>Network forensics</strong> is more technically challenging: evidence distributed across large, complex networks, often transient and never written to permanent storage.</p>
+    </div>
+  </div>
+
+  <h4>The three roles a computer can play in a crime</h4>
+  <p>A computer can be the target, the instrument, or an evidence repository — and sometimes more than one at once. Knowing which role it played tells you where to look, which matters enormously when a single drive can take days to examine.</p>
+
+  <div class="tabs" data-tabs>
+    <div class="tablist" role="tablist" aria-label="Roles of a computer in a crime">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="r1">Target</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="r2">Instrument</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="r3">Evidence repository</button>
+    </div>
+    <div class="tabpanel" id="r1" role="tabpanel">
+      <h5>The computer is the victim</h5>
+      <p>Someone broke into it, defaced it, or knocked it over. The crime happened <em>to</em> the machine.</p>
+      <p style="margin-top:.6rem"><strong>So you look for:</strong> audit logs and unfamiliar programs. If the machine was the target of an intrusion, those two sources tell you how they got in and what they left behind.</p>
+      <p style="margin-top:.6rem;color:var(--custody)"><strong>Example:</strong> a college's result-portal server is defaced overnight. The web server access logs and a newly installed PHP file are the first two things an examiner pulls.</p>
+    </div>
+    <div class="tabpanel" id="r2" role="tabpanel" hidden>
+      <h5>The computer is the weapon</h5>
+      <p>It was the tool used to commit the offence — the &ldquo;smoking gun&rdquo;.</p>
+      <p style="margin-top:.6rem"><strong>So you look for:</strong> the tooling. If it was used to hack into a network password file, the investigator knows to look for password-cracking software and password files.</p>
+      <p style="margin-top:.6rem;color:var(--custody)"><strong>Example:</strong> a laptop used to send phishing mail carries the mailing script, the target address list and the SMTP configuration.</p>
+    </div>
+    <div class="tabpanel" id="r3" role="tabpanel" hidden>
+      <h5>The computer is the filing cabinet</h5>
+      <p>It stores valuable information about the crime, whether or not it was involved in committing it.</p>
+      <p style="margin-top:.6rem"><strong>So you look for:</strong> the stored material itself — documents, images, records, correspondence.</p>
+      <p style="margin-top:.6rem;color:var(--custody)"><strong>Example:</strong> a hacker uses a machine to break into another computer and steal files, then stores them locally. That one machine is now both instrument <em>and</em> repository.</p>
+    </div>
+  </div>
+
+  <h4>Who can use digital forensic evidence?</h4>
+  <div class="grid3">
+    <div class="card"><span class="k">Group 1</span><h5>Criminal prosecutors</h5><p>Use it wherever incriminating documents can be found: homicides, financial fraud, drug and embezzlement record-keeping, child pornography.</p></div>
+    <div class="card"><span class="k">Group 2</span><h5>Civil litigations</h5><p>Personal and business records bearing on fraud, divorce, discrimination and harassment cases.</p></div>
+    <div class="card"><span class="k">Group 3</span><h5>Insurance companies</h5><p>May mitigate costs using discovered evidence of possible fraud in accident, arson and workman's compensation claims.</p></div>
+    <div class="card"><span class="k">Group 4</span><h5>Corporations</h5><p>Hire specialists over sexual harassment, embezzlement, theft or misappropriation of trade secrets and other confidential information.</p></div>
+    <div class="card"><span class="k">Group 5</span><h5>Law enforcement officials</h5><p>Frequently need assistance in pre-search-warrant preparations and post-seizure handling of the equipment.</p></div>
+    <div class="card"><span class="k">Group 6</span><h5>Individuals</h5><p>Sometimes hire specialists to support claims of wrongful termination, sexual harassment or age discrimination.</p></div>
+  </div>
+
+  <h4>Problems with digital forensic evidence</h4>
+  <div class="grid2">
+    <div class="card card--safe">
+      <h5>It must meet the same bar as any evidence</h5>
+      <ul class="ticks">
+        <li>Authentic</li><li>Accurate</li><li>Complete</li>
+        <li>Convincing to juries</li>
+        <li>In conformity with common law and legislative rules — that is, admissible</li>
+      </ul>
+    </div>
+    <div class="card card--risk">
+      <h5>But it has four special problems</h5>
+      <ul class="crosses">
+        <li>Computer data changes moment by moment</li>
+        <li>It is invisible to the human eye and can only be viewed indirectly, after appropriate procedures</li>
+        <li>The process of collecting it may change it — in significant ways. Opening a file or printing it is not always neutral</li>
+        <li>The technology keeps changing, so forensic processes can seldom be fixed for very long</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Why the field grew so fast</span>
+    <p>A 2003 FBI survey put the average bank robbery at $6,900 and the average computer crime at $900,000. The Internet made targets far more accessible while dropping the risk to the criminal — no one gets gunned down escaping a wire transfer. Of 849 organisations surveyed, 30% claimed theft of proprietary information, 35% experienced system penetration from outside, 23% reported sabotage, and 12% claimed financial fraud.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Definition, objective (&ldquo;useable as evidence in a court of law&rdquo;), and priority (accuracy over speed) are three separate marks. Then the three roles of a computer with an example of each.</span></div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="topic" id="t02">
+  <div class="exhibit"><span class="exno">EX-02</span><span class="exsrc">Vacca Ch. 1 · pp. 8–9</span></div>
+  <h3>Use of Digital Forensics in Law Enforcement</h3>
+  <p class="lede">If there is a computer on the premises of a crime scene, the chances are very good that there is valuable evidence on it. And if that computer is examined — even very briefly — by anyone other than a trained and experienced specialist, the usefulness and credibility of that evidence will be tainted.</p>
+
+  <div class="note note--risk">
+    <span class="nk">The sentence to remember</span>
+    <p>&ldquo;Even if very briefly&rdquo; is doing a lot of work in that rule. A single careless boot, a single double-clicked file, and a defence lawyer has something to attack. There is no such thing as a quick harmless look.</p>
+  </div>
+
+  <h4>Choosing a specialist for a criminal case</h4>
+  <div class="grid2">
+    <div class="card">
+      <h5>Shop around, and look hard at experience</h5>
+      <p>There are an increasing number of people who claim to be experts in the field. There is far more to proper forensic analysis than the ability to retrieve data, especially in a criminal case. Think about digital forensics just as you would any other forensic science, and look for a corresponding level of expertise.</p>
+    </div>
+    <div class="card card--cust">
+      <h5>Remember who is actually testifying</h5>
+      <p>You are retaining an <em>individual</em> who will likely be called to explain what he or she did to the computer and its data. The court will want to know that individual's own level of training and experience — <strong>not the experience of their employer</strong>. Find someone who has the expertise <em>and</em> the ability to stand up to the scrutiny and pressure of cross-examination.</p>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · why the individual matters more than the firm</span>
+    <p>A well-known forensics company is retained for a fraud case. The imaging is technically flawless, but the junior analyst who actually did the work has eight months' experience and has never testified. Under cross-examination he cannot explain why a particular tool reported what it did. The firm's reputation does not appear in the witness box — he does.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Two parts: the tainting rule (any non-specialist examination destroys credibility) and the criteria for choosing a specialist (the individual's own training and experience, plus the ability to survive cross-examination).</span></div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="topic" id="t03">
+  <div class="exhibit"><span class="exno">EX-03</span><span class="exsrc">Vacca Ch. 1 · pp. 9–10</span></div>
+  <h3>Digital Forensics Assistance to Human Resources / Employment Proceedings</h3>
+  <p class="lede">Forensic analysis is becoming increasingly useful to businesses, not just to police. Computers can contain evidence in many kinds of human resources proceedings — sexual harassment suits, allegations of discrimination, and wrongful termination claims.</p>
+
+  <div class="grid3">
+    <div class="card"><span class="k">Source 1</span><h5>Electronic mail systems</h5><p>People write things in email they would never consider writing in a memorandum or letter.</p></div>
+    <div class="card"><span class="k">Source 2</span><h5>Network servers</h5><p>Shared drives and mailbox stores, often with months or years of backup tapes behind them.</p></div>
+    <div class="card"><span class="k">Source 3</span><h5>Individual employee computers</h5><p>Local files, browser history, downloads and drafts.</p></div>
+  </div>
+  <p><strong>But:</strong> because computer data is so easy to manipulate, if the search and analysis is not performed by a trained specialist, it could likely be thrown out of court.</p>
+
+  <h4>The Employer Safeguard Program</h4>
+  <div class="card card--safe">
+    <p><strong>The procedure:</strong> before an individual is informed of their termination, a forensic specialist should come on-site and create an exact duplicate of the data on that individual's computer.</p>
+    <div class="grid3" style="margin-top:.9rem">
+      <div><h5 style="color:var(--verify)">Protects the employer</h5><p style="font-size:.88rem;color:var(--ink2);margin:0">Should the employee do anything to that data before leaving, damaged or deleted data can be replaced.</p></div>
+      <div><h5 style="color:var(--verify)">Builds the employer's case</h5><p style="font-size:.88rem;color:var(--ink2);margin:0">Evidence can be recovered showing the removal of proprietary information.</p></div>
+      <div><h5 style="color:var(--verify)">Defends against false charges</h5><p style="font-size:.88rem;color:var(--ink2);margin:0">It equally protects the employer from allegations made by the departing employee.</p></div>
+    </div>
+  </div>
+
+  <h4>Did you know&hellip;</h4>
+  <p>The textbook lists what a trained examiner can establish. Read this as a list of what a workplace machine quietly remembers.</p>
+  <div class="grid2">
+    <div class="card">
+      <ul class="clean">
+        <li>What websites have been visited</li>
+        <li>What files have been downloaded</li>
+        <li>When files were last accessed</li>
+        <li>Attempts to conceal or destroy evidence</li>
+        <li>Attempts to fabricate evidence</li>
+        <li>That the electronic copy of a document can contain text that was removed from the final printed version</li>
+      </ul>
+    </div>
+    <div class="card">
+      <ul class="clean">
+        <li>That some fax machines contain exact duplicates of the last several hundred pages received</li>
+        <li>That faxes sent or received via computer may remain on the computer indefinitely</li>
+        <li>That email has been used successfully in criminal cases as well as civil litigation</li>
+        <li>That email is often backed up on tapes generally kept for months or years</li>
+        <li>That many people keep their financial records, including investments, on computers</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the resignation nobody saw coming</span>
+    <p>A senior sales manager resigns on a Friday to join a competitor. Because the company follows the safeguard programme, his laptop is imaged before he is told. The image shows 400 client records copied to a USB device two days earlier and a draft email — never sent, but still on disk — offering the list to the competitor. Without the pre-termination image, the drive would simply have been wiped and reissued.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Name the three proceeding types (harassment, discrimination, wrongful termination), the three evidence sources, and then describe the Employer Safeguard Program with its timing — <em>before</em> the employee is informed. The timing is the point.</span></div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="topic" id="t04">
+  <div class="exhibit"><span class="exno">EX-04</span><span class="exsrc">Vacca Ch. 1 · pp. 10–16</span></div>
+  <h3>Digital Forensics Services</h3>
+  <p class="lede">No matter how careful they are, when people attempt to steal electronic information they leave behind traces of their activities. When people try to destroy incriminating evidence, they leave behind vital clues. In both cases those traces can prove to be the smoking gun. A forensics professional does far more than turn on a computer, make a directory listing and search through files.</p>
+
+  <h4>The eight services</h4>
+  <div class="svc">
+    <div class="svci"><span class="sx">01</span><span><b>Data seizure</b><span>Federal rules of civil procedure let a party inspect and copy designated documents or data compilations that may contain evidence. Your experts act as that representative, using their knowledge of storage technologies to track evidence down, and assist officials during the equipment seizure process.</span></span></div>
+    <div class="svci"><span class="sx">02</span><span><b>Data duplication and preservation</b><span>Two concerns: the data must not be altered in any way, and the seizure must not put an undue burden on the responding party. An exact duplicate answers both — the responding party quickly resumes business, and work happens on the copy so the original stays intact.</span></span></div>
+    <div class="svci"><span class="sx">03</span><span><b>Data recovery</b><span>Using proprietary tools, experts safely recover and analyse otherwise inaccessible evidence. When a user deletes an email, traces may still exist on the storage device — inaccessible to the user, recoverable by the expert.</span></span></div>
+    <div class="svci"><span class="sx">04</span><span><b>Document searches</b><span>Able to search over 200,000 electronic documents in seconds rather than hours, making discovery less complicated and less intrusive to all parties.</span></span></div>
+    <div class="svci"><span class="sx">05</span><span><b>Media conversion</b><span>Some clients need data stored on old and unreadable devices. Experts extract it, convert it into readable formats, and place it onto new storage media for analysis.</span></span></div>
+    <div class="svci"><span class="sx">06</span><span><b>Expert witness services</b><span>Explaining complex technical processes in an easy-to-understand fashion, so judges and juries grasp how the evidence was found, what it consists of, and why it is relevant.</span></span></div>
+    <div class="svci"><span class="sx">07</span><span><b>Computer evidence service options</b><span>Various service levels to suit the investigation — standard, on-site, emergency, priority and weekend.</span></span></div>
+    <div class="svci"><span class="sx">08</span><span><b>Other miscellaneous services</b><span>Analysis and on-site seizure in both criminal and civil matters, analysis of company computers to determine employee activity, help preparing electronic discovery requests, comprehensive reporting, court-recognised testimony, PC and Mac platforms, fast turnaround.</span></span></div>
+  </div>
+
+  <h4>The five service levels</h4>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Level</th><th>When they work</th><th>What you get</th></tr></thead>
+    <tbody>
+      <tr><td>Standard</td><td>Normal business hours</td><td>Work continues until your critical electronic evidence is found. Clean rooms provided, and all equipment warranties remain valid.</td></tr>
+      <tr><td>On-site</td><td>At your location</td><td>Experts travel to you and quickly produce exact duplicates of the media in question, then work on the duplicate — minimising disruption. They can also help federal marshals seize data.</td></tr>
+      <tr><td>Emergency</td><td>Highest lab priority</td><td>Your case takes precedence over all others and is worked without interruption until your evidence objectives are met.</td></tr>
+      <tr><td>Priority</td><td>8 a.m.–5 p.m., Mon–Fri</td><td>Dedicated experts on your case. Typically cuts turnaround time in half.</td></tr>
+      <tr><td>Weekend</td><td>8 a.m.–5 p.m., Sat–Sun</td><td>Work continues through the weekend, subject to expert availability.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>What else a forensics service will do for you</h4>
+  <div class="grid2">
+    <div class="card card--cust"><h5>Recover data you thought was lost forever</h5><p>Crashes, accidental deletion, reformatted disks, viruses, overwritten files, a disgruntled employee. In many instances the data cannot be found using the limited software available to most users. Where files are irreparably damaged, expertise allows recovery of even the smallest remaining fragments.</p></div>
+    <div class="card card--cust"><h5>Advise you on keeping data safe</h5><p>Guidance on encryption and back-up, thorough cleaning of sensitive data from systems you plan to eliminate, and a survey of information leaks — cordless phones, cellular phones, trash, employees, answering machines.</p></div>
+    <div class="card card--cust"><h5>Examine a computer to find out what its user has been doing</h5><p>Finding and interpreting the clues left behind, including where files have been deleted, disks reformatted, or other steps taken to conceal or destroy evidence.</p></div>
+    <div class="card card--cust"><h5>Sweep your office for listening devices</h5><p>Bugging devices from micro-miniature transmitters to recorders are readily available. Experts should have the equipment for thorough electronic countermeasures (ECM) sweeps.</p></div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the $286 million slush fund</span>
+    <p>The textbook's own exercise: senior officials at a Fortune 500 company discover employees operating internal slush funds totalling roughly $286 million. A forensics professional is called in — not to prove the money moved, which the accounts already show, but to establish <em>why</em> and to assess impact. That means data seizure, duplication, recovery of deleted correspondence, document search across the mail store, and finally expert testimony. Six of the eight services, in one engagement.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>The eight services are a classic list question — learn them in order. A common trick is a &ldquo;which of these is <em>not</em> a service&rdquo; multiple choice; the fake option is usually <span class="mono">data dump</span>.</span></div>
+</section>
+
+<!-- ============ 05 ============ -->
+<section class="topic" id="t05">
+  <div class="exhibit"><span class="exno">EX-05</span><span class="exsrc">Vacca Ch. 1 · pp. 17–18</span></div>
+  <h3>Benefits of Professional Forensics Methodology</h3>
+  <p class="lede">Why bring in an impartial professional rather than letting your own IT team have a look? Because of what they know, what they can find that others would not think to ask for, and — above all — what they will not accidentally destroy.</p>
+
+  <div class="grid3">
+    <div class="card"><span class="k">Benefit 1</span><h5>Transferable expertise</h5><p>The impartial expert will typically have experience across a wide range of hardware and software. It helps when they know your exact system, but fundamental computer design and software implementation is often quite similar from one system to another, so experience in one operating system or application area transfers easily to a new one.</p></div>
+    <div class="card"><span class="k">Benefit 2</span><h5>Knowing what to ask for</h5><p>Unlike paper evidence, computer evidence often exists in many forms, with earlier versions still accessible on disk. Knowing that those may exist, the expert identifies more possibilities that can be <em>requested</em> as relevant evidence during discovery.</p></div>
+    <div class="card"><span class="k">Benefit 3</span><h5>Faster on-site identification</h5><p>Where disks are not actually seized or forensically copied, the expert can more quickly identify places to look, signs to look for, and additional information sources — earlier versions of memos and spreadsheets, or differently formatted versions created by other applications.</p></div>
+  </div>
+
+  <h4>Protection of evidence — the six guarantees</h4>
+  <p>This is the heart of the benefit. A knowledgeable professional ensures that a subject computer system is carefully handled so that:</p>
+  <ul class="ticks">
+    <li>No possible evidence is damaged, destroyed or otherwise compromised by the procedures used to investigate the computer</li>
+    <li>No possible computer virus is introduced to a subject computer during the analysis process</li>
+    <li>Extracted and possibly relevant evidence is properly handled and protected from later mechanical or electromagnetic damage</li>
+    <li>A continuing chain of custody is established and maintained</li>
+    <li>Business operations are affected for a limited amount of time, if at all</li>
+    <li>Any client–attorney information inadvertently acquired during a forensic exploration is ethically and legally respected and not divulged</li>
+  </ul>
+
+  <div class="note note--case">
+    <span class="nk">Note the last one</span>
+    <p>The sixth guarantee is an ethical obligation, not a technical one — and it is the one students leave out. An examiner trawling a lawyer's client's mailbox will inevitably read privileged material. Respecting and not divulging it is part of the professional methodology.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the helpful sysadmin</span>
+    <p>A company's own administrator investigates a suspected data theft by copying the user's home directory to a network share and opening a few documents to check. Every file's last-access time is now today's date, the copy has none of the deleted material, and there is no record of what was touched. A professional would have imaged the disk first and never opened anything on the original — the difference between an investigation and an accident.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Three benefits plus the six protection guarantees. The guarantees are the higher-value half of the answer.</span></div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section class="topic" id="t06">
+  <div class="exhibit"><span class="exno">EX-06</span><span class="exsrc">Vacca Ch. 1 · pp. 7, 18</span></div>
+  <h3>Steps Taken by Digital Forensics Specialists</h3>
+  <p class="lede">The specialist completes an Evidence Identification and Retrieval Checklist, then takes eight careful steps to identify and attempt to retrieve possible evidence on the subject system. Learn these in order.</p>
+
+  <ol class="steps">
+    <li><b>Protect the subject computer system</b>During the forensic examination, from any possible alteration, damage, data corruption or virus introduction.</li>
+    <li><b>Discover all files on the subject system</b>This includes existing normal files, deleted yet remaining files, hidden files, password-protected files and encrypted files.</li>
+    <li><b>Recover all discovered deleted files</b>All of them, or as much as possible.</li>
+    <li><b>Reveal the contents of hidden files</b>To the extent possible — as well as temporary and swap files used by both the application programs and the operating system.</li>
+    <li><b>Access the contents of protected or encrypted files</b>If possible, and if legally appropriate. Both conditions matter.</li>
+    <li><b>Analyse all possibly relevant data in special areas of a disk</b>Including <strong>unallocated space</strong> (currently unused, but possibly the repository of previous relevant data) and <strong>slack space</strong> in a file (the remnant area at the end of a file, in the last assigned disk cluster, unused by current file data but possibly a site for previously created evidence).</li>
+    <li><b>Print out an overall analysis</b>Of the subject system and a listing of all possibly relevant files and file data. Provide an opinion on the system layout, the file structures discovered, any discovered data and authorship information, any attempts to hide, delete, protect or encrypt information, and anything else relevant.</li>
+    <li><b>Provide expert consultation and/or testimony</b>As required.</li>
+  </ol>
+
+  <div class="note note--case">
+    <span class="nk">The shape of the list</span>
+    <p>Read it as a narrowing funnel: step 1 freezes the scene, steps 2–6 find progressively harder-to-reach data (visible → deleted → hidden → encrypted → slack and unallocated), and steps 7–8 turn all of it into something a court can use. Every step after the first is worthless if the first one fails.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the eight steps on one laptop</span>
+    <p>A seized laptop in an IP-theft case runs the full sequence: imaged through a write blocker <em>(1)</em>; the file listing shows 60,000 files including 3,000 deleted entries and an encrypted archive <em>(2)</em>; carving recovers 2,100 of the deleted files <em>(3)</em>; the pagefile yields a fragment of a design document <em>(4)</em>; a warrant compels the passphrase for the archive <em>(5)</em>; slack space holds a CAD file the suspect thought he had wiped <em>(6)</em>; the report maps every finding to its source <em>(7)</em>; the examiner testifies <em>(8)</em>.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Eight steps in order — a guaranteed question. Step 6 is where the marks hide: define <strong>unallocated space</strong> and <strong>slack space</strong> in your own words, because the examiner is checking whether you know they are different things.</span></div>
+</section>
+<div class="partbreak">
+  <div class="pk">Part B · Chapter 2</div>
+  <h2>Types of Digital Forensics Technology</h2>
+  <p>Cyber forensics focuses on real-time, online evidence gathering rather than traditional offline disk forensics. Like medical forensics, it is generally performed <em>postmortem</em> — but in a networked environment, examinations must happen on an almost continuous basis. Part B looks at what the military, law enforcement and business each bring to that problem.</p>
+</div>
+
+<!-- ============ 07 ============ -->
+<section class="topic" id="t07">
+  <div class="exhibit"><span class="exno">EX-07</span><span class="exsrc">Vacca Ch. 2 · pp. 36–38</span></div>
+  <h3>Types of Military Digital Forensic Technology</h3>
+  <p class="lede">U.S. Department of Defense cyber forensics includes evaluation and in-depth examination of data related to both the <em>trans-</em> and <em>post-</em>cyberattack periods — during the attack as well as after it.</p>
+
+  <div class="grid3">
+    <div class="card card--dark"><span class="k">Objective 1</span><h5>Rapid discovery of evidence</h5></div>
+    <div class="card card--dark"><span class="k">Objective 2</span><h5>Estimating potential impact of the malicious activity on the victim</h5></div>
+    <div class="card card--dark"><span class="k">Objective 3</span><h5>Assessing the intent and identity of the perpetrator</h5></div>
+  </div>
+  <p>Real-time tracking of potentially malicious activity is especially difficult when the pertinent information has been intentionally hidden, destroyed or modified in order to elude discovery.</p>
+
+  <h4>CFX-2000 — the Computer Forensics Experiment</h4>
+  <p>The information directorate's cyber forensic concepts were new and untested, so it partnered with the National Institute of Justice through the National Law Enforcement and Corrections Technology Center (NLECTC) in Rome, New York, to test the ideas and prototype tools. CFX-2000 was the result — a first-of-a-kind event representing a new paradigm for transitioning cyber forensic technology out of military R&amp;D laboratories and into the hands of law enforcement.</p>
+
+  <div class="card card--cust">
+    <h5>The central hypothesis</h5>
+    <p style="font-size:1rem">That it is possible to accurately determine the <strong>motives, intent, targets, sophistication, identity and location</strong> of cyber criminals and cyber terrorists by deploying an integrated forensic analysis framework.</p>
+  </div>
+
+  <h4>How the experiment ran</h4>
+  <div class="flow">
+    <div class="fstep"><span class="fn">SETUP</span><b>A realistic scenario</b><span>NLECTC assembled computer crime investigators from DoD and federal, state and local law enforcement, hosted by the New York State Police's Forensic Investigative Center in Albany.</span></div>
+    <div class="fstep"><span class="fn">METHOD</span><b>Three identical teams</b><span>Participants were divided into three teams. Each received an identical set of software tools and identical initial evidence of suspicious activity.</span></div>
+    <div class="fstep"><span class="fn">TASK</span><b>Uncover the maze</b><span>Each team had to uncover several linked criminal activities from a maze of about 30 milestones culminating in an information warfare crime.</span></div>
+    <div class="fstep fstep--dark"><span class="fn">RESULT</span><b>Hypothesis largely correct</b><span>It is possible to ascertain the intent and identity of cyber criminals.</span></div>
+  </div>
+
+  <h4>SI-FI and digital evidence bags</h4>
+  <div class="grid2">
+    <div class="card">
+      <h5>SI-FI — Synthesizing Information from Forensic Investigations</h5>
+      <p>Developed under contract by WetStone Technologies, SI-FI was the cornerstone of the technology demonstrated. It is an integration environment supporting the collection, examination and analysis processes employed during a cyber forensic investigation.</p>
+    </div>
+    <div class="card card--safe">
+      <h5>DEBs — digital evidence bags</h5>
+      <p>Secure, tamperproof containers used to store digital evidence. Investigators seal evidence inside them and use SI-FI to collaborate on complex investigations. Authorised users can securely reopen a DEB for examination, while <strong>automatic audit of all actions</strong> ensures the continued integrity of the contents.</p>
+    </div>
+  </div>
+  <p>Other tools and prototypes in the exercise collected and analysed specific features of the digital evidence, performed case management and timelining of digital events, automated event link analysis, and performed <strong>steganography detection</strong>.</p>
+
+  <div class="note note--case">
+    <span class="nk">The physical analogy that makes DEBs click</span>
+    <p>A police evidence bag is tamper-evident: you can see if it was opened, and every transfer is signed on the outside. A digital evidence bag does the same job for a file — sealed, openable only by authorised users, and every single action against it written to an automatic audit trail. It is the chain of custody, implemented in software.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · why the military cares about the &ldquo;trans-attack&rdquo; period</span>
+    <p>Traditional forensics is postmortem — you examine the body after the fact. But a defence network under active attack cannot simply be switched off and imaged; it has to keep functioning. So the objectives shift to containment while the attack is live, locating the perpetrator, mitigating damage, and initiating recovery on a crippled but still-functioning network. That is the difference between military and conventional forensics in one sentence.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Expand every acronym: <strong>CFX-2000</strong>, <strong>NLECTC</strong>, <strong>SI-FI</strong>, <strong>DEB</strong>. Then the three key objectives and the central hypothesis. The six things the hypothesis claims can be determined — motives, intent, targets, sophistication, identity, location — are often asked as a list.</span></div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section class="topic" id="t08">
+  <div class="exhibit"><span class="exno">EX-08</span><span class="exsrc">Vacca Ch. 2 · pp. 38–46</span></div>
+  <h3>Types of Law Enforcement Digital Forensic Technology</h3>
+  <p class="lede">Digital forensics involves the preservation, identification, extraction and documentation of computer evidence stored as magnetically encoded information. Often that evidence was created transparently by the operating system, without the knowledge of the computer operator — and may be hidden from view entirely, which is why special tools are required.</p>
+
+  <div class="note note--case">
+    <span class="nk">What forensic software can establish</span>
+    <p>Forensic tools and methods identify passwords, logons and other information automatically dumped from memory as a transparent operation of popular PC operating systems. They can also identify <strong>backdated files</strong> and <strong>tie a diskette to the computer that created it</strong>.</p>
+  </div>
+
+  <h4>The seven areas of law enforcement forensic technology</h4>
+  <div class="grid2">
+    <div class="card"><span class="k">Area 1</span><h5>Computer evidence processing procedures</h5><p>Procedures and methodologies should conform to federal computer evidence processing standards. Procedures have also been developed for the U.S. Treasury Department, and training and certification programmes exist through the <strong>International Association of Computer Investigation Specialists (IACIS)</strong>.</p></div>
+    <div class="card"><span class="k">Area 2</span><h5>Preservation of evidence</h5><p>Computer evidence is fragile and susceptible to alteration or erasure by any number of occurrences. Trainees must be exposed to <strong>bit stream backup</strong> theories that ensure preservation of all storage levels that may contain evidence.</p></div>
+    <div class="card"><span class="k">Area 3</span><h5>Trojan horse programs</h5><p>The need to preserve evidence before processing should be demonstrated using programs designed to destroy data and modify operating systems. Participants must be able to avoid destructive programs and traps planted by users bent on destroying evidence — programs which can also covertly capture passwords and network logons.</p></div>
+    <div class="card"><span class="k">Area 4</span><h5>Forensics documentation</h5><p>Without proper documentation it is difficult to present findings — and if those findings become the object of a lawsuit or criminal investigation, documentation matters even more. Good methodology facilitates good evidence-processing documentation and good chain of custody procedures.</p></div>
+    <div class="card"><span class="k">Area 5</span><h5>File slack</h5><p>Random memory dumps in hidden storage areas. This data is a source of potential security leaks regarding passwords, network logons, email, database entries and word processing documents. Trainees must demonstrate proficiency in searching file slack, documenting findings, and eliminating the security risk.</p></div>
+    <div class="card"><span class="k">Area 6</span><h5>Data-hiding techniques</h5><p>Trade secrets and sensitive data can be secreted many ways — it is possible to hide diskettes within diskettes and to hide entire hard disk partitions. Data-hiding courses are only open to classified government agencies and businesses with a demonstrated need to know, because the material could be used to defeat government security review processes.</p></div>
+    <div class="card" style="grid-column:1/-1"><span class="k">Area 7</span><h5>E-commerce investigation</h5><p><strong>Net Threat Analyzer</strong> from New Technologies Inc. identifies past Internet browsing and email activity through specific computers. It analyses a computer's disk drives and other storage areas that are generally unknown to, or beyond the reach of, most general computer users — recovering activity a user believed was cleaned away.</p></div>
+  </div>
+
+  <h4>The three named law enforcement tools</h4>
+  <div class="tabs" data-tabs>
+    <div class="tablist" role="tablist" aria-label="Law enforcement forensic tools">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="tool1">SafeBack</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tool2">AnaDisk</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tool3">CopyQM</button>
+    </div>
+    <div class="tabpanel" id="tool1" role="tabpanel">
+      <h5>SafeBack — mirror image backup software</h5>
+      <p>Used to create mirror-image (bit-stream) backup files of hard disks, or a mirror-image copy of an entire drive or partition. <strong>The photo-negative analogy:</strong> once the negative has been made, several exact reproductions can be made of the original — but unlike a photo, SafeBack image files cannot be altered or modified to change the reproduction.</p>
+      <ul class="clean">
+        <li>A worldwide standard for mirror image backups since 1990, developed to requirements set by the U.S. Treasury Department and IACIS</li>
+        <li>Version 3.0+ maintains integrity through two separate implementations of the NIST-tested <strong>SHA-256</strong> algorithm</li>
+        <li>Preserves <em>all</em> data on a copied disk, including inactive and deleted data</li>
+        <li>Keeps a date- and time-stamped audit trail of every operation</li>
+        <li>Checks for possible data hiding when sector CRCs do not match, and records it automatically in the audit log</li>
+        <li>Does <strong>not</strong> compress relevant data — deliberately, to avoid legal arguments that the evidence was altered by compression or software translation</li>
+        <li>Does not write to or modify the original system; should be started from a boot diskette</li>
+      </ul>
+      <p style="margin-top:.6rem"><strong>Two derivative modes.</strong> <em>Verify</em> restores from the backup but throws the data away, letting the operator confirm the backup reads without errors. <em>Copy</em> feeds Restore directly from Backup with no intermediate file.</p>
+    </div>
+    <div class="tabpanel" id="tool2" role="tabpanel" hidden>
+      <h5>AnaDisk — diskette analysis tool</h5>
+      <p>Turns a PC into a sophisticated diskette analysis tool. Originally created to meet the needs of the U.S. Treasury Department in 1991, it is used primarily to <strong>identify data storage anomalies on floppy diskettes</strong>. It works at a very low level and makes maximum use of the floppy hardware.</p>
+      <ul class="clean">
+        <li>Security reviews of diskettes for storage anomalies</li>
+        <li>Duplication of diskettes that are nonstandard or involve storage anomalies</li>
+        <li>Editing diskettes at a physical sector level</li>
+        <li>Searching for data in traditional <em>and nontraditional</em> storage areas</li>
+        <li>Formatting diskettes in nontraditional ways — used in data-hiding courses to <em>create</em> hiding areas by adding extra sectors and tracks</li>
+        <li>Scans for anomalies identify odd formats, extra tracks and extra sectors, and flag data mismatches where file extensions have been changed to hide data</li>
+      </ul>
+      <p style="margin-top:.6rem">The textbook notes AnaDisk's duplication capability was used with odd diskette formats in cases such as the FBI's investigation of suspected spy Robert Philip Hanssen.</p>
+    </div>
+    <div class="tabpanel" id="tool3" role="tabpanel" hidden>
+      <h5>CopyQM — diskette duplication software</h5>
+      <p>Essentially turns a personal computer into a diskette duplicator. In a single pass, diskettes are <strong>formatted, copied and verified</strong> — useful for specialists who need to pre-configure floppy diskettes for specific uses and duplicate them.</p>
+      <ul class="clean">
+        <li>Certified by the U.S. DoD for duplicating &ldquo;search disks&rdquo; used in classified government computer risk reviews</li>
+        <li>Can create <strong>self-extracting executable programs</strong> that recreate the master diskette — so once created, anyone can produce pre-configured assessment diskettes with little technical knowledge</li>
+        <li>Images can be password protected using built-in encryption, keeping forensic tools away from curious hands</li>
+        <li>Diskette images can be serial numbered, which helps when copies are shared among several lawyers or with the court</li>
+        <li>Copies files, file slack <em>and</em> unallocated storage space (erased files)</li>
+        <li>Does not copy all areas of copy-protected diskettes — use AnaDisk for that</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · why SafeBack refuses to compress</span>
+    <p>It would be trivial to make image files smaller. The tool deliberately does not, because a defence lawyer could argue that compressing and decompressing the evidence is a software translation that may have altered it. Giving up disk space to remove a line of cross-examination is a very forensic trade — and the same instinct explains the two independent SHA-256 implementations rather than one.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Name the seven areas, then the three tools with one distinguishing feature each: SafeBack = evidence-grade bit stream imaging with SHA-256; AnaDisk = diskette <em>analysis</em> and anomaly detection; CopyQM = diskette <em>duplication</em>. Students routinely swap the last two.</span></div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section class="topic" id="t09">
+  <div class="exhibit"><span class="exno">EX-09</span><span class="exsrc">Vacca Ch. 2 · business forensic technology</span></div>
+  <h3>Types of Business Digital Forensic Technology</h3>
+  <p class="lede">Beyond law enforcement, businesses use a parallel set of forensic tools — from covert monitoring to theft recovery — to protect assets, investigate misuse and respond quickly when incidents occur. Same discipline, tuned for corporate risk: theft, leaks and insider misuse.</p>
+
+  <div class="grid2">
+    <div class="card card--cust">
+      <span class="k">Technology 1 · covert monitoring</span>
+      <h5>Remote monitoring of target computers — DIRT</h5>
+      <p><strong>Data Interception by Remote Transmission (DIRT)</strong> is a stealth remote-control monitoring tool. It watches all activity on one or more target computers simultaneously from a command centre, with no physical access needed. It also lets agents remotely seize and secure digital evidence <em>before</em> entering suspect premises.</p>
+      <p style="margin-top:.55rem;font-size:.88rem;color:var(--custody)"><strong>Real example — building a case before the raid.</strong> A corporate security team suspects an employee of leaking trade secrets. DIRT covertly monitors his activity across the network, capturing evidence of the leak before anyone touches the physical machine.</p>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Technology 2 · document security</span>
+      <h5>Creating trackable electronic documents</h5>
+      <p>Intrusion-detection tools can <strong>tag</strong> electronic documents so that any unauthorised person who accesses, downloads or views them is identified, including their location. This lets security teams trace the chain of custody and chain of command of stolen files.</p>
+      <p style="margin-top:.55rem;font-size:.88rem;color:var(--custody)"><strong>Real example — catching a data leak.</strong> A company plants a tagged copy of a confidential product roadmap on its file server. Weeks later the tool flags that the file was opened from an external IP address, revealing exactly who leaked it and to whom.</p>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Technology 3 · theft recovery</span>
+      <h5>Theft recovery software — PC PhoneHome</h5>
+      <p><strong>98% of stolen computers are never recovered</strong>, and corporate theft costs over $11 billion a year. PC PhoneHome is transparent theft-recovery software that secretly emails its location every time a protected laptop or PC connects to the Internet — no user action required. It works on Windows and Macintosh and is backed by a dedicated recovery service centre.</p>
+      <p style="margin-top:.55rem;font-size:.88rem;color:var(--custody)"><strong>Real example — recovering a stolen laptop.</strong> A consultant's laptop is stolen from a hotel room. Days later the thief connects it to a new Wi-Fi network; PC PhoneHome silently emails its new IP address and location, letting police trace and recover the machine.</p>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Technology 4 · training</span>
+      <h5>Basic forensic tools and techniques</h5>
+      <p>Workshops train investigators and corporate security personnel in core skills: tracing email to its source, cyber-law basics, cracking passwords, remote monitoring, tracking online activity, recovering hidden or deleted data, locating stolen computers, and identifying software pirates.</p>
+      <p style="margin-top:.55rem;font-size:.88rem;color:var(--custody)"><strong>Real example — applying the training.</strong> After a workshop, a corporate security analyst uses email-tracing techniques to identify the true source of a threatening internal message, resolving a harassment case in-house.</p>
+    </div>
+  </div>
+
+  <div class="card card--safe">
+    <span class="k">Technology 5 · outsourced expertise</span>
+    <h5>Forensic services available</h5>
+    <p>Specialised firms provide on-site imaging of hard drives and tapes for lab analysis with minimal disruption. Services include password and file recovery, hidden and deleted file retrieval, email decryption and authentication, honeypot sting operations, and protection from hackers, viruses and worms.</p>
+    <p style="margin-top:.55rem;font-size:.9rem"><strong>Real example — suspected embezzlement.</strong> A business suspects an employee of financial fraud. An outside service images the suspect's drive on-site, recovers deleted spreadsheets and decrypted emails in their lab, and traces threatening messages back to their true source.</p>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">The pattern across all five</span>
+    <p>Notice the shape: two technologies for <em>gathering evidence before you confront anyone</em> (DIRT, trackable documents), one for <em>getting hardware back</em> (PC PhoneHome), and two for <em>capability</em> — training your own people, and buying in a lab when you need one. Businesses need to act quietly, then act fast.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Five items, each with its named tool where the textbook gives one: DIRT, trackable documents, PC PhoneHome. Expand DIRT in full. The two statistics — 98% never recovered, $11 billion a year — are worth quoting.</span></div>
+</section>
+<div class="partbreak">
+  <div class="pk">Part C · Chapter 5</div>
+  <h2>Digital Forensics Evidence and Capture</h2>
+  <p>Everything in Part C rests on one observation: what a suspect deleted, reformatted or physically destroyed can very often be brought back. Part C covers what data recovery is, why backup keeps failing organisations, how backup's role has changed, and what a real recovery solution looks like.</p>
+</div>
+
+<!-- ============ 10 ============ -->
+<section class="topic" id="t10">
+  <div class="exhibit"><span class="exno">EX-10</span><span class="exsrc">Vacca Ch. 5 · Data Recovery Defined</span></div>
+  <h3>Data Recovery Defined</h3>
+  <p class="lede">Data recovery is the process in which highly trained engineers evaluate and extract data from damaged media and return it in an intact format. In forensics, what was deleted, damaged or hidden by a suspect can be reconstructed — turning discarded data into evidence.</p>
+
+  <div class="grid3">
+    <div class="card card--risk"><h5>Recovery is needed when&hellip;</h5><ul class="crosses" style="margin-bottom:0"><li>Accidental deletion or reformatting</li><li>Computer virus or malware corruption</li><li>Fire, smoke or water damage to media</li></ul></div>
+    <div class="card card--risk"><h5>&hellip;or when</h5><ul class="crosses" style="margin-bottom:0"><li>Physically damaged hard drives</li><li>Deliberate destruction by a disgruntled user</li><li>Files accidentally overwritten</li></ul></div>
+    <div class="card card--safe"><h5>Why it matters to the business</h5><p>A system-wide data-centre failure can be catastrophic: hundreds or thousands of employees rendered unproductive, sales transactions impossible to complete, customer service disrupted. Replacing the lost data may be extraordinarily costly — if it can be replaced at all.</p></div>
+  </div>
+
+  <h4>The data recovery workflow</h4>
+  <div class="flow">
+    <div class="fstep"><span class="fn">STEP 1</span><b>Identify data loss</b><span>What is missing, and when did it go?</span></div>
+    <div class="fstep"><span class="fn">STEP 2</span><b>Assess media damage</b><span>Logical, physical, or both.</span></div>
+    <div class="fstep"><span class="fn">STEP 3</span><b>Select method and tools</b><span>Match the technique to the failure mode.</span></div>
+  </div>
+  <div class="flow">
+    <div class="fstep"><span class="fn">STEP 4</span><b>Image and extract</b><span>Work from an image, never the failing media.</span></div>
+    <div class="fstep"><span class="fn">STEP 5</span><b>Validate and document</b><span>Prove what was recovered and how.</span></div>
+    <div class="fstep fstep--dark"><span class="fn">STEP 6</span><b>Present as evidence</b><span>Where the recovery is forensic rather than operational.</span></div>
+  </div>
+  <p style="font-size:.93rem;color:var(--ink3)">Even irreparably damaged media can yield the smallest remaining fragments — recovering what a suspect believed was destroyed forever.</p>
+
+  <h4>Six real recovery cases from the textbook</h4>
+  <div class="cases">
+    <div class="casec"><span class="cn">Case 1</span><h5>A Dog's Dinner</h5><p>Diskettes chewed by a customer's dog suffered severe physical damage. Engineers imaged both disks with only 15% sector damage, rebuilt the file allocation tables, and recovered every file.</p></div>
+    <div class="casec"><span class="cn">Case 2</span><h5>Credit Card Monster</h5><p>A 200 kg NetWare RAID array with 18 SCSI drives failed, losing hours of unbacked-up transactions. Three drives had failed; specialists repaired them and imaged all 18 — losing just 7 sectors out of roughly 88 million.</p></div>
+    <div class="casec"><span class="cn">Case 3</span><h5>Flying Low</h5><p>A Toshiba laptop would not boot after travelling in a plane's cargo hold. The head/disk assembly had speckle damage from being bounced around. After a headstack swap, 86 of 112 bad sectors were still readable.</p></div>
+    <div class="casec"><span class="cn">Case 4</span><h5>Accounts Critical</h5><p>A critical tape data loss — around 35 poorly recorded tapes — had already defeated another recovery firm. Within hours, hundreds of megabytes were extracted; the full accounts dataset was recovered within a week.</p></div>
+    <div class="casec"><span class="cn">Case 5</span><h5>Sinking Ship</h5><p>A seismic survey ship's IBM 3590 tape had a media flaw at the start, risking a costly repeat survey at sea. Engineers located the undamaged data and safely transferred it for delivery.</p></div>
+    <div class="casec"><span class="cn">Case 6</span><h5>All Flooded Out</h5><p>A basement flood coated more than 40 tape and optical cartridges in fine silt. Each tape was cleaned in a special rig and re-cased, and all files were returned to the customer on 26 CD-ROMs.</p></div>
+  </div>
+
+  <h4>Where data hides — and the slack space problem</h4>
+  <p>Filesystems allocate space in fixed-size blocks. Ext2 filesystems typically use 1, 2 or 4 KB blocks. If a file is smaller than the block, the remaining space is wasted — that leftover is <strong>slack space</strong>, and data written there is invisible to the filesystem, invulnerable to normal disk usage, and undetectable by file integrity checkers using checksums and MAC times.</p>
+
+  <div class="slackbox">
+    <h5 style="font-size:.95rem;margin-bottom:.2rem">Interactive: one 4 KB disk block</h5>
+    <p style="font-size:.88rem;color:var(--ink3);margin:0">Drag the slider to change the file size and watch the slack space appear. Then hide data in it.</p>
+    <div class="blockbar" aria-hidden="true">
+      <div class="bfile" id="bfile" style="width:60%">FILE DATA</div>
+      <div class="bslack" id="bslack" style="width:40%">SLACK SPACE</div>
+    </div>
+    <div class="blocklabels"><span>0 KB</span><span>4 KB block boundary</span></div>
+    <div class="slackctl">
+      <label>File size <input type="range" id="fsize" min="256" max="4096" step="64" value="2432" aria-label="File size in bytes"> <span class="readout" id="fsizeOut">2400 B</span></label>
+      <label style="gap:.45rem"><input type="checkbox" id="hidechk"> Hide data in slack space</label>
+    </div>
+    <div class="fscheck" id="fscheck">
+      <b>What the filesystem reports</b>
+      <span id="fsmsg">File size 2432 bytes. Slack space 1664 bytes, unused. Integrity checksum unchanged.</span>
+    </div>
+  </div>
+
+  <div class="card card--risk">
+    <h5>Other places investigators look — and attackers hide</h5>
+    <div class="grid2" style="margin-top:.4rem">
+      <ul class="clean" style="margin:0">
+        <li><strong>NTFS alternate data streams</strong> — not destroyed by many file-wiping utilities that promise irrecoverable removal</li>
+        <li><strong>Open-but-unlinked files on Linux</strong> — the classic UNIX method: keep a process holding the file open, then delete it. The contents stay on disk and the space is not reclaimed</li>
+      </ul>
+      <ul class="clean" style="margin:0">
+        <li><strong>Deleted-but-unoverwritten blocks</strong> — <span class="mono">/bin/rm</span> removes the directory entry, not the data</li>
+        <li><strong>Swap space remnants</strong> — fragments of whatever was in memory</li>
+        <li><strong>/proc memory image</strong> — if an executable erases itself, its contents can be retrieved from <span class="mono">/proc/$PID/exe</span></li>
+      </ul>
+    </div>
+    <p style="margin:.7rem 0 0;font-size:.9rem">The tool <span class="mono">bmap</span> exists specifically to write data into slack space, read it back, and wipe it. Forensic software will find it; the suspect probably will not.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the reformatted laptop</span>
+    <p>An employee formats a company laptop before returning it, believing the data is gone for good. A forensic examiner images the drive and, using data-recovery techniques, reconstructs the file table and recovers spreadsheets the employee tried to erase — intact enough to use as evidence.</p>
+  </div>
+  <div class="note note--real">
+    <span class="nk">Real example · Satyam Computer Services, 2009</span>
+    <p>In India's largest corporate fraud case, Satyam had falsified financial records for years. Investigators used data-recovery and backup-analysis techniques to retrieve deleted financial records and emails from company servers, reconstructing the true state of the accounts. Structured, documented recovery is what made the recovered material usable as evidence.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Definition first, then the causes of loss, then the hiding places. Define <strong>slack space</strong> precisely — the leftover bytes when a file is smaller than the allocated block — and say why it defeats checksum-based integrity checkers.</span></div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section class="topic" id="t11">
+  <div class="exhibit"><span class="exno">EX-11</span><span class="exsrc">Vacca Ch. 5 · Data Backup and Recovery · Figures 5.1–5.4</span></div>
+  <h3>Data Back-up and Recovery</h3>
+  <p class="lede">Information is one of the most valuable assets a business owns — yet industry experts estimate that over <strong>56% of client/server data is not backed up on a regular basis.</strong> Understanding why is the point of this topic.</p>
+
+  <h4>The four obstacles to backing up</h4>
+  <div class="grid4">
+    <div class="card card--risk"><span class="k">Obstacle 1</span><h5>Backup window</h5><p>The narrow, non-production time slot available to run backups — shrinking as businesses move to 7&times;24 operations.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 2</span><h5>Network bandwidth</h5><p>LANs and WANs often cannot carry hundreds of gigabytes of backup traffic in the time available.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 3</span><h5>System throughput</h5><p>Three I/O bottlenecks: pushing data from the system being backed up, the backup server accepting data from many systems at once, and the throughput of the tape devices.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 4</span><h5>Lack of resources</h5><p>Funding for data protection loses out to competing priorities such as e-commerce projects, and in-house expertise is limited.</p></div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">The four key elements of successful backup and recovery</span>
+    <p>The backup server &middot; the network &middot; the backup window &middot; the backup storage device(s). Note what is <em>not</em> on that list — &ldquo;the hardware&rdquo; is a distractor that appears in the textbook's own multiple-choice question.</p>
+  </div>
+
+  <h4>Backup architectures — the four textbook figures</h4>
+  <p>Select a tab to see how each architecture moves the data, and where the bottleneck ends up.</p>
+
+  <div class="tabs" data-tabs>
+    <div class="tablist" role="tablist" aria-label="Backup architectures">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="a1">Fig 5.1 · Shared tape library</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="a2">Fig 5.2 · Serverless</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="a3">Fig 5.3 · LAN-less</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="a4">Fig 5.4 · SAN</button>
+    </div>
+
+    <div class="tabpanel" id="a1" role="tabpanel">
+      <h5>Shared tape library backup — centralised</h5>
+      <div class="schem">
+        <span class="node">Backup client</span><span class="link">&rarr;</span>
+        <span class="node">Network</span><span class="link">&rarr;</span>
+        <span class="node pri">Backup server<small>index / metadata</small></span><span class="link">&rarr;</span>
+        <span class="node tape">Tape library</span>
+      </div>
+      <p>All backup traffic is processed <em>through</em> a central backup server, which also holds the index. Simple to manage and easy to reason about.</p>
+      <div class="bottleneck">Bottleneck: the backup server itself. Every byte passes through it.</div>
+    </div>
+
+    <div class="tabpanel" id="a2" role="tabpanel" hidden>
+      <h5>Serverless backup</h5>
+      <div class="schem">
+        <span class="node disk">Disk array</span><span class="link">&rarr;</span>
+        <span class="node">Tape server</span><span class="link">&rarr;</span>
+        <span class="node tape">Tape library</span>
+      </div>
+      <div class="schem"><span class="node" style="border-style:dashed">Backup server holds only the index / metadata — data does not flow through it</span></div>
+      <p>Data moves <strong>directly from disk to tape</strong>. The backup server no longer sits in the data path; it just manages the index.</p>
+      <div class="goodnote">Server bottleneck removed. Performance is now limited chiefly by network bandwidth.</div>
+    </div>
+
+    <div class="tabpanel" id="a3" role="tabpanel" hidden>
+      <h5>LAN-less backup</h5>
+      <div class="schem">
+        <span class="node pri">Server with 600 GB database</span><span class="link">&rarr;</span>
+        <span class="node tape">Directly attached tape library</span>
+      </div>
+      <div class="schem"><span class="node" style="border-style:dashed">Backup server on the LAN handles policy and index only</span></div>
+      <p>A tape device attaches <strong>directly to a large database server</strong>, skipping the LAN entirely for the bulk data transfer. The LAN still carries policy and index traffic, but not the 600 GB.</p>
+      <div class="goodnote">Network removed from the data path for the biggest single workload.</div>
+    </div>
+
+    <div class="tabpanel" id="a4" role="tabpanel" hidden>
+      <h5>Storage Area Network (SAN) backup</h5>
+      <div class="schem">
+        <span class="node">Server</span><span class="node">Server</span><span class="node">Server</span>
+      </div>
+      <div class="schem"><span class="node pri wide">Fibre Channel SAN &mdash; a dedicated data path</span></div>
+      <div class="schem">
+        <span class="node tape">Shared tape library</span><span class="link">&nbsp;</span><span class="node">Remote tape server</span>
+      </div>
+      <p>A dedicated data path — SCSI, ATM, FDDI or fibre channel — links every server directly to shared backup storage. This is the foundation of SAN-based backup and the destination the other three architectures are heading towards.</p>
+      <div class="goodnote">Every server reaches shared storage without touching the production LAN.</div>
+    </div>
+  </div>
+
+  <h4>Techniques for beating the backup window</h4>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Technique</th><th>How it works</th><th>Key benefit</th></tr></thead>
+    <tbody>
+      <tr><td>Incremental backup</td><td>Transfers only data changed since the last backup — roughly 5% of data changes daily</td><td>Dramatically shorter backup time</td></tr>
+      <tr><td>Block-level incremental</td><td>Backs up only the changed disk <em>blocks</em> within modified files</td><td>Even greater efficiency, at the cost of vendor lock-in</td></tr>
+      <tr><td>Image backup</td><td>Takes a snapshot of the entire file system at a point in time</td><td>Fast, bare-metal recovery without reinstalling the OS</td></tr>
+      <tr><td>Data archiving</td><td>Moves static, rarely accessed data off to tape</td><td>Shrinks scheduled backups by up to 80%</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Recommended backup features</h4>
+  <div class="grid4">
+    <div class="card"><h5>Data interleaving</h5><p>To back up multiple systems concurrently, the application must write data from multiple clients to tape in an interleaved manner — otherwise clients back up sequentially, which takes far longer.</p></div>
+    <div class="card"><h5>Remote backup</h5><p>Off-site locations are often not backed up at all. Laptops are especially vulnerable. A backup application should be able to back up systems across a WAN or over dial-up.</p></div>
+    <div class="card"><h5>Global monitoring</h5><p>Backup applications need to be accessed and administered from multiple locations, supporting reporting and administration of any backup system regardless of location.</p></div>
+    <div class="card"><h5>Performance</h5><p>An enterprise backup application should benchmark data rates exceeding one terabyte per hour — showing that performance is limited by hardware and network, not the application.</p></div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the 600 GB database that could not wait</span>
+    <p>A company's nightly backup window shrinks as its database grows past 600 GB. Moving that across the network would take longer than the window allows. Attaching a tape device directly to the server — LAN-less backup, Figure 5.3 — lets it back up locally without saturating the network or missing the window. The architecture <em>is</em> the solution to the obstacle.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>The four obstacles are the most-asked item here. Then be able to draw and label any of the four architectures and say where its bottleneck is. The progression 5.1 &rarr; 5.4 is a story: each figure removes one bottleneck the previous one had.</span></div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section class="topic" id="t12">
+  <div class="exhibit"><span class="exno">EX-12</span><span class="exsrc">Vacca Ch. 5 · The Role of Backup in Data Recovery · pp. 200–203</span></div>
+  <h3>The Role of Back-up in Data Recovery</h3>
+  <p class="lede">Three factors have changed what backup is for. Get these three and the rest of the topic follows.</p>
+
+  <div class="grid3">
+    <div class="card card--cust"><span class="k">Factor 1</span><h5>Storage costs are decreasing</h5><p>The cost per megabyte of primary online storage has fallen dramatically and continues to. As users get accustomed to immediate access to more and more information online, the time required to restore data from secondary media is found to be <strong>unacceptable</strong>.</p></div>
+    <div class="card card--cust"><span class="k">Factor 2</span><h5>Systems have to be online continuously</h5><p>7&times;24 operations are the norm. The amount of operationally ready data is very large and constantly increasing. The dilemma: you can no longer take files offline long enough to perform a backup.</p></div>
+    <div class="card card--cust"><span class="k">Factor 3</span><h5>The role of backup has changed</h5><p>It is no longer just about restoring data. Operationally ready or mirrored data does not guard against data corruption and user error. Backup now includes responsibility for <strong>recovering user errors</strong> and ensuring good data has been saved and can quickly be restored.</p></div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Careful — this is an exam trap</span>
+    <p>The textbook's own multiple choice asks which is <em>not</em> a factor, and the wrong options are &ldquo;storage costs are <em>increasing</em>&rdquo; and &ldquo;the role of backup has <em>not</em> changed&rdquo;. Read the direction of each statement carefully.</p>
+  </div>
+
+  <h4>Conventional tape backup, and its alternative</h4>
+  <div class="grid2">
+    <div class="card">
+      <h5>The typical tape management system</h5>
+      <p>A dedicated workstation with the front end interfaced to the network and the back end controlling a repository of tape devices. The media server runs the tape management software, can administer backup devices throughout an enterprise, and can run continuous parallel backups and restores.</p>
+    </div>
+    <div class="card">
+      <h5>The alternative: mirror everything</h5>
+      <p>Physically replicate all data and keep two copies online at all times. Because primary storage costs are falling this is not as cost-prohibitive as it once was, and the data does not have to be restored — so there are no immediate-availability issues. But it has its own drawbacks.</p>
+    </div>
+  </div>
+
+  <h4>Four issues with today's backup</h4>
+  <div class="grid2">
+    <div class="card card--risk"><h5>Network backup creates network performance problems</h5><p>Using the production network to carry backup data as well as normal user access can severely overburden busy network resources. Installing a separate backup network helps, but even dedicated backup networks may become performance bottlenecks.</p></div>
+    <div class="card card--risk"><h5>Offline backup affects data accessibility</h5><p>Host processors must be quiescent during backup. It is neither host-independent nor nondisruptive, so offline time must be minimised — which requires extremely high-speed continuous parallel backup. Even then you have only deferred the real problem: <strong>the time needed to restore</strong>.</p></div>
+    <div class="card card--risk"><h5>Live backups affect performance</h5><p>Many database vendors offer live backup, which allows access during the process. But redirection and journaling both live on the host: <strong>up to 50% of all host CPU cycles</strong> may be consumed during the backup.</p></div>
+    <div class="card card--risk"><h5>Mirroring does not protect against user error</h5><p>Synchronising, breaking and resynchronising mirrors is not trivial and affects data access speeds. And duplicating data after a user has deleted a critical file, or mirroring a file already corrupted by a host process, does not help at all. Mirroring has its place but cannot solve the problem by itself.</p></div>
+  </div>
+
+  <h4>New architectures and techniques are required</h4>
+  <div class="card card--dark">
+    <ul class="clean" style="margin:0">
+      <li>Backup at extremely high speed, with host-processor independence of the underlying file structures</li>
+      <li><strong>Recovery must be available at the file level</strong> — not the full raw image — so the most critical information can be brought back into operation first</li>
+      <li>The time that systems are offline for backup must be eliminated</li>
+      <li>Remote hot recovery sites are needed for immediate resumption of data access. <strong>Backup and mirroring are complementary, not competing technologies</strong></li>
+      <li>Decouple data from its storage space, just as programs are decoupled from the memory in which they execute</li>
+      <li>Journal modified pages within the primary storage device, without host intervention, using memory-mapping to track all modified information</li>
+      <li>Set aside part of primary storage for data to be backed up — as large as the largest backup block — and use a point-in-time snapshot of changed data while the file remains in normal operation</li>
+      <li>Allow backup to occur directly from the primary storage area to the backup area without host intervention, eliminating both host CPU and network bottlenecks</li>
+    </ul>
+  </div>
+  <p><strong>The net result:</strong> faster user response times during live backup, normal network performance throughout, and no backup downtime. Indexing of file structures can be done in the background after a high-speed backup, so at restore time the indices allow selection at the file level.</p>
+
+  <div class="note note--real">
+    <span class="nk">Real example · why file-level restore matters more than backup speed</span>
+    <p>A payroll database fails at 09:00 on a pay run. A full raw image restore takes six hours and everything comes back at once. A file-level restore brings the current month's transaction file back in eleven minutes, payroll runs, and the historical tables restore quietly in the background. Same backup, completely different business outcome — which is exactly why the textbook insists recovery must be available at the file level.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Three factors, four issues, and the requirement that recovery be available at the file level. The line &ldquo;backup and mirroring are complementary, not competing technologies&rdquo; is very quotable.</span></div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section class="topic" id="t13">
+  <div class="exhibit"><span class="exno">EX-13</span><span class="exsrc">Vacca Ch. 5 · The Data-Recovery Solution · pp. 203–206</span></div>
+  <h3>The Data Recovery Solution</h3>
+  <p class="lede">Availability once meant an application was available during the week, from nine to five. Batch processing took the evenings and nights and most people did not care, because they were at home asleep. The world has changed — customers now access their accounts in the middle of the night — and everything in this topic follows from that.</p>
+
+  <div class="grid2">
+    <div class="card card--risk">
+      <span class="k">Pressure 1</span><h5>Shrinking expertise, growing complexity</h5>
+      <p>Systems programmers, database administrators and other mainframe experts are maturing and heading for retirement. Most bright graduates have had little exposure to mainframe concepts in their coursework, much less a grasp of day-to-day requirements. Meanwhile the complex systems built over thirty years must still be monitored, managed, controlled and optimised, batch windows are shrinking to almost nothing, and backups often take place while an application is running.</p>
+    </div>
+    <div class="card card--risk">
+      <span class="k">Pressure 2</span><h5>Failures — and where they really come from</h5>
+      <p>Hardware failures were once more common than they are today; disk storage is more reliable than ever. More likely now is <strong>a simple mistake</strong> by an application programmer, system programmer or operations person. Logic errors, or the wrong update applied at the wrong time, can cause a crash or — worse — an <em>undetected</em> error in the database, undetected until a customer calls days later. And disasters strike without warning: flooding, tornadoes, hurricanes, earthquakes.</p>
+    </div>
+    <div class="card card--risk">
+      <span class="k">Pressure 3</span><h5>Budgets and downtime</h5>
+      <p>Fewer resources — people, processing power, time and money — to do more work than ever. The tools that could save resources themselves cost resources to obtain, implement and operate. But businesses cannot tolerate availability problems whatever the source: if an outage occurs, the company stands to lose <strong>tens of thousands of dollars an hour</strong>. You must balance the data management budget against the cost of downtime.</p>
+    </div>
+    <div class="card card--safe">
+      <span class="k">The response</span><h5>Recovery: think before you back up</h5>
+      <p>One of the most critical data-management tasks is recovering data when there is a problem, and installations spend many hours each week preparing for that possibility. Those preparations — backing up data, accumulating changes, tracking resources — need four things: <strong>evaluate your preparations, make sure all resources are available in usable condition, automate as much as possible, and make sure you have the right kind of resources.</strong></p>
+    </div>
+  </div>
+
+  <h4>The four planning disciplines</h4>
+  <ol class="steps">
+    <li><b>Evaluate your preparations</b>Procedures were often designed years ago and may not have been maintained. Say an organisation has always taken weekly image copies at the weekend and change accumulations mid-week. If all the resources are available at recovery time, that allows a standard recovery — but if hundreds of logs must be applied, recovery may take many hours. A strategy that was adequate when designed may be <strong>dangerously obsolete</strong> given today's availability requirements.</li>
+    <li><b>Don't let your resources fall through the cracks</b>Real environments use combinations of batch and online image copies of various database groups, plus change accumulations, staggered through the week. How do you check that <em>every</em> database is being backed up, that copies are being taken as frequently as planned, that media errors have not occurred? Finding out at recovery time that a critical resource is missing can be disastrous.</li>
+    <li><b>Automated recovery</b>If the only person who understands your systems and can recover them has moved far away, you are in trouble. Automation takes the human error factor and the &ldquo;think time&rdquo; out of the recovery equation and makes the complexity of the environment less of a concern. With proper planning and automation, recovery is made possible, reliance on specific personnel is reduced, and the human-error factor is nearly eliminated.</li>
+    <li><b>Make recoveries efficient</b>Multithreading shortens the process. Recovering multiple databases with <em>one pass</em> through your log data saves time. Taking image copies, rebuilding indexes and validating pointers concurrently with the recovery further reduces downtime. Where downtime is costly, time saved is money in the bank.</li>
+  </ol>
+
+  <div class="note note--risk">
+    <span class="nk">The RECON clean-up trap</span>
+    <p>Creating recovery JCL is not as simple as modifying existing JCL to change names. In a disaster the IMS recovery control (RECON) data sets must be modified before recovery: deleting online log data sets, closing logistics supportability, deleting subsystem records. RECON backups are usually taken while IMS is up, which leaves them needing many clean-up activities first. This process often takes <strong>hours</strong>, with the system down, equating to lost money — and discovering the deficiency at disaster-recovery time is too late.</p>
+  </div>
+
+  <h4>Take backups — the last step, not the first thought</h4>
+  <p>After you have thought about and planned for your recoveries, it is time to execute. The goal is to back up quickly, efficiently, and usually with minimal impact to customers. If you have a large window where systems are unavailable, <strong>standard image copies</strong> are your best option — clean recovery points, easy to manage. If you need backups while systems are active, you may need only very brief outages to take instant copies, or you may have intelligent storage devices that allow a snapshot. Both methods call for tools to assist in managing resources.</p>
+
+  <h4>The Backup and Recovery Solution (BRS) model</h4>
+  <div class="grid3">
+    <div class="card"><h5>Image Copy</h5><p>Captures point-in-time snapshots.</p></div>
+    <div class="card"><h5>Change Accumulation</h5><p>Consolidates updates between image copies.</p></div>
+    <div class="card"><h5>Recovery Manager</h5><p>Automates and synchronises multi-database restores.</p></div>
+    <div class="card"><h5>Pointer Checking</h5><p>Repairs and validates database structures.</p></div>
+    <div class="card"><h5>Index Rebuild</h5><p>Reconstructs indexes as part of the recovery pass.</p></div>
+    <div class="card"><h5>Recovery Advisor</h5><p>Monitors continuously that everything is actually being backed up on schedule.</p></div>
+  </div>
+  <p style="font-size:.93rem;color:var(--ink3)">Instead of restoring twenty databases one at a time from separate tapes, a Recovery Manager groups related databases and replays log and change-accumulation data in a single automated pass — turning an all-night recovery into under two hours.</p>
+
+  <div class="note note--real">
+    <span class="nk">Real example · Tropical Storm Allison floods XYZ Corporation, Houston</span>
+    <p>Three feet of rain floods the basement data centre, knocking out the UPS, network switches and storage devices. But the preparations were in place and tested: <strong>weekly</strong> dual image copies with the second sent off-site; <strong>nightly</strong> change accumulations consolidating updates, with secondary copies shipped off-site each morning; <strong>daily at 6 p.m.</strong> log copies dispatched to off-site storage; and <strong>ongoing</strong> Recovery Advisor jobs verifying that copies and accumulations ran on schedule. When the disaster hit, tapes were shipped to the hot site, RECONs cleaned, recovery JCL built and run — and data was restored without errors. The team executed a practiced plan rather than improvising under pressure.</p>
+  </div>
+  <div class="note note--risk">
+    <span class="nk">Real example · the missing log file</span>
+    <p>The counter-case. A team designed its recovery plan years ago around weekly backups. When a real outage hits, they discover hundreds of logs must be applied and one archive tape is missing — turning an expected two-hour recovery into an eighteen-hour outage. Test the plan before you need it.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Structure a long answer as: the three pressures &rarr; the four planning disciplines &rarr; the BRS components &rarr; a worked example. The XYZ Corporation case is the textbook's own illustration and using it will read as a well-prepared answer.</span></div>
+</section>
+<!-- ===================== SUMMARY ===================== -->
+<section class="topic" id="summary">
+  <div class="exhibit"><span class="exno">REVISION</span><span class="exsrc">One line for each of the thirteen topics</span></div>
+  <h3>The Whole Unit in Thirteen Lines</h3>
+  <p class="lede">If you can write these from memory you can answer any two-mark question in Unit I, and you have the skeleton of every ten-mark answer.</p>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#A2B0C0;font-weight:600">Part A · Fundamentals</h4>
+    <div class="sumrow"><span class="sn">01</span><span class="st">Defined</span><span class="sd">The discovery, analysis and reconstruction of evidence from computer systems, networks, media and peripherals. Objective: material useable as evidence in a court of law. Priority: accuracy, not speed. A computer can be target, instrument or evidence repository.</span></div>
+    <div class="sumrow"><span class="sn">02</span><span class="st">Law enforcement</span><span class="sd">If a computer is at a crime scene there is probably evidence on it — and any examination by a non-specialist, however brief, taints its credibility. Choose the specialist on their own training and their ability to survive cross-examination.</span></div>
+    <div class="sumrow"><span class="sn">03</span><span class="st">HR / employment</span><span class="sd">Evidence for harassment, discrimination and wrongful termination lives in email, on servers and on employee machines. The Employer Safeguard Program images the machine <em>before</em> the employee is told of termination.</span></div>
+    <div class="sumrow"><span class="sn">04</span><span class="st">Services</span><span class="sd">Data seizure, data duplication and preservation, data recovery, document searches, media conversion, expert witness services, computer evidence service options, other miscellaneous services.</span></div>
+    <div class="sumrow"><span class="sn">05</span><span class="st">Benefits of methodology</span><span class="sd">Transferable expertise, knowing which alternate versions to request, faster on-site identification — and six guarantees that no evidence is damaged, no virus introduced, evidence protected afterwards, chain of custody maintained, business barely disrupted, privilege respected.</span></div>
+    <div class="sumrow"><span class="sn">06</span><span class="st">Specialist steps</span><span class="sd">Protect the system, discover all files, recover deleted files, reveal hidden and swap files, access protected files, analyse unallocated and slack space, print an overall analysis, provide consultation and testimony.</span></div>
+  </div>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#A2B0C0;font-weight:600">Part B · Types of Technology</h4>
+    <div class="sumrow"><span class="sn">07</span><span class="st">Military</span><span class="sd">DoD cyber forensics covers trans- and post-attack periods. Objectives: rapid discovery, impact estimation, intent and identity. CFX-2000 tested the hypothesis using SI-FI and tamperproof digital evidence bags with automatic audit.</span></div>
+    <div class="sumrow"><span class="sn">08</span><span class="st">Law enforcement</span><span class="sd">Evidence processing procedures, preservation, trojan horse programs, documentation, file slack, data-hiding techniques and e-commerce investigation. Tools: SafeBack (bit stream imaging), AnaDisk (diskette analysis), CopyQM (diskette duplication), Net Threat Analyzer.</span></div>
+    <div class="sumrow"><span class="sn">09</span><span class="st">Business</span><span class="sd">Remote monitoring via DIRT, trackable electronic documents, theft recovery via PC PhoneHome, basic tools and techniques training, and outsourced forensic services.</span></div>
+  </div>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#A2B0C0;font-weight:600">Part C · Evidence and Capture</h4>
+    <div class="sumrow"><span class="sn">10</span><span class="st">Data recovery defined</span><span class="sd">Trained engineers evaluate and extract data from damaged media and return it in an intact format. Data hides in slack space, alternate data streams, unlinked open files, unoverwritten deleted blocks and swap remnants.</span></div>
+    <div class="sumrow"><span class="sn">11</span><span class="st">Backup and recovery</span><span class="sd">Over 56% of client/server data is not backed up regularly. Four obstacles: backup window, network bandwidth, system throughput, lack of resources. Architectures run shared tape library &rarr; serverless &rarr; LAN-less &rarr; SAN.</span></div>
+    <div class="sumrow"><span class="sn">12</span><span class="st">Role of backup</span><span class="sd">Storage costs are decreasing, systems must be online continuously, and the role of backup has changed — it must now recover user error, not just disaster. Recovery must be available at the file level.</span></div>
+    <div class="sumrow"><span class="sn">13</span><span class="st">The solution</span><span class="sd">Shrinking expertise, human error and downtime cost drive the need. Evaluate preparations, track every resource, automate recovery, make it efficient. BRS: Image Copy, Change Accumulation, Recovery Manager, Pointer Checking, Index Rebuild, Recovery Advisor.</span></div>
+  </div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section class="topic" id="quiz">
+  <div class="exhibit"><span class="exno">SELF-CHECK</span><span class="exsrc">Ten questions across the whole unit</span></div>
+  <h3>Check Yourself</h3>
+  <p class="lede">One attempt per question. Pick an answer and the explanation appears, including why the other options are wrong.</p>
+
+  <div class="quiz" id="quizbox">
+    <div class="q" data-a="2">
+      <p class="qt"><span class="qn">Q1</span>In digital forensics, what is the absolute priority?</p>
+      <div class="opts">
+        <button class="opt">Speed of analysis</button>
+        <button class="opt">Cost efficiency</button>
+        <button class="opt">Accuracy</button>
+        <button class="opt">Recovering the maximum volume of data</button>
+      </div>
+      <p class="qfb">In contrast to every other area of computing, where speed is the main concern, here the absolute priority is accuracy. The textbook phrases the compromise carefully: as fast as possible <em>without sacrificing accuracy</em>.</p>
+    </div>
+
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q2</span>A hacker uses a laptop to break into a bank server, then stores the stolen files on that same laptop. What role or roles did the laptop play?</p>
+      <div class="opts">
+        <button class="opt">Target only</button>
+        <button class="opt">Instrument and evidence repository</button>
+        <button class="opt">Evidence repository only</button>
+        <button class="opt">Target and instrument</button>
+      </div>
+      <p class="qfb">It was the instrument (the tool used to commit the crime) and the evidence repository (the filing cabinet holding the stolen files). It was not the target — the bank server was.</p>
+    </div>
+
+    <div class="q" data-a="3">
+      <p class="qt"><span class="qn">Q3</span>Which of these is <em>not</em> one of the eight digital forensics services?</p>
+      <div class="opts">
+        <button class="opt">Media conversion</button>
+        <button class="opt">Document searches</button>
+        <button class="opt">Expert witness services</button>
+        <button class="opt">Data dump</button>
+      </div>
+      <p class="qfb">The eight are data seizure, data duplication and preservation, data recovery, document searches, media conversion, expert witness services, computer evidence service options, and other miscellaneous services. &ldquo;Data dump&rdquo; is the textbook's own distractor in this exact question.</p>
+    </div>
+
+    <div class="q" data-a="0">
+      <p class="qt"><span class="qn">Q4</span>Under the Employer Safeguard Program, when should the employee's computer be imaged?</p>
+      <div class="opts">
+        <button class="opt">Before the individual is informed of their termination</button>
+        <button class="opt">Immediately after they hand in their laptop</button>
+        <button class="opt">Only if wrongdoing is already suspected</button>
+        <button class="opt">At the next scheduled backup window</button>
+      </div>
+      <p class="qfb">The timing is the whole point. Imaging before the employee knows means that anything they do to the data afterwards can be detected and reversed — and it equally protects the employer against false charges made by the employee.</p>
+    </div>
+
+    <div class="q" data-a="2">
+      <p class="qt"><span class="qn">Q5</span>In CFX-2000, what were digital evidence bags (DEBs) used for?</p>
+      <div class="opts">
+        <button class="opt">Compressing disk images for transport</button>
+        <button class="opt">Encrypting network traffic between investigators</button>
+        <button class="opt">Secure, tamperproof storage of digital evidence with automatic audit of all actions</button>
+        <button class="opt">Detecting steganography in image files</button>
+      </div>
+      <p class="qfb">DEBs are the software equivalent of a police evidence bag. Authorised users can reopen them, but every action is automatically audited, which is what preserves the integrity of the contents. Steganography detection was done by separate tools in the same exercise.</p>
+    </div>
+
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q6</span>Why does SafeBack deliberately avoid compressing relevant data?</p>
+      <div class="opts">
+        <button class="opt">Compression is too slow on DOS systems</button>
+        <button class="opt">To avoid legal arguments that the evidence was altered by compression or software translation</button>
+        <button class="opt">Because compressed files cannot be hashed</button>
+        <button class="opt">Tape drives cannot read compressed images</button>
+      </div>
+      <p class="qfb">It is a legal decision, not a technical one. Giving up disk space removes an avenue of cross-examination. The same instinct explains why version 3.0 uses two separate implementations of SHA-256 rather than one.</p>
+    </div>
+
+    <div class="q" data-a="0">
+      <p class="qt"><span class="qn">Q7</span>What is slack space?</p>
+      <div class="opts">
+        <button class="opt">The leftover bytes in a disk block when a file is smaller than the block size</button>
+        <button class="opt">Disk space reserved by the operating system for swapping</button>
+        <button class="opt">Unpartitioned space at the end of a drive</button>
+        <button class="opt">The gap between the last file and the end of the partition</button>
+      </div>
+      <p class="qfb">Filesystems allocate in fixed-size blocks — typically 1, 2 or 4 KB. A file smaller than its block leaves the remainder unused, and that remainder can conceal data invisibly to the filesystem and to checksum-based integrity checkers.</p>
+    </div>
+
+    <div class="q" data-a="3">
+      <p class="qt"><span class="qn">Q8</span>Which is <em>not</em> one of the four obstacles to backing up?</p>
+      <div class="opts">
+        <button class="opt">Backup window</button>
+        <button class="opt">Network bandwidth</button>
+        <button class="opt">System throughput</button>
+        <button class="opt">Media shelf life</button>
+      </div>
+      <p class="qfb">The fourth obstacle is lack of resources. Media shelf life is a real consideration when selecting a backup storage device, but it is not one of the four named obstacles.</p>
+    </div>
+
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q9</span>In serverless backup (Figure 5.2), what changes compared with a shared tape library?</p>
+      <div class="opts">
+        <button class="opt">Tape is replaced entirely by mirrored disk</button>
+        <button class="opt">Data moves directly from disk to tape, so the backup server is no longer the bottleneck</button>
+        <button class="opt">The backup server handles both index and data at higher speed</button>
+        <button class="opt">Backups run only during the offline window</button>
+      </div>
+      <p class="qfb">The backup server drops out of the data path and keeps only the index and metadata. Performance is then limited chiefly by network bandwidth — which is the bottleneck LAN-less and SAN backup go on to address.</p>
+    </div>
+
+    <div class="q" data-a="2">
+      <p class="qt"><span class="qn">Q10</span>Why does mirroring alone fail as a data protection strategy?</p>
+      <div class="opts">
+        <button class="opt">It is prohibitively expensive at any scale</button>
+        <button class="opt">Mirrored copies cannot be read while synchronising</button>
+        <button class="opt">It faithfully replicates user error and corrupted data</button>
+        <button class="opt">It requires the host to go offline</button>
+      </div>
+      <p class="qfb">Duplicating data after a user has deleted a critical file, or mirroring a file already corrupted by a host process, does not help — the mirror copies the mistake. Mirroring protects against hardware loss and has its place, but backup and mirroring are complementary, not competing, technologies.</p>
+    </div>
+
+    <div class="score" id="score">Answered 0 of 10.</div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer class="foot">
+  <div class="foot-in">
+    <b>Digital Forensics · 20CS41020 · Unit I</b><br>
+    Digital Forensics Fundamentals · Types of Digital Forensics Technology · Digital Forensics Evidence and Capture<br>
+    B.Tech CSE (AIML), IV Year I Sem · AR22 · Geethanjali College of Engineering and Technology<br><br>
+    <b>Prescribed text:</b> John R. Vacca, <i>Computer Forensics: Computer Crime Scene Investigation</i>, Chapters 1, 2 and 5.<br>
+    Named products (SafeBack, AnaDisk, CopyQM, DIRT, PC PhoneHome, Net Threat Analyzer, SI-FI) are cited in the text for illustration.<br>
+    The Satyam and Tropical Storm Allison cases are real; other scenarios are teaching illustrations.
+  </div>
+</footer>
+
+</main>
+</div><!-- /shell -->
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- mobile nav ---------- */
+  var rail=document.getElementById('rail'),
+      scrim=document.getElementById('scrim'),
+      menubtn=document.getElementById('menubtn');
+  function setNav(open){
+    rail.classList.toggle('open',open);
+    scrim.classList.toggle('on',open);
+    menubtn.setAttribute('aria-expanded',open?'true':'false');
+  }
+  menubtn.addEventListener('click',function(){setNav(!rail.classList.contains('open'));});
+  scrim.addEventListener('click',function(){setNav(false);});
+  rail.addEventListener('click',function(e){ if(e.target.closest('a')) setNav(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') setNav(false); });
+
+  /* ---------- scroll progress + rail state ---------- */
+  var links=Array.prototype.slice.call(document.querySelectorAll('.chain a')),
+      sections=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}),
+      prog=document.getElementById('prog'),
+      sealtxt=document.getElementById('sealtxt'),
+      ticking=false;
+
+  function update(){
+    ticking=false;
+    var doc=document.documentElement,
+        max=doc.scrollHeight-doc.clientHeight,
+        y=window.scrollY||doc.scrollTop;
+    prog.style.width=(max>0?(y/max*100):0)+'%';
+    var current=-1;
+    for(var i=0;i<sections.length;i++){
+      if(!sections[i]) continue;
+      if(sections[i].getBoundingClientRect().top<=140) current=i;
+    }
+    for(var j=0;j<links.length;j++){
+      var li=links[j].parentNode;
+      li.classList.toggle('seen', j<=current);
+      li.classList.toggle('here', j===current);
+    }
+    var n=Math.max(0,Math.min(current+1,13));
+    sealtxt.textContent=n+' / 13 sections';
+  }
+  function onScroll(){ if(!ticking){ ticking=true; window.requestAnimationFrame(update); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  update();
+
+  /* ---------- tab groups ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tabs]'),function(group){
+    var tabs=Array.prototype.slice.call(group.querySelectorAll('.tab'));
+    tabs.forEach(function(tab,i){
+      tab.addEventListener('click',function(){ select(i); });
+      tab.addEventListener('keydown',function(e){
+        var d = e.key==='ArrowRight'?1 : e.key==='ArrowLeft'?-1 : 0;
+        if(!d) return;
+        e.preventDefault();
+        var n=(i+d+tabs.length)%tabs.length;
+        select(n); tabs[n].focus();
+      });
+    });
+    function select(i){
+      tabs.forEach(function(t,k){
+        var on = k===i;
+        t.setAttribute('aria-selected', on?'true':'false');
+        var panel=document.getElementById(t.getAttribute('aria-controls'));
+        if(panel) panel.hidden = !on;
+      });
+    }
+  });
+
+  /* ---------- slack space visualiser ---------- */
+  var BLOCK=4096,
+      fsize=document.getElementById('fsize'),
+      fsizeOut=document.getElementById('fsizeOut'),
+      hidechk=document.getElementById('hidechk'),
+      bfile=document.getElementById('bfile'),
+      bslack=document.getElementById('bslack'),
+      fscheck=document.getElementById('fscheck'),
+      fsmsg=document.getElementById('fsmsg');
+
+  function slackUpdate(){
+    var f=+fsize.value, s=BLOCK-f,
+        fp=(f/BLOCK*100), sp=100-fp;
+    bfile.style.width=fp+'%';
+    bslack.style.width=sp+'%';
+    bfile.textContent = fp>18 ? 'FILE DATA' : '';
+    bslack.textContent = sp>20 ? (hidechk.checked?'HIDDEN DATA':'SLACK SPACE') : '';
+    fsizeOut.textContent=f+' B';
+    bslack.classList.toggle('filled', hidechk.checked && s>0);
+
+    if(hidechk.checked && s>0){
+      fscheck.classList.add('alert');
+      fsmsg.innerHTML='File size still reports <span class="mono">'+f+' bytes</span>. '+
+        'Up to <span class="mono">'+s+' bytes</span> of hidden data now sit in the slack. '+
+        'The filesystem cannot see it, MAC times are unchanged, and the file checksum still matches. Only a forensic tool finds it.';
+    } else if(s===0){
+      fscheck.classList.remove('alert');
+      fsmsg.textContent='File exactly fills the 4096-byte block. No slack space, nowhere to hide anything.';
+    } else {
+      fscheck.classList.remove('alert');
+      fsmsg.textContent='File size '+f+' bytes. Slack space '+s+' bytes, unused. Integrity checksum unchanged.';
+    }
+  }
+  fsize.addEventListener('input',slackUpdate);
+  hidechk.addEventListener('change',slackUpdate);
+  slackUpdate();
+
+  /* ---------- quiz ---------- */
+  var qs=Array.prototype.slice.call(document.querySelectorAll('.q')),
+      scoreEl=document.getElementById('score'),
+      total=qs.length, done=0, right=0;
+  qs.forEach(function(q){
+    var correct=+q.dataset.a,
+        opts=Array.prototype.slice.call(q.querySelectorAll('.opt')),
+        fb=q.querySelector('.qfb'),
+        answered=false;
+    opts.forEach(function(o,i){
+      o.addEventListener('click',function(){
+        if(answered) return;
+        answered=true; done++;
+        if(i===correct) right++;
+        opts.forEach(function(x,k){
+          if(k===correct) x.classList.add('right');
+          else if(k===i) x.classList.add('wrong');
+          x.disabled=true;
+        });
+        fb.classList.add('show');
+        scoreEl.textContent='Answered '+done+' of '+total+' · '+right+' correct.'+
+          (done===total?(right>=8?'  Solid.':'  Worth another read of the sections you missed.'):'');
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
