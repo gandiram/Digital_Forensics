@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit II — Evidence Collection, Data Seizure &amp; Preservation | Digital Forensics</title>
+<meta name="description" content="A complete plain-language guide to Unit II of Digital Forensics (20CS41020): evidence collection and data seizure, duplication and preservation of digital evidence, and computer image verification and authentication.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================= TOKENS ================= */
+:root{
+  --paper:#EDF0F3; --panel:#FFFFFF; --panel2:#F6F8FA; --panel3:#E3E9EF;
+  --ink:#0F1620; --ink2:#374350; --ink3:#5A6673;
+  --rule:#D4DBE2; --rule2:#BEC8D3;
+  --custody:#23456E; --custody2:#35618F; --custodybg:#E9EEF5; --custodyline:#C3D2E3;
+  --seal:#AE202A; --sealbg:#FBEDEE; --sealline:#E9C5C8;
+  --verify:#0B6E5A; --verifybg:#E7F3F0; --verifyline:#B7DBD2;
+  --tag:#8F6206; --tagbg:#FCF3DE; --tagline:#E8D5A4;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --rail:274px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.2rem;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;font-optical-sizing:auto}
+img,svg{max-width:100%;display:block}
+a{color:var(--custody);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--custody2);outline-offset:2px;border-radius:2px}
+p{margin:0 0 .9rem}
+strong{font-weight:600}
+
+/* ================= LAYOUT ================= */
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:.7rem 1rem;z-index:300;font-family:var(--sans);font-weight:600}
+.skip:focus{left:.5rem;top:.5rem}
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);max-width:1520px;margin:0 auto}
+.main{min-width:0;padding:0 clamp(1rem,3.2vw,3rem) 6rem}
+.wrap{max-width:900px;margin:0 auto}
+
+/* ================= CUSTODY RAIL (signature) ================= */
+.rail{position:sticky;top:0;height:100vh;background:var(--ink);color:#C7D2DE;display:flex;flex-direction:column;z-index:60}
+.railhead{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid #222B36;flex:0 0 auto}
+.railkick{font-family:var(--mono);font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#96A5B6}
+.railtitle{font-family:var(--sans);font-weight:800;font-size:1rem;letter-spacing:-.01em;color:#fff;margin:.35rem 0 .2rem;line-height:1.22}
+.railsub{font-family:var(--mono);font-size:.64rem;color:#8595A6;letter-spacing:.03em}
+.railseal{margin-top:.75rem;display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase}
+.railseal .dot{width:.5rem;height:.5rem;border-radius:50%;background:#2FA98A;box-shadow:0 0 0 3px rgba(47,169,138,.18)}
+.railseal .txt{color:#57C0A4}
+body.broken .railseal .dot{background:#E0525C;box-shadow:0 0 0 3px rgba(224,82,92,.2)}
+body.broken .railseal .txt{color:#F08A92}
+.railscroll{overflow-y:auto;padding:.85rem .5rem 3rem 1.2rem;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:#2B3644 transparent}
+.railscroll::-webkit-scrollbar{width:6px}
+.railscroll::-webkit-scrollbar-thumb{background:#2B3644;border-radius:3px}
+.railpart{font-family:var(--mono);font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:#8595A6;margin:1.15rem 0 .45rem;padding-left:1.5rem}
+.railpart:first-of-type{margin-top:.15rem}
+.chain{list-style:none;margin:0;padding:0;position:relative}
+.chain::before{content:"";position:absolute;left:.43rem;top:.6rem;bottom:.6rem;width:2px;background:#222C38}
+.chain li{position:relative}
+.chain a{display:flex;gap:.5rem;align-items:baseline;padding:.3rem .5rem .3rem 1.5rem;text-decoration:none;color:#AAB8C7;font-family:var(--sans);font-size:.79rem;line-height:1.32;font-weight:500;border-radius:4px;transition:color .18s,background .18s}
+.chain a:hover{color:#fff;background:#1A222C}
+.chain a::before{content:"";position:absolute;left:.18rem;top:.6rem;width:.52rem;height:.52rem;border:2px solid #35414E;background:var(--ink);border-radius:1px;transition:background .22s,border-color .22s}
+.chain a .n{font-family:var(--mono);font-size:.62rem;color:#8595A6;flex:0 0 auto}
+.chain li.seen > a::before{background:#3C6E93;border-color:#4E86AE}
+.chain li.here > a{color:#fff;background:#1B242F}
+.chain li.here > a::before{background:#E9B949;border-color:#E9B949}
+.chain li.here > a .n{color:#E9B949}
+body.broken .chain li.seen > a::before{background:#8A3038;border-color:#A83E47}
+
+/* mobile nav */
+.mobar{display:none;position:sticky;top:0;z-index:70;background:var(--ink);color:#fff;align-items:center;gap:.7rem;padding:.6rem .9rem;border-bottom:1px solid #222B36}
+.mobar b{font-family:var(--sans);font-size:.86rem;font-weight:700;letter-spacing:-.01em}
+.mobar small{font-family:var(--mono);font-size:.62rem;color:#96A5B6;letter-spacing:.08em;text-transform:uppercase}
+.menubtn{margin-left:auto;background:#1D2733;color:#fff;border:1px solid #2E3A48;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .7rem;border-radius:3px;cursor:pointer}
+.progress{position:fixed;top:0;left:0;height:3px;background:#E9B949;width:0;z-index:90;transition:width .1s linear}
+
+/* ================= HERO / CASE FILE ================= */
+.hero{background:var(--ink);color:#E7EDF3;margin:0 calc(-1*clamp(1rem,3.2vw,3rem));padding:clamp(2rem,5vw,3.6rem) clamp(1rem,3.2vw,3rem) clamp(2rem,4vw,3rem);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px);pointer-events:none}
+.hero-in{max-width:900px;margin:0 auto;position:relative;z-index:1}
+.filebar{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#A2B0C0;border-bottom:1px solid #26303C;padding-bottom:.8rem;margin-bottom:1.6rem}
+.filebar .stamp{color:#0F1620;background:#E9B949;padding:.2rem .5rem;border-radius:2px;font-weight:600;letter-spacing:.1em}
+.hero h1{font-family:var(--sans);font-weight:800;font-size:clamp(2rem,5.4vw,3.5rem);line-height:1.03;letter-spacing:-.028em;margin:0 0 1rem;color:#fff;text-wrap:balance}
+.hero h1 em{font-style:normal;color:#E9B949}
+.hero .lede{font-size:clamp(1.02rem,1.7vw,1.18rem);color:#B7C4D2;max-width:60ch;margin:0 0 1.8rem}
+.herometa{display:flex;flex-wrap:wrap;gap:.5rem}
+.pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;padding:.35rem .65rem;border:1px solid #2E3A48;border-radius:2px;color:#AEBCCB;background:#161E28}
+
+/* case timeline */
+.tl{margin:2.2rem 0 0;border-top:1px solid #26303C;padding-top:1.5rem}
+.tl h2{font-family:var(--mono);font-size:.66rem;letter-spacing:.17em;text-transform:uppercase;color:#A2B0C0;font-weight:500;margin:0 0 1rem}
+.tlgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:tl}
+.tlstep{position:relative;padding:.9rem .8rem .9rem 0;border-top:2px solid #2E3A48}
+.tlstep:nth-child(1){border-top-color:#E9B949}
+.tlstep::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;background:#2E3A48;border-radius:1px}
+.tlstep:nth-child(1)::before{background:#E9B949}
+.tltime{font-family:var(--mono);font-size:.78rem;color:#E9B949;font-weight:500;display:block;margin-bottom:.25rem}
+.tltxt{font-size:.86rem;line-height:1.4;color:#AEBCCB;font-family:var(--sans)}
+@media (max-width:820px){.tlgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.tlgrid{grid-template-columns:1fr}}
+
+/* ================= SECTION / TOPIC ================= */
+.partbreak{margin:4.5rem 0 2.5rem;padding-top:2rem;border-top:3px solid var(--ink)}
+.partbreak .pk{font-family:var(--mono);font-size:.66rem;letter-spacing:.19em;text-transform:uppercase;color:var(--seal);font-weight:600}
+.partbreak h2{font-family:var(--sans);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.15rem);letter-spacing:-.022em;margin:.5rem 0 .5rem;line-height:1.12}
+.partbreak p{color:var(--ink2);max-width:62ch;margin:0}
+
+.topic{scroll-margin-top:1.2rem;padding:2.6rem 0 0;border-top:1px solid var(--rule);margin-top:2.6rem}
+.topic:first-of-type{border-top:0;margin-top:0}
+.exhibit{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin-bottom:.85rem}
+.exno{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.1em;background:var(--tagbg);color:var(--tag);border:1px solid var(--tagline);padding:.24rem .55rem;border-radius:2px}
+.exsrc{font-family:var(--mono);font-size:.66rem;color:var(--ink3);letter-spacing:.03em}
+.topic h3{font-family:var(--sans);font-weight:700;font-size:clamp(1.42rem,3vw,2rem);letter-spacing:-.022em;line-height:1.14;margin:0 0 .7rem;text-wrap:balance}
+.lede{font-size:1.06rem;color:var(--ink2);max-width:66ch;margin:0 0 1.4rem}
+h4{font-family:var(--sans);font-weight:700;font-size:1.02rem;letter-spacing:-.008em;margin:1.8rem 0 .7rem}
+h5{font-family:var(--sans);font-weight:700;font-size:.85rem;letter-spacing:.02em;margin:0 0 .5rem;text-transform:none}
+
+/* ================= PANELS & CARDS ================= */
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.25rem;margin:1.1rem 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media (max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.05rem 1.1rem}
+.card h5{font-size:.95rem;margin-bottom:.4rem}
+.card p{font-size:.94rem;margin:0;color:var(--ink2)}
+.card .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:.4rem}
+.card--risk{background:var(--sealbg);border-color:var(--sealline)}
+.card--risk h5{color:var(--seal)}
+.card--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.card--safe h5{color:var(--verify)}
+.card--cust{background:var(--custodybg);border-color:var(--custodyline)}
+.card--cust h5{color:var(--custody)}
+.card--dark{background:var(--ink);border-color:var(--ink)}
+.card--dark h5{color:#E9B949}
+.card--dark p,.card--dark li{color:#C2CEDA}
+.card--dark .k{color:#A2B0C0}
+
+/* notes */
+.note{border-radius:6px;padding:1rem 1.1rem 1rem 1.15rem;margin:1.2rem 0;border:1px solid;font-size:.95rem}
+.note .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:.35rem}
+.note p:last-child{margin-bottom:0}
+.note--case{background:var(--custodybg);border-color:var(--custodyline)}
+.note--case .nk{color:var(--custody)}
+.note--real{background:var(--tagbg);border-color:var(--tagline)}
+.note--real .nk{color:var(--tag)}
+.note--risk{background:var(--sealbg);border-color:var(--sealline)}
+.note--risk .nk{color:var(--seal)}
+.note--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.note--safe .nk{color:var(--verify)}
+
+/* exam pointer */
+.exam{display:flex;gap:.8rem;align-items:flex-start;margin:1.3rem 0 .3rem;padding:.75rem .95rem;background:var(--panel2);border-left:3px solid var(--ink);border-radius:0 4px 4px 0;font-size:.92rem}
+.exam b{font-family:var(--mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);flex:0 0 auto;padding-top:.16rem}
+.exam span{color:var(--ink2)}
+
+/* lists */
+ul.clean,ol.clean{margin:.4rem 0 1rem;padding-left:1.15rem}
+ul.clean li,ol.clean li{margin-bottom:.42rem;font-size:.97rem}
+ul.clean li::marker{color:var(--custody2)}
+ol.clean li::marker{font-family:var(--mono);font-size:.82rem;color:var(--custody2)}
+ul.ticks{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.ticks li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.ticks li::before{content:"";position:absolute;left:0;top:.52em;width:.62rem;height:.62rem;border:2px solid var(--verify);border-radius:1px}
+ul.crosses{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.crosses li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.crosses li::before{content:"\00d7";position:absolute;left:.06rem;top:-.05em;color:var(--seal);font-weight:700;font-size:1.1rem}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:1.1rem 0;font-size:.93rem;background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.tbl th{font-family:var(--sans);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;text-align:left;background:var(--ink);color:#DCE4EC;padding:.6rem .8rem;font-weight:600}
+.tbl td{padding:.65rem .8rem;border-top:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+.tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--ink);font-size:.9rem}
+.tbl tr:nth-child(even) td{background:var(--panel2)}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* mono chip */
+.mono{font-family:var(--mono);font-size:.86em;background:var(--panel3);padding:.1em .38em;border-radius:3px;color:var(--ink)}
+.hash{font-family:var(--mono);font-size:.8rem;letter-spacing:.02em}
+
+/* pull quote */
+.pull{border-left:3px solid var(--tag);padding:.3rem 0 .3rem 1.1rem;margin:1.4rem 0;font-size:1.1rem;line-height:1.5;color:var(--ink);font-style:italic}
+.pull cite{display:block;font-style:normal;font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:.5rem}
+</style>
+<style>
+/* ================= INTERACTIVE COMPONENTS ================= */
+
+/* two-path chooser (collection options, freezing vs honeypot) */
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.2rem 0}
+@media (max-width:760px){.paths{grid-template-columns:1fr}}
+.path{background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.path-h{padding:.7rem 1rem;font-family:var(--sans);font-weight:700;font-size:.95rem;color:#fff;display:flex;align-items:center;gap:.5rem}
+.path-a .path-h{background:var(--custody)}
+.path-b .path-h{background:var(--tag)}
+.path-body{padding:1rem}
+.path-body p{font-size:.94rem;color:var(--ink2)}
+.tradeoff{margin-top:.8rem;padding-top:.8rem;border-top:1px dashed var(--rule2)}
+.tradeoff div{display:flex;gap:.5rem;font-size:.9rem;margin-bottom:.4rem;align-items:flex-start}
+.tradeoff .lbl{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;flex:0 0 3.6rem;padding-top:.2rem}
+.tradeoff .up .lbl{color:var(--verify)}
+.tradeoff .dn .lbl{color:var(--seal)}
+
+/* comparison strip: paper vs electronic */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin:1.2rem 0;background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.vs-col{padding:1rem}
+.vs-col h5{font-family:var(--mono);font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.8rem}
+.vs-a{background:var(--verifybg)}
+.vs-a h5{color:var(--verify)}
+.vs-b{background:var(--sealbg)}
+.vs-b h5{color:var(--seal)}
+.vs-mid{width:1px;background:var(--rule)}
+.vs-row{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:4px;padding:.5rem .65rem;margin-bottom:.45rem}
+.vs-row b{display:block;font-family:var(--sans);font-size:.85rem;font-weight:600}
+.vs-row span{font-size:.8rem;color:var(--ink3)}
+@media (max-width:760px){.vs{grid-template-columns:1fr}.vs-mid{width:auto;height:1px}}
+
+/* order of volatility ladder */
+.vol{margin:1.2rem 0;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.vol-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;padding:.55rem .8rem;background:var(--ink);color:#A2B0C0}
+.vol-h .a{color:#E9B949}
+.vol-h .b{color:#7FA3C4}
+.volitem{display:grid;grid-template-columns:2.6rem 1fr;align-items:stretch;border-top:1px solid var(--rule);cursor:pointer;background:none;width:100%;text-align:left;font-family:inherit;padding:0;color:inherit}
+.volitem:first-of-type{border-top:0}
+.voln{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.82rem;font-weight:600;color:#fff}
+.volbody{padding:.55rem .8rem}
+.volbody b{font-family:var(--sans);font-size:.92rem;font-weight:600;display:block}
+.volbody .why{font-size:.85rem;color:var(--ink3);display:none;margin-top:.2rem}
+.volitem[aria-expanded="true"] .why{display:block}
+.volitem:hover .volbody b{color:var(--custody)}
+
+/* chain of custody (signature interaction) */
+.cocwrap{margin:1.3rem 0}
+.coc{display:grid;grid-template-columns:repeat(6,1fr);gap:0;position:relative}
+.coclink{background:var(--panel);border:1px solid var(--rule);border-right:0;padding:.85rem .7rem;position:relative;text-align:left;font-family:inherit;cursor:pointer;transition:background .2s,border-color .2s}
+.coclink:first-child{border-radius:6px 0 0 6px}
+.coclink:last-child{border-right:1px solid var(--rule);border-radius:0 6px 6px 0}
+.coclink .st{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:block}
+.coclink .nm{font-family:var(--sans);font-size:.83rem;font-weight:700;display:block;margin:.28rem 0 .18rem;line-height:1.2}
+.coclink .who{font-size:.76rem;color:var(--ink3);font-family:var(--mono)}
+.coclink .sig{margin-top:.5rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:var(--verify)}
+.coclink[aria-pressed="true"]{background:var(--custodybg);border-color:var(--custody2);z-index:2}
+.coclink.snapped{background:var(--sealbg);border-color:var(--sealline)}
+.coclink.snapped .sig{color:var(--seal);text-decoration:line-through}
+body.broken .coclink{background:var(--sealbg);border-color:var(--sealline)}
+body.broken .coclink .sig{color:var(--seal)}
+@media (max-width:760px){
+  .coc{grid-template-columns:1fr}
+  .coclink{border-right:1px solid var(--rule);border-bottom:0}
+  .coclink:first-child{border-radius:6px 6px 0 0}
+  .coclink:last-child{border-radius:0 0 6px 6px;border-bottom:1px solid var(--rule)}
+  .coclink+.coclink{border-top:0}
+}
+.cocout{margin-top:.9rem;padding:.9rem 1rem;border-radius:6px;background:var(--verifybg);border:1px solid var(--verifyline);font-size:.94rem;min-height:4.2rem}
+.cocout .h{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--verify);display:block;margin-bottom:.3rem}
+body.broken .cocout{background:var(--sealbg);border-color:var(--sealline)}
+body.broken .cocout .h{color:var(--seal)}
+.cocbtn{margin-top:.9rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--sans);font-weight:600;font-size:.82rem;padding:.5rem .95rem;border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;transition:opacity .18s}
+.btn:hover{opacity:.85}
+.btn--ghost{background:transparent;color:var(--ink)}
+.btn--seal{background:var(--seal);border-color:var(--seal)}
+.hint{font-family:var(--mono);font-size:.68rem;color:var(--ink2);letter-spacing:.03em}
+
+/* disk map */
+.disk{display:grid;grid-template-columns:3.2fr 2.4fr 2.8fr 2.6fr;gap:3px;margin:1.1rem 0 .5rem;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--rule)}
+@media (max-width:760px){.disk{grid-template-columns:1fr}}
+.dseg{background:var(--panel);padding:0}
+.dseg .dh{padding:.5rem .7rem;font-family:var(--sans);font-size:.82rem;font-weight:700;color:#fff}
+.dseg .db{padding:.6rem .7rem;font-size:.83rem;color:var(--ink2)}
+.d1 .dh{background:var(--verify)} .d1{background:var(--verifybg)}
+.d2 .dh{background:#8F6206} .d2{background:var(--tagbg)}
+.d3 .dh{background:#5B3E7A} .d3{background:#F0EAF6}
+.d4 .dh{background:var(--custody2)} .d4{background:var(--custodybg)}
+.disklabels{display:grid;grid-template-columns:3.2fr 8fr;gap:3px;margin-bottom:1.2rem}
+@media (max-width:760px){.disklabels{grid-template-columns:1fr}}
+.dl{padding:.42rem .7rem;border-radius:4px;font-family:var(--sans);font-size:.79rem;font-weight:600;text-align:center}
+.dl-a{background:var(--verifybg);color:var(--verify);border:1px solid var(--verifyline)}
+.dl-b{background:var(--sealbg);color:var(--seal);border:1px solid var(--sealline)}
+
+/* flow diagram */
+.flow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:stretch;margin:1.1rem 0}
+.fstep{flex:1 1 8rem;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:.65rem .7rem;position:relative}
+.fstep .fn{font-family:var(--mono);font-size:.6rem;color:var(--custody2);letter-spacing:.1em}
+.fstep b{display:block;font-family:var(--sans);font-size:.86rem;font-weight:700;margin:.2rem 0 .18rem;line-height:1.2}
+.fstep span{font-size:.8rem;color:var(--ink3);line-height:1.35;display:block}
+.fstep--dark{background:var(--ink);border-color:var(--ink)}
+.fstep--dark b{color:#fff}.fstep--dark span{color:#AEBCCB}.fstep--dark .fn{color:#E9B949}
+
+/* phase columns for 16 steps */
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.1rem 0}
+@media (max-width:860px){.phases{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.phases{grid-template-columns:1fr}}
+.phase{background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.phase h5{padding:.5rem .7rem;color:#fff;font-family:var(--sans);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.p1 h5{background:var(--custody)} .p2 h5{background:#5B3E7A} .p3 h5{background:#8F6206} .p4 h5{background:var(--verify)}
+.phase ol{list-style:none;margin:0;padding:.5rem}
+.phase li{margin:0}
+.stepchk{display:flex;gap:.5rem;align-items:flex-start;width:100%;text-align:left;background:none;border:0;padding:.36rem .35rem;font-family:inherit;font-size:.83rem;color:var(--ink2);cursor:pointer;border-radius:4px;line-height:1.3}
+.stepchk:hover{background:var(--panel2)}
+.stepchk .bx{flex:0 0 auto;width:.85rem;height:.85rem;border:2px solid var(--rule2);border-radius:2px;margin-top:.18rem;position:relative}
+.stepchk[aria-pressed="true"] .bx{background:var(--verify);border-color:var(--verify)}
+.stepchk[aria-pressed="true"] .bx::after{content:"";position:absolute;left:.16rem;top:.01rem;width:.2rem;height:.42rem;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.stepchk[aria-pressed="true"]{color:var(--ink3);text-decoration:line-through}
+.stepchk .sn{font-family:var(--mono);font-size:.72rem;color:var(--custody2);flex:0 0 auto}
+.chkbar{display:flex;align-items:center;gap:.7rem;margin:.5rem 0 0;font-family:var(--mono);font-size:.68rem;color:var(--ink3);letter-spacing:.05em}
+.chkbar .track{flex:1;height:5px;background:var(--panel3);border-radius:3px;overflow:hidden}
+.chkbar .fill{height:100%;width:0;background:var(--verify);transition:width .25s}
+
+/* hash compare */
+.hashcmp{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin:1.2rem 0;align-items:stretch}
+@media (max-width:760px){.hashcmp{grid-template-columns:1fr}}
+.hbox{border:1px solid var(--rule);border-radius:6px;padding:.9rem 1rem;background:var(--panel)}
+.hbox.good{background:var(--verifybg);border-color:var(--verifyline)}
+.hbox.bad{background:var(--sealbg);border-color:var(--sealline)}
+.hbox h5{font-family:var(--mono);font-size:.63rem;letter-spacing:.11em;text-transform:uppercase;margin-bottom:.6rem}
+.hbox.good h5{color:var(--verify)} .hbox.bad h5{color:var(--seal)}
+.hrow{display:flex;justify-content:space-between;gap:.6rem;padding:.32rem 0;border-bottom:1px dashed rgba(0,0,0,.09);font-size:.83rem}
+.hrow:last-child{border-bottom:0}
+.hrow .k{color:var(--ink3);font-family:var(--sans);font-size:.78rem}
+.hrow .v{font-family:var(--mono);font-size:.78rem;text-align:right}
+.hrow.key .v{font-weight:600}
+.hbox.good .hrow.key .v{color:var(--verify)}
+.hbox.bad .hrow.key .v{color:var(--seal)}
+.hvs{display:flex;align-items:center;justify-content:center;padding:0 .7rem;font-family:var(--mono);font-size:.7rem;color:var(--ink3);letter-spacing:.1em}
+@media (max-width:760px){.hvs{padding:.5rem 0}}
+
+/* authenticode figure */
+.auth{display:grid;grid-template-columns:1fr 1.15fr;gap:1rem;margin:1.2rem 0}
+@media (max-width:760px){.auth{grid-template-columns:1fr}}
+.authpkg{background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:.85rem}
+.authpkg .t{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:.55rem;display:block}
+.apart{border:1.5px solid;border-radius:4px;padding:.5rem .6rem;margin-bottom:.45rem;font-size:.82rem;background:#fff}
+.apart b{display:block;font-family:var(--sans);font-size:.84rem}
+.apart span{color:var(--ink3);font-size:.76rem}
+.a1{border-color:var(--custody2)} .a1 b{color:var(--custody)}
+.a2{border-color:#5B3E7A} .a2 b{color:#5B3E7A}
+.a3{border-color:var(--verify)} .a3 b{color:var(--verify)}
+.authpaths{display:flex;flex-direction:column;gap:.55rem}
+.apath{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.anode{background:var(--panel);border:1.5px solid var(--rule);border-radius:4px;padding:.42rem .6rem;font-family:var(--sans);font-size:.79rem;font-weight:600;flex:1 1 auto;min-width:0}
+.anode.op{background:var(--ink);color:#fff;border-color:var(--ink);flex:0 1 auto}
+.anode.op.p2{background:#5B3E7A;border-color:#5B3E7A}
+.arrow{font-family:var(--mono);color:var(--ink2);flex:0 0 auto;font-size:1rem;font-weight:600}
+.acmp{background:#E9B949;border:1.5px solid #C79A20;border-radius:5px;padding:.6rem .8rem;text-align:center;font-family:var(--sans);font-weight:700;font-size:.9rem;margin-top:.2rem}
+
+/* cartridge */
+.cart{display:grid;grid-template-columns:1.05fr 1.5fr .95fr;gap:.5rem;margin:1.1rem 0}
+@media (max-width:760px){.cart{grid-template-columns:1fr}}
+.czone{border:1.5px solid;border-radius:6px;padding:.75rem .8rem;font-size:.83rem}
+.czone h5{font-family:var(--mono);font-size:.6rem;letter-spacing:.11em;text-transform:uppercase;margin-bottom:.5rem}
+.cz1{background:#F0EAF6;border-color:#C9B6DC} .cz1 h5{color:#5B3E7A}
+.cz2{background:var(--panel2);border-color:var(--rule2)} .cz2 h5{color:var(--custody)}
+.cz3{background:var(--verifybg);border-color:var(--verifyline)} .cz3 h5{color:var(--verify)}
+.sectors{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;margin:.5rem 0 .35rem}
+.sectors i{display:block;height:.62rem;background:#CBD6E3;border-radius:1px}
+.sectors i:nth-child(3n){background:#B6C5D6}
+
+/* quiz */
+.quiz{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.2rem 0}
+.q{border-top:1px solid var(--rule);padding-top:1.1rem;margin-top:1.1rem}
+.q:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.q p.qt{font-family:var(--sans);font-weight:600;font-size:.98rem;margin-bottom:.6rem}
+.q p.qt .qn{font-family:var(--mono);font-size:.72rem;color:var(--custody2);margin-right:.4rem}
+.opts{display:flex;flex-direction:column;gap:.35rem}
+.opt{text-align:left;font-family:inherit;font-size:.92rem;padding:.5rem .7rem;border:1px solid var(--rule);border-radius:4px;background:var(--panel2);cursor:pointer;transition:background .15s,border-color .15s;color:var(--ink2)}
+.opt:hover{background:var(--custodybg);border-color:var(--custodyline)}
+.opt.right{background:var(--verifybg);border-color:var(--verify);color:var(--verify);font-weight:600}
+.opt.wrong{background:var(--sealbg);border-color:var(--seal);color:var(--seal)}
+.qfb{font-size:.88rem;color:var(--ink2);margin-top:.55rem;padding-left:.7rem;border-left:2px solid var(--rule2);display:none}
+.qfb.show{display:block}
+.score{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;color:var(--ink3);margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--rule)}
+
+/* summary table */
+.sumcard{background:var(--ink);border-radius:8px;padding:1.4rem 1.5rem;margin:1.3rem 0;color:#DCE4EC}
+.sumcard h4{color:#fff;margin-top:0}
+.sumrow{display:grid;grid-template-columns:1.5rem 11rem 1fr;gap:.7rem;padding:.6rem 0;border-top:1px solid #232C38;align-items:baseline}
+.sumrow:first-of-type{border-top:0}
+.sumrow .sn{font-family:var(--mono);font-size:.7rem;color:#E9B949}
+.sumrow .st{font-family:var(--sans);font-weight:600;font-size:.86rem;color:#E9B949}
+.sumrow .sd{font-size:.88rem;color:#BCC9D6;line-height:1.45}
+@media (max-width:700px){.sumrow{grid-template-columns:1.5rem 1fr}.sumrow .sd{grid-column:2}}
+
+/* footer */
+.foot{margin:5rem calc(-1*clamp(1rem,3.2vw,3rem)) 0;background:var(--ink);color:#A2B0C0;padding:2.4rem clamp(1rem,3.2vw,3rem)}
+.foot-in{max-width:900px;margin:0 auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;line-height:1.8}
+.foot b{color:#DCE4EC;font-weight:500}
+
+/* print */
+@media print{
+  .rail,.mobar,.progress,.cocbtn,.btn,.quiz{display:none!important}
+  .shell{grid-template-columns:1fr}
+  body{background:#fff;font-size:11pt}
+  .hero,.foot{background:#fff;color:#000;margin:0;padding:0 0 1rem}
+  .hero h1{color:#000}.hero .lede{color:#333}
+  .topic{break-inside:avoid;page-break-inside:avoid}
+  .volitem .why{display:block!important}
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);transform:translateX(-102%);transition:transform .28s ease;box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .rail.open{transform:none}
+  .mobar{display:flex}
+  .scrim{position:fixed;inset:0;background:rgba(6,10,15,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.on{opacity:1;pointer-events:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="prog"></div>
+
+<div class="mobar">
+  <div>
+    <small>Digital Forensics</small><br><b>Unit II — Evidence &amp; Preservation</b>
+  </div>
+  <button class="menubtn" id="menubtn" aria-expanded="false" aria-controls="rail">Contents</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Unit II contents">
+  <div class="railhead">
+    <div class="railkick">20CS41020 · Unit II</div>
+    <div class="railtitle">Evidence Collection, Seizure &amp; Preservation</div>
+    <div class="railsub">B.Tech CSE (AIML) · AR22</div>
+    <div class="railseal"><span class="dot"></span><span class="txt" id="sealtxt">Chain intact</span></div>
+  </div>
+  <div class="railscroll">
+    <div class="railpart">Part A · Evidence Collection and Data Seizure</div>
+    <ul class="chain" id="chain">
+      <li><a href="#t01"><span class="n">01</span><span>Reasons to Collect Evidence</span></a></li>
+      <li><a href="#t02"><span class="n">02</span><span>Collection Options</span></a></li>
+      <li><a href="#t03"><span class="n">03</span><span>Obstacles</span></a></li>
+      <li><a href="#t04"><span class="n">04</span><span>Types of Evidence</span></a></li>
+      <li><a href="#t05"><span class="n">05</span><span>The Rules of Evidence</span></a></li>
+      <li><a href="#t06"><span class="n">06</span><span>Volatile Evidence</span></a></li>
+      <li><a href="#t07"><span class="n">07</span><span>General Procedure</span></a></li>
+      <li><a href="#t08"><span class="n">08</span><span>Collection and Archiving</span></a></li>
+      <li><a href="#t09"><span class="n">09</span><span>Methods of Collection</span></a></li>
+      <li><a href="#t10"><span class="n">10</span><span>Artifacts</span></a></li>
+      <li><a href="#t11"><span class="n">11</span><span>Collection Steps</span></a></li>
+      <li><a href="#t12"><span class="n">12</span><span>Controlling Contamination</span></a></li>
+      <li><a href="#t13"><span class="n">13</span><span>The Chain of Custody</span></a></li>
+    </ul>
+    <div class="railpart">Part B · Duplication &amp; Preservation</div>
+    <ul class="chain">
+      <li><a href="#t14"><span class="n">14</span><span>Preserving the Digital Crime Scene</span></a></li>
+      <li><a href="#t15"><span class="n">15</span><span>Computer Evidence Processing Steps</span></a></li>
+      <li><a href="#t16"><span class="n">16</span><span>Legal Aspects of Collecting &amp; Preserving</span></a></li>
+    </ul>
+    <div class="railpart">Part C · Image Verification</div>
+    <ul class="chain">
+      <li><a href="#t17"><span class="n">17</span><span>Computer Image Verification &amp; Authentication</span></a></li>
+      <li><a href="#t18"><span class="n">18</span><span>Special Needs of Evidential Authentication</span></a></li>
+      <li><a href="#t19"><span class="n">19</span><span>Practical Consideration</span></a></li>
+      <li><a href="#t20"><span class="n">20</span><span>Practical Implementation</span></a></li>
+    </ul>
+    <div class="railpart">Revision</div>
+    <ul class="chain">
+      <li><a href="#summary"><span class="n">S</span><span>One-line Summary of All 20</span></a></li>
+      <li><a href="#quiz"><span class="n">Q</span><span>Check Yourself</span></a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main" id="main">
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="filebar">
+      <span class="stamp">Case File</span>
+      <span>Ref: DF/U-II/AR22</span>
+      <span>Subject: 20CS41020 Digital Forensics</span>
+      <span>Source: Vacca, Ch. 6–8</span>
+    </div>
+    <h1>Evidence is easy to lose.<br>This unit is about <em>not losing it.</em></h1>
+    <p class="lede">Twenty topics, in syllabus order, each explained in plain language and traced through one running case — the TechCorp breach. By the end you should be able to take a compromised machine from the moment it is discovered all the way to a courtroom without the evidence falling apart on the way.</p>
+    <div class="herometa">
+      <span class="pill">20 topics</span>
+      <span class="pill">One running case</span>
+      <span class="pill">Real incidents</span>
+      <span class="pill">Exam pointers</span>
+      <span class="pill">Self-check quiz</span>
+    </div>
+
+    <div class="tl">
+      <h2>The running case — TechCorp breach</h2>
+      <div class="tlgrid">
+        <div class="tlstep"><span class="tltime">02:00</span><span class="tltxt">An intruder logs in to the file server using a stolen credential.</span></div>
+        <div class="tlstep"><span class="tltime">02:07</span><span class="tltxt">Confidential client files are copied off the server.</span></div>
+        <div class="tlstep"><span class="tltime">07:30</span><span class="tltxt">IT discovers the breach and calls investigators. Server still powered on.</span></div>
+        <div class="tlstep"><span class="tltime">Day 2–5</span><span class="tltxt">Evidence is collected, preserved and analysed.</span></div>
+        <div class="tlstep"><span class="tltime">Trial</span><span class="tltxt">Evidence is presented — and attacked by the defence.</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="partbreak">
+  <div class="pk">Part A · Chapter 6</div>
+  <h2>Evidence Collection and Data Seizure</h2>
+  <p>Electronic evidence has none of the permanence that conventional evidence has, and it is much harder to form into a coherent argument. Part A is about getting hold of it before it disappears, and getting hold of it in a way that a court will still accept months later.</p>
+</div>
+
+<!-- ===================== 01 ===================== -->
+<section class="topic" id="t01">
+  <div class="exhibit"><span class="exno">EX-01</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Why Collect Evidence?&rdquo; · pp. 217–218</span></div>
+  <h3>Reasons to Collect Evidence</h3>
+  <p class="lede">Collecting electronic evidence is expensive. The procedures are strict and exhaustive, the affected systems may be unusable for a long time, and everything collected still has to be analysed. So why bother? There are two reasons.</p>
+
+  <div class="grid2">
+    <div class="card card--cust">
+      <span class="k">Reason 1</span>
+      <h5>Future prevention</h5>
+      <p>Without knowing what happened, you have no hope of stopping someone else — or the same attacker — from doing it again. It is the digital equivalent of not fixing the lock after a break-in. Collection is costly, but repeatedly recovering from the same compromise costs far more, in money and in reputation.</p>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Reason 2</span>
+      <h5>Responsibility</h5>
+      <p>Two parties carry responsibility after an attack. The <strong>attacker</strong> is responsible for the damage, and evidence is the only way to bring them to justice. The <strong>victim</strong> has a responsibility to the community: what you learn can help others prevent the same attack — and you may have a legal obligation to analyse it, especially if your system was part of a larger attack.</p>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the same door, twice</span>
+    <p>A retailer patches a breached web server but never investigates how the attacker got in. Six months later the same unpatched flaw is used again, this time to steal customer card data. One proper evidence review would have closed the door before it was walked through twice.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · one breach, an industry-wide warning</span>
+    <p>Investigators trace a payment processor's breach to a flaw in a widely used point-of-sale system. Their findings are published as a security advisory, and hundreds of other retailers patch before they are targeted. That is the victim's responsibility to the community in action.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Two reasons only: <strong>future prevention</strong> and <strong>responsibility</strong>. Under responsibility, name both parties — attacker and victim — and say what each is responsible for.</span></div>
+</section>
+
+<!-- ===================== 02 ===================== -->
+<section class="topic" id="t02">
+  <div class="exhibit"><span class="exno">EX-02</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Collection Options&rdquo; · p. 218</span></div>
+  <h3>Collection Options</h3>
+  <p class="lede">Once a compromise is detected you have exactly two options, and you have to choose quickly. Both have real costs. There is no universally right answer — the decision depends on the situation.</p>
+
+  <div class="paths">
+    <div class="path path-a">
+      <div class="path-h">Option A — pull the system off the network</div>
+      <div class="path-body">
+        <p>Disconnect and start collecting evidence immediately. The attack stops at once and no further damage is done from this machine.</p>
+        <div class="tradeoff">
+          <div class="up"><span class="lbl">Gain</span><span>Stops the attack immediately; limits further damage; you can begin work straight away.</span></div>
+          <div class="dn"><span class="lbl">Risk</span><span>You may end up with insufficient evidence — or the attacker may have left a <strong>dead man switch</strong> that destroys evidence the moment the system detects it is offline.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="path path-b">
+      <div class="path-h">Option B — leave it online and monitor</div>
+      <div class="path-body">
+        <p>Keep the system running and watch the intruder work, gathering richer evidence over time about tools, behaviour and intent.</p>
+        <div class="tradeoff">
+          <div class="up"><span class="lbl">Gain</span><span>Reveals the attacker's toolkit, timing and motives in real time, and may expose other compromised machines.</span></div>
+          <div class="dn"><span class="lbl">Risk</span><span>You may accidentally alert the intruder, who then wipes his tracks by any means necessary. You may also face <strong>liability</strong> if he launches further attacks on others from your network in the meantime.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Real example · the booby-trapped script</span>
+    <p>An investigator disconnects a compromised server the instant intrusion is detected. The attacker had planted a script that wipes the log files whenever the network interface goes down. The investigation loses its most valuable evidence in the first sixty seconds.</p>
+  </div>
+  <div class="note note--safe">
+    <span class="nk">Real example · watching the intruder work</span>
+    <p>A security team notices unusual activity but keeps the server online, quietly logging every command the intruder types. Over three days they capture his full toolkit and identify two other compromised machines — evidence that disconnecting immediately would have destroyed.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Say both options, then one gain and one risk for each. The two named risks worth marks are the <strong>dead man switch</strong> (disconnect) and <strong>tipping off the attacker plus liability</strong> (monitor).</span></div>
+</section>
+
+<!-- ===================== 03 ===================== -->
+<section class="topic" id="t03">
+  <div class="exhibit"><span class="exno">EX-03</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Obstacles&rdquo; · pp. 218–219</span></div>
+  <h3>Obstacles</h3>
+  <p class="lede">Electronic crime is difficult to investigate and prosecute. Investigators have to build their case purely from whatever records survive after the transaction is finished. Electronic records are extremely — sometimes transparently — malleable, and electronic transactions face fewer limitations than paper ones. Together that produces what the textbook calls a <strong>collection nightmare</strong>.</p>
+
+  <div class="grid3">
+    <div class="card card--risk"><span class="k">Obstacle 1</span><h5>Speed</h5><p>Transactions complete in milliseconds. There is no window in which to intervene.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 2</span><h5>Location independence</h5><p>Conducted from anywhere, through anywhere, to anywhere — crossing jurisdictions in one hop.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 3</span><h5>Encryption and anonymity</h5><p>The content may be unreadable and the actor unidentified.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 4</span><h5>No intrinsic identity</h5><p>No handwriting, no signature, no physical impression — nothing that belongs to a body.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 5</span><h5>Fragile paper trail</h5><p>Any record left behind is easily modified, easily destroyed, or only ever temporary.</p></div>
+    <div class="card card--risk"><span class="k">Obstacle 6</span><h5>Self-erasing audit logs</h5><p>Auditing programs may automatically destroy the records once the transaction is finished with them.</p></div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">The identity gap — the part students miss</span>
+    <p>Even when the transaction is fully reconstructed, tying it to a <em>person</em> is hard. A password, PIN or any other electronic identifier does not prove who acted. It only shows that whoever did it either knew that identifier or could get past it. Authentication data authenticates the credential, not the human being.</p>
+  </div>
+
+  <h4>Why the same technique fails when the medium changes</h4>
+  <div class="vs">
+    <div class="vs-col vs-a">
+      <h5>Paper-based transaction</h5>
+      <div class="vs-row"><b>Signed cheque</b><span>Physical, unique ink signature</span></div>
+      <div class="vs-row"><b>Teller stamps and files it</b><span>A human witness was present</span></div>
+      <div class="vs-row"><b>Stored in a ledger</b><span>Alteration leaves visible physical marks</span></div>
+      <div class="vs-row"><b>Retrieved years later</b><span>The medium is durable and self-evidencing</span></div>
+      <p style="margin:.6rem 0 0;font-size:.86rem;color:var(--verify);font-weight:600">Evidence survives and speaks for itself.</p>
+    </div>
+    <div class="vs-mid"></div>
+    <div class="vs-col vs-b">
+      <h5>Electronic transaction</h5>
+      <div class="vs-row"><b>Login with PIN / OTP</b><span>Identifier only — proves knowledge, not identity</span></div>
+      <div class="vs-row"><b>Routed via VPN / proxy</b><span>From anywhere, through anywhere, to anywhere</span></div>
+      <div class="vs-row"><b>Written to a log file</b><span>Malleable; edited or deleted in seconds</span></div>
+      <div class="vs-row"><b>Log rotates after 7 days</b><span>The audit program destroys it automatically</span></div>
+      <p style="margin:.6rem 0 0;font-size:.86rem;color:var(--seal);font-weight:600">The trail may be gone before anyone looks.</p>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · Cosmos Bank, Pune (August 2018)</span>
+    <p>Malware on the bank's ATM switch server authorised roughly ₹94 crore in cloned-card withdrawals across 28 countries in about two hours. Every obstacle fires at once: the transactions were fast and simultaneous, spread across many jurisdictions, the actors used stolen card credentials rather than any identity of their own, and the switch server's own logs were tampered with.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>List four to six obstacles and then add the identity-gap sentence. Finish with the textbook's conclusion: investigating electronic crime will always be difficult because data is easy to alter and transactions can be anonymous — the best you can do is follow the rules of evidence collection and be as assiduous as possible.</span></div>
+</section>
+
+<!-- ===================== 04 ===================== -->
+<section class="topic" id="t04">
+  <div class="exhibit"><span class="exno">EX-04</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Types of Evidence&rdquo; · p. 219</span></div>
+  <h3>Types of Evidence</h3>
+  <p class="lede">Before you start collecting, know the categories. Get this wrong and you can spend weeks and a great deal of money collecting something that turns out to be useless.</p>
+
+  <div class="grid3">
+    <div class="card card--safe">
+      <span class="k">Type 1 · strongest</span>
+      <h5>Real evidence</h5>
+      <p>Evidence that speaks for itself, without relying on anything else. In electronic terms, a log produced by an audit function — <em>provided the log can be shown to be free from contamination</em>.</p>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Type 2 · strong if credible</span>
+      <h5>Testimonial evidence</h5>
+      <p>Evidence supplied by a witness. Subject to the perceived reliability of that witness, but as long as the witness is considered reliable it can be almost as powerful as real evidence. A word-processor document counts as testimonial as long as its author will state that he wrote it.</p>
+    </div>
+    <div class="card card--risk">
+      <span class="k">Type 3 · weakest</span>
+      <h5>Hearsay</h5>
+      <p>Evidence presented by a person who was <em>not</em> a direct witness. A document written by someone with no direct knowledge of the incident is hearsay. Generally inadmissible in court, and should be avoided.</p>
+    </div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">TechCorp file note</span>
+    <p><strong>Real:</strong> the firewall logged every connection with a timestamp and source IP the moment the intruder connected — written by a machine, untouched by human hands. <strong>Testimonial:</strong> the night-shift admin says &ldquo;I was watching the dashboard and saw a login from an unfamiliar device at 2:07 AM.&rdquo; She saw it herself and can be cross-examined. <strong>Hearsay:</strong> a colleague says &ldquo;someone in the break room reckoned it was a former employee.&rdquo; No direct knowledge — the court will not take it.</p>
+  </div>
+
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Type</th><th>What it is</th><th>Digital example</th><th>Weight in court</th></tr></thead>
+    <tbody>
+      <tr><td>Real</td><td>Speaks for itself; needs no witness</td><td>Firewall or audit log</td><td>Strongest — if uncontaminated</td></tr>
+      <tr><td>Testimonial</td><td>An account from a direct witness</td><td>&ldquo;I saw the login myself&rdquo;</td><td>Strong — if the witness is credible</td></tr>
+      <tr><td>Hearsay</td><td>Secondhand, no direct knowledge</td><td>&ldquo;Someone told me&hellip;&rdquo;</td><td>Generally inadmissible</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Three types, one line each, one digital example each. The qualifier on real evidence — &ldquo;provided it can be shown free from contamination&rdquo; — is worth a mark on its own.</span></div>
+</section>
+
+<!-- ===================== 05 ===================== -->
+<section class="topic" id="t05">
+  <div class="exhibit"><span class="exno">EX-05</span><span class="exsrc">Vacca Ch. 6 · &ldquo;The Rules of Evidence&rdquo; · pp. 220–222</span></div>
+  <h3>The Rules of Evidence</h3>
+  <p class="lede">There are five rules of collecting electronic evidence. They describe five properties evidence must have to be useful. Miss one and everything else you did stops mattering.</p>
+
+  <div class="grid2">
+    <div class="card"><span class="k">Rule 1</span><h5>Admissible</h5><p>The most basic rule — the evidence must be able to be used in court. Failing this rule is the same as never having collected the evidence at all, except that it cost you more.</p><p style="margin-top:.5rem;font-size:.88rem;color:var(--custody)"><strong>TechCorp:</strong> investigators get proper authorisation before imaging the server. Evidence grabbed without it, however damning, risks being thrown out entirely.</p></div>
+    <div class="card"><span class="k">Rule 2</span><h5>Authentic</h5><p>You must be able to tie the evidence positively and relevantly to the incident. If you cannot connect it to what happened, it proves nothing.</p><p style="margin-top:.5rem;font-size:.88rem;color:var(--custody)"><strong>TechCorp:</strong> a SHA-256 hash is generated the moment the drive image is taken, proving this exact copy is the one made that night.</p></div>
+    <div class="card"><span class="k">Rule 3</span><h5>Complete</h5><p>It is not enough to collect evidence that shows one perspective. You collect evidence that proves the attacker's actions <em>and</em> evidence that could prove their innocence — <strong>exculpatory evidence</strong>.</p><p style="margin-top:.5rem;font-size:.88rem;color:var(--custody)"><strong>TechCorp:</strong> the team shows the suspect was logged in at 2:07 AM, and also records everyone else with access that night and why each was ruled out.</p></div>
+    <div class="card"><span class="k">Rule 4</span><h5>Reliable</h5><p>Your collection and analysis procedures must not cast any doubt on the evidence's authenticity and veracity.</p><p style="margin-top:.5rem;font-size:.88rem;color:var(--custody)"><strong>TechCorp:</strong> standard documented tools — a write-blocker and verified imaging software — not improvised scripts. Standard method, reproducible result.</p></div>
+    <div class="card" style="grid-column:1/-1"><span class="k">Rule 5</span><h5>Believable</h5><p>The evidence must be clearly understandable and believable to a jury. There is no point presenting a binary dump of process memory to people who cannot read it. But if you present a formatted, human-readable version instead, you must also be able to show its relationship to the original binary — otherwise the jury has no way of knowing whether you faked it.</p><p style="margin-top:.5rem;font-size:.88rem;color:var(--custody)"><strong>TechCorp:</strong> the investigator shows an annotated timeline — &ldquo;02:00 login, 02:07 files copied, 02:15 connection closed&rdquo; — and can map every entry back to the raw data.</p></div>
+  </div>
+
+  <h4>The do's and don'ts that follow from the five rules</h4>
+  <div class="grid2">
+    <div class="card card--safe">
+      <h5>Do</h5>
+      <ul class="ticks">
+        <li>Minimise handling and corruption of original data</li>
+        <li>Account for any changes, and keep detailed logs of your actions</li>
+        <li>Comply with the five rules of evidence</li>
+        <li>Follow your local security policy</li>
+        <li>Capture as accurate an image of the system as possible</li>
+        <li>Be prepared to testify</li>
+        <li>Work fast — volatile evidence may vanish entirely</li>
+        <li>Proceed from volatile to persistent evidence</li>
+      </ul>
+    </div>
+    <div class="card card--risk">
+      <h5>Don't</h5>
+      <ul class="crosses">
+        <li>Do not exceed your knowledge — if you are out of your depth, learn first or find someone who is not</li>
+        <li>Do not shut down before collecting evidence</li>
+        <li>Do not run any programs on the affected system</li>
+      </ul>
+      <p style="font-size:.88rem;margin-top:.7rem"><strong>Why not shut down?</strong> You lose all volatile evidence, the attacker may have trojaned the startup and shutdown scripts, plug-and-play devices may alter the configuration, and temporary file systems may be wiped. Rebooting is worse still. Until the compromised disk is finished with, it should never be used as a boot disk.</p>
+      <p style="font-size:.88rem"><strong>Why not run programs?</strong> The attacker may have left trojaned programs and libraries. Anything you run should be on read-only media and statically linked.</p>
+    </div>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Mnemonic for the five: <strong>A-A-C-R-B</strong> — Admissible, Authentic, Complete, Reliable, Believable. For ten marks, give the five rules plus the do's and don'ts derived from them.</span></div>
+</section>
+
+<!-- ===================== 06 ===================== -->
+<section class="topic" id="t06">
+  <div class="exhibit"><span class="exno">EX-06</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Volatile Evidence&rdquo; · p. 223</span></div>
+  <h3>Volatile Evidence</h3>
+  <p class="lede">Not all evidence lasts. Some resides in storage that needs a constant power supply; some sits in information that is continuously changing. If you do not capture it fast, it is gone for good.</p>
+
+  <div class="note note--risk">
+    <span class="nk">TechCorp file note · 07:30, the server is still on</span>
+    <p>The attacker's active network connections and the contents of RAM exist only while the machine stays powered. The moment someone unplugs it &ldquo;to be safe&rdquo;, that evidence is destroyed forever — and with it the proof of exactly what was running at the time of the breach.</p>
+  </div>
+
+  <h4>The order of volatility</h4>
+  <p>Draw up a list of evidence sources ordered by relative volatility, and always collect the most volatile first. Tap any row to see what it costs you if you are late.</p>
+
+  <div class="vol">
+    <div class="vol-h"><span class="a">Most volatile — collect first</span><span class="b">Least volatile</span></div>
+    <button class="volitem" aria-expanded="false" style="--c:#A81C16"><span class="voln" style="background:#A81C16">1</span><span class="volbody"><b>Registers and cache</b><span class="why">Survive nanoseconds. Effectively uncapturable unless you are already there — which is why the list starts here rather than with the disk.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#A63A10">2</span><span class="volbody"><b>Routing tables</b><span class="why">Overwritten within seconds. They can show where traffic was actually being sent at the time.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#8F5A0A">3</span><span class="volbody"><b>ARP cache</b><span class="why">Overwritten within seconds, and it holds the attacker's gateway MAC address — a link to the physical network that exists nowhere on disk.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#7C6612">4</span><span class="volbody"><b>Process table</b><span class="why">Lost on reboot. It is your only record of what was actually executing during the incident, including injected processes with no file on disk.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#666D24">5</span><span class="volbody"><b>Kernel statistics and modules</b><span class="why">Lost on reboot. A loaded rootkit module may exist only here.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#46704A">6</span><span class="volbody"><b>Main memory (RAM)</b><span class="why">Lost the instant power is cut. Encryption keys, decrypted documents, chat fragments and live sockets live here and nowhere else.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#33705F">7</span><span class="volbody"><b>Temporary file systems</b><span class="why">Lost on unmount or reboot. Often full of exactly the working files an attacker did not intend to keep.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#2A6A83">8</span><span class="volbody"><b>Secondary memory (disk)</b><span class="why">Survives shutdown, so it can wait — this is the single most common mistake, imaging the disk first because it feels like the &ldquo;real&rdquo; evidence.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#2A5A8C">9</span><span class="volbody"><b>Router configuration</b><span class="why">Persists until manually changed. Capture it, but not before anything above it.</span></span></button>
+    <button class="volitem" aria-expanded="false"><span class="voln" style="background:#26467A">10</span><span class="volbody"><b>Network topology</b><span class="why">Persists indefinitely and is usually documented separately anyway.</span></span></button>
+  </div>
+
+  <div class="note note--safe">
+    <span class="nk">TechCorp file note · doing it in the right order</span>
+    <p>Investigators dump RAM and capture the active connections and process table <em>before</em> touching anything else. Only then is the disk imaged. Once the raw data has been collected from the volatile sources, the system may be shut down.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · a live banking-trojan infection</span>
+    <p>The responder plugs in a trusted USB of statically linked tools and works in exactly this order: memory, routing and ARP tables, process list, then the disk image. Pulling the power first would have looked safe and would have destroyed the injected process, the key held in RAM and the live command-and-control socket.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Memorise all ten in order. Add the caveat the textbook gives: still weigh the circumstances — do not waste time extracting memory from an unimportant machine while an affected machine's secondary memory has not been examined.</span></div>
+</section>
+
+<!-- ===================== 07 ===================== -->
+<section class="topic" id="t07">
+  <div class="exhibit"><span class="exno">EX-07</span><span class="exsrc">Vacca Ch. 6 · &ldquo;General Procedure&rdquo; · p. 224</span></div>
+  <h3>General Procedure</h3>
+  <p class="lede">A four-step method for handling any piece of evidence, from the moment it is found to the moment it is shown in court. It is a very general outline — customise the details to your situation.</p>
+
+  <div class="flow">
+    <div class="fstep"><span class="fn">STEP 1</span><b>Identification</b><span>Distinguish evidence from junk data. Know what the data is, where it is located, and how it is stored — only then can you work out the best way to retrieve and store it.</span></div>
+    <div class="fstep"><span class="fn">STEP 2</span><b>Preservation</b><span>Preserve the evidence as close as possible to its original state. Any change made during this phase must be documented and justified.</span></div>
+    <div class="fstep"><span class="fn">STEP 3</span><b>Analysis</b><span>Extract the relevant information and recreate the chain of events. Requires in-depth knowledge — make sure whoever analyses it is fully qualified to do so.</span></div>
+    <div class="fstep"><span class="fn">STEP 4</span><b>Presentation</b><span>Communicate the meaning. It must be understandable by a layman while remaining technically correct and credible. A good presenter helps.</span></div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">TechCorp file note · all four steps</span>
+    <p><strong>Identify:</strong> separate the firewall logs, the memory dump and the files created around 02:00 from routine business documents on the shared drive. <strong>Preserve:</strong> image the drive through a write-blocker and record a cryptographic hash at the moment of copying. <strong>Analyse:</strong> correlate firewall timestamps, the RAM dump and file access times to reconstruct the login at 02:00, the browsing of the share, and the copy-out by 02:07. <strong>Present:</strong> hand the court an annotated timeline in plain language, not a raw memory dump — with a qualified presenter ready to be questioned.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Four steps: <strong>Identification → Preservation → Analysis → Presentation</strong>. One sentence each. The presentation step's requirement — understandable to a layman <em>and</em> technically correct — is the one people forget.</span></div>
+</section>
+<!-- ===================== 08 ===================== -->
+<section class="topic" id="t08">
+  <div class="exhibit"><span class="exno">EX-08</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Collecting and Archiving&rdquo; · pp. 224–225</span></div>
+  <h3>Collection and Archiving</h3>
+  <p class="lede">Once you have a plan of attack and you know what evidence is needed, the actual capture begins. Storage matters as much as capture, because storage affects how the data is perceived later.</p>
+
+  <div class="grid2">
+    <div class="card card--cust">
+      <span class="k">Pillar A</span><h5>Logs and logging</h5>
+      <ul class="clean">
+        <li>Run some kind of system logging function at all times</li>
+        <li>Keep the logs secure and back them up periodically</li>
+        <li>Logs are usually auto-timestamped, so a simple copy will normally do</li>
+        <li>Digitally sign and encrypt any important logs to protect them from contamination</li>
+        <li>Logs kept locally on the compromised machine can be altered or deleted by the attacker</li>
+        <li>A remote syslog server plus a sticky directory reduces that risk — though an attacker can still inject decoy or junk entries</li>
+        <li>Regular auditing only works if you have a clean snapshot taken <em>before</em> the compromise</li>
+      </ul>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Pillar B</span><h5>Monitoring</h5>
+      <ul class="clean">
+        <li>Gather statistics, watch for irregular activity, and trace where the attacker is coming from</li>
+        <li>Watching logs as they are created reveals patterns you would miss reading them separately</li>
+        <li>What is <em>missing</em> from a log can itself be the suspicious fact</li>
+        <li>Traffic statistics define normal behaviour, so deviation becomes an early warning</li>
+        <li>Monitor users too: unknown users appearing is cause for closer inspection</li>
+        <li>Legal caution — limit monitoring to traffic and user information; leave content unmonitored unless the situation demands it</li>
+        <li>Display a logon disclaimer stating what monitoring is done, drafted with your lawyer</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Where the log file lives decides whether the evidence survives</h4>
+  <div class="grid2">
+    <div class="card card--risk">
+      <h5>Local logging — vulnerable</h5>
+      <div class="flow" style="flex-direction:column;gap:.35rem;margin:.6rem 0">
+        <div class="fstep" style="flex:1 1 auto;border-color:var(--sealline)"><b>Compromised web server</b><span>The attacker now has root</span></div>
+        <div class="fstep" style="flex:1 1 auto;border-color:var(--sealline)"><b>/var/log/ on the same disk</b><span>Same machine, same privileges</span></div>
+        <div class="fstep fstep--dark" style="flex:1 1 auto;background:var(--seal);border-color:var(--seal)"><b>Attacker edits or deletes the log</b><span style="color:#F6D9DB">Evidence destroyed</span></div>
+      </div>
+      <p style="font-size:.87rem;margin:0"><strong>Single point of failure:</strong> the log lives where the attacker lives.</p>
+    </div>
+    <div class="card card--safe">
+      <h5>Remote syslog — resilient</h5>
+      <div class="flow" style="flex-direction:column;gap:.35rem;margin:.6rem 0">
+        <div class="fstep" style="flex:1 1 auto;border-color:var(--verifyline)"><b>Compromised web server</b><span>Write-only, one-way, over TLS</span></div>
+        <div class="fstep" style="flex:1 1 auto;border-color:var(--verifyline)"><b>Hardened syslog server</b><span>Sticky directory, append-only</span></div>
+        <div class="fstep fstep--dark" style="flex:1 1 auto;background:var(--verify);border-color:var(--verify)"><b>Signed and encrypted copy</b><span style="color:#CBE7DF">Evidence survives the compromise</span></div>
+      </div>
+      <p style="font-size:.87rem;margin:0"><strong>Residual risk:</strong> a remote server prevents deletion, not injection. The attacker can still add junk entries.</p>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · a bank Security Operations Centre in Hyderabad</span>
+    <p>Firewall, VPN and Active Directory logs are shipped in real time to a central SIEM over TLS, so a compromised teller workstation cannot erase its own history. The SIEM has learned the branch averages around forty logins a day; three hundred attempts at 2 a.m. from one host breaks that baseline and raises the alert. The monitoring disclaimer on the logon banner is what makes the captured traffic usable later.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · WannaCry, May 2017</span>
+    <p>Organisations that logged only to the local disk lost their initial-infection record when the ransomware encrypted the whole volume, and could not establish patient zero. Those forwarding to a central log server still had the SMB connection records from before encryption — which is how the propagation path through port 445 was reconstructed.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Two pillars, then the two details that carry marks: <strong>remote syslog with a sticky directory</strong>, and the <strong>logon disclaimer</strong>. The disclaimer is a legal prerequisite, not a formality.</span></div>
+</section>
+
+<!-- ===================== 09 ===================== -->
+<section class="topic" id="t09">
+  <div class="exhibit"><span class="exno">EX-09</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Methods of Collection&rdquo; · pp. 225–226</span></div>
+  <h3>Methods of Collection</h3>
+  <p class="lede">There are two basic forms of collection: <strong>freezing the scene</strong> and <strong>honeypotting</strong>. They are not mutually exclusive — you can collect frozen information after or during any honeypotting.</p>
+
+  <div class="paths">
+    <div class="path path-a">
+      <div class="path-h">Freezing the scene</div>
+      <div class="path-body">
+        <p>Taking a snapshot of the system in its compromised state.</p>
+        <ol class="clean">
+          <li>Notify the necessary authorities — police, your incident response team, your legal team</li>
+          <li>Do <em>not</em> tell the world yet</li>
+          <li>Copy all important data onto removable non-volatile media, in a standard format</li>
+          <li>Collect the programs and utilities you used onto the <em>same</em> media as the data</li>
+          <li>Create a cryptographic message digest for everything collected</li>
+          <li>Compare each digest against the original for verification</li>
+        </ol>
+      </div>
+    </div>
+    <div class="path path-b">
+      <div class="path-h">Honeypotting</div>
+      <div class="path-body">
+        <p>Creating a replica system and luring the attacker into it for further monitoring.</p>
+        <ul class="clean">
+          <li><strong>Sandboxing</strong> is the related method: limit what the attacker can do while he is still on the compromised system, so he can be monitored without much further damage</li>
+          <li>Plant misleading information — his response to it is a good way of determining his motives</li>
+          <li>Any data on the system that reveals his detection must be removed or encrypted, or he will cover his tracks by destroying it</li>
+          <li>Extremely resource intensive — may simply be infeasible</li>
+          <li>Legal issue: <strong>entrapment</strong>. Consult your lawyers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h4>Where each one sits on the network</h4>
+  <div class="flow">
+    <div class="fstep fstep--dark" style="flex:0 1 8rem;background:var(--seal);border-color:var(--seal)"><b>Attacker</b><span style="color:#F6D9DB">Internet</span></div>
+    <div class="fstep fstep--dark" style="flex:0 1 8rem"><b>Firewall + redirector</b><span>Decides where hostile traffic goes</span></div>
+    <div style="flex:1 1 16rem;display:flex;flex-direction:column;gap:.45rem">
+      <div class="fstep" style="border-color:var(--verifyline);background:var(--verifybg)"><b>Production segment</b><span>Real customer data. Traffic identified as hostile never reaches it.</span></div>
+      <div class="fstep" style="border-color:var(--tagline);background:var(--tagbg)"><b>Honeypot</b><span>A replica system seeded with misleading data. He is lured here; tools, timing and motives are recorded.</span></div>
+      <div class="fstep" style="border-color:var(--rule2);background:var(--panel2)"><b>Sandbox</b><span>The real host, but with capability limited. He stays where he is, monitored, without much further damage.</span></div>
+    </div>
+  </div>
+  <p style="font-size:.9rem;color:var(--ink3)">Out-of-band monitoring and logging run alongside all three, invisible to the attacker.</p>
+
+  <div class="note note--real">
+    <span class="nk">Real example · a compromised e-commerce server in a Hyderabad data centre</span>
+    <p>The card-payment host is imaged bit-for-bit to a write-blocked drive together with the <span class="mono">dd</span> and hashing binaries used, and every image gets an SHA-256 digest — that is freezing the scene. In parallel a decoy host on a segmented VLAN is seeded with fake customer records; the attacker returns, works on it for six days, and his toolkit and command history are captured — that is honeypotting. Both at once.</p>
+  </div>
+  <div class="note note--real">
+    <span class="nk">Real example · Honeynet Project research pots</span>
+    <p>A deliberately weak SSH service is exposed on a spare public IP. Within hours credential-stuffing bots log in, and the pot records every command, every uploaded binary and every outbound callback address — while no production machine is ever touched. Remember the two cautions: it costs real staff time, and any sign that the pot is instrumented must stay hidden.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Do not present these as alternatives — the textbook says explicitly they combine. On honeypotting, the two things that must appear in your answer are the <strong>resource cost</strong> and the <strong>entrapment risk</strong>. Also distinguish honeypot (a decoy machine) from sandbox (the same machine, restricted).</span></div>
+</section>
+
+<!-- ===================== 10 ===================== -->
+<section class="topic" id="t10">
+  <div class="exhibit"><span class="exno">EX-10</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Artifacts&rdquo; · p. 226</span></div>
+  <h3>Artifacts</h3>
+  <p class="lede">Whenever a system is compromised there is almost always something left behind by the attacker. These are artifacts. They are one of the important things you should collect — but you must be careful.</p>
+
+  <div class="grid4">
+    <div class="card card--dark"><h5 style="font-size:.9rem">Code fragments</h5></div>
+    <div class="card card--dark"><h5 style="font-size:.9rem">Trojaned programs</h5></div>
+    <div class="card card--dark"><h5 style="font-size:.9rem">Running processes</h5></div>
+    <div class="card card--dark"><h5 style="font-size:.9rem">Sniffer log files</h5></div>
+  </div>
+
+  <div class="grid2" style="margin-top:1rem">
+    <div class="card card--risk">
+      <h5>The golden rule</h5>
+      <p style="font-weight:600;color:var(--ink)">Never analyse an artifact on the compromised system.</p>
+      <ul class="clean" style="margin-top:.6rem">
+        <li>Artifacts are capable of anything — you must make sure their effects are controlled</li>
+        <li>Use a clean, isolated examination host with no network access</li>
+        <li>Analysis of artifacts can reveal <em>other</em> systems the attacker or his tools have broken into</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h5>Why artifacts are hard to find</h5>
+      <ul class="clean">
+        <li>A trojaned program may be identical to the original in every obvious way — same file size, same MAC times</li>
+        <li>Cryptographic checksums may therefore be necessary</li>
+        <li>Which means you need the <em>original</em> file's checksum</li>
+        <li>If you already perform regular file integrity assessments, this is not a problem</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Detecting a trojaned artifact by checksum</h4>
+  <div class="hashcmp">
+    <div class="hbox good">
+      <h5>Baseline /bin/ls — known good</h5>
+      <div class="hrow"><span class="k">File size</span><span class="v">142,144 bytes</span></div>
+      <div class="hrow"><span class="k">MAC times</span><span class="v">2024-03-11 06:12:04</span></div>
+      <div class="hrow"><span class="k">Owner / perms</span><span class="v">root:root rwxr-xr-x</span></div>
+      <div class="hrow key"><span class="k">SHA-256</span><span class="v">a91f…4d7c</span></div>
+    </div>
+    <div class="hvs">VS</div>
+    <div class="hbox bad">
+      <h5>Suspect /bin/ls — post-incident</h5>
+      <div class="hrow"><span class="k">File size</span><span class="v">142,144 bytes ← same</span></div>
+      <div class="hrow"><span class="k">MAC times</span><span class="v">2024-03-11 06:12:04 ← same</span></div>
+      <div class="hrow"><span class="k">Owner / perms</span><span class="v">root:root rwxr-xr-x ← same</span></div>
+      <div class="hrow key"><span class="k">SHA-256</span><span class="v">e03b…19aa</span></div>
+    </div>
+  </div>
+  <div class="card card--dark">
+    <p>Every obvious attribute matches. Only the cryptographic hash differs — so the suspect binary is an artifact. It is copied to a clean, isolated examination host. It is never executed on the victim machine.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · a trojaned /bin/ls, and a supply chain</span>
+    <p>An attacker replaces the directory-listing binary with one that hides chosen filenames, pads the file and resets its timestamps so size and MAC times match exactly. Nothing looks wrong. Only a hash comparison exposes it. At the other end of the scale, the 2020 SolarWinds Orion compromise shipped a correctly signed, correctly sized DLL inside a legitimate product — defenders found it by comparing build hashes, not file properties. Record hashes of critical binaries at commissioning time, before you need them.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Four artifact types, the golden rule, and the reason checksums are needed: file size and MAC times are attacker-controllable, the hash is not.</span></div>
+</section>
+
+<!-- ===================== 11 ===================== -->
+<section class="topic" id="t11">
+  <div class="exhibit"><span class="exno">EX-11</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Collection Steps&rdquo; · pp. 226–227</span></div>
+  <h3>Collection Steps</h3>
+  <p class="lede">You now have enough to build a step-by-step guide. This is only a guide — customise it to your specific situation.</p>
+
+  <div class="flow">
+    <div class="fstep"><span class="fn">STEP 1</span><b>Find the evidence</b><span>Determine where the evidence you are looking for is stored. Use a checklist: it helps you collect, and it lets you double-check that everything is there.</span></div>
+    <div class="fstep"><span class="fn">STEP 2</span><b>Find the relevant data</b><span>Work out which part of it is relevant to the case. Err on the side of over-collection, but work fast — do not spend hours on obviously useless data.</span></div>
+    <div class="fstep"><span class="fn">STEP 3</span><b>Create an order of volatility</b><span>Work out the best order in which to gather it. This ensures you minimise the loss of uncorrupted evidence.</span></div>
+  </div>
+  <div class="flow">
+    <div class="fstep"><span class="fn">STEP 4</span><b>Remove external avenues of change</b><span>Prevention is better than cure. Stop anyone tampering with the evidence — but be careful, the attacker may have left a dead-man switch.</span></div>
+    <div class="fstep"><span class="fn">STEP 5</span><b>Collect the evidence</b><span>Use the appropriate tools. As you go, re-evaluate what you have already collected — you may find you missed something important.</span></div>
+    <div class="fstep"><span class="fn">STEP 6</span><b>Document everything</b><span>Your procedures will be questioned later. Timestamps, digital signatures and signed statements all matter. Do not leave anything out.</span></div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">The structure to remember</span>
+    <p>Steps 1 to 3 are <strong>planning</strong>. Steps 4 to 6 are <strong>execution</strong>. Step 4's warning about a dead-man switch links straight back to the collection options at the start of the chapter — this is the same trap, met again at a different moment.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Guaranteed question. Learn all six in order and be able to write one sentence on each.</span></div>
+</section>
+
+<!-- ===================== 12 ===================== -->
+<section class="topic" id="t12">
+  <div class="exhibit"><span class="exno">EX-12</span><span class="exsrc">Vacca Ch. 6 · &ldquo;Controlling Contamination&rdquo; · pp. 228–229</span></div>
+  <h3>Controlling Contamination</h3>
+  <p class="lede">Once the data has been collected, it must be protected from contamination.</p>
+
+  <div class="card card--risk">
+    <h5>Never work on the original</h5>
+    <ul class="clean">
+      <li>Originals should never be used in forensic examination — verified duplicates are used instead</li>
+      <li>This keeps the original data clean, and it also frees examiners to try more dangerous, potentially data-corrupting tests</li>
+      <li>Any such test must run on a clean, isolated host. You do not want to make the problem worse by letting the attacker's programs reach a network</li>
+    </ul>
+  </div>
+
+  <h4>Contamination control continues into analysis</h4>
+  <div class="grid3">
+    <div class="card">
+      <span class="k">Time</span><h5>Building the timeline</h5>
+      <ul class="clean">
+        <li>Clock drift, delayed reporting and differing time zones create confusion in abundance</li>
+        <li><strong>Never change the clock on an affected system</strong></li>
+        <li>Record the clock drift and the time zone in use</li>
+        <li>Synchronise log timestamps; use GMT as the common reference point</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="k">Backups</span><h5>Forensic analysis of backups</h5>
+      <ul class="clean">
+        <li>Use a dedicated examination host</li>
+        <li>Secure, clean — a fresh hardened OS install — and isolated from any network</li>
+        <li>You do not want it tampered with, and you do not want to send something nasty down the line</li>
+        <li>Mistakes here are recoverable: simply restore the backup again</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="k">Reconstruction</span><h5>Reconstructing the attack</h5>
+      <ul class="clean">
+        <li>Correlate all the evidence — which is why accurate timestamps are critical</li>
+        <li>Use graphical tools, diagrams and spreadsheets</li>
+        <li>Include every piece of evidence, no matter how small</li>
+        <li>Leave one out and you may miss the whole picture</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · why GMT saves an investigation</span>
+    <p>One incident spans a web server in Mumbai (IST +5:30), a CDN node logging in UTC, and an attacker's VPS in Frankfurt (CEST +2:00). Normalising every timestamp to GMT turns three contradictory log sets into a single sequence, showing the file upload preceded the database dump by forty seconds — the ordering the whole causation argument rests on. One server ran 3 min 12 s fast; that drift was recorded, never corrected.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>The two most quotable lines here: <strong>never change the clock on an affected system</strong>, and <strong>use GMT as the common reference point</strong>.</span></div>
+</section>
+
+<!-- ===================== 13 ===================== -->
+<section class="topic" id="t13">
+  <div class="exhibit"><span class="exno">EX-13</span><span class="exsrc">Vacca Ch. 6 · &ldquo;The Chain of Custody&rdquo; · p. 228</span></div>
+  <h3>The Chain of Custody</h3>
+  <p class="lede">A good way of ensuring that data remains uncorrupted is to keep a chain of custody: a detailed list of what was done with the original copies once they were collected. It will be questioned later, so document everything.</p>
+
+  <div class="card card--cust">
+    <h5>What a chain of custody records</h5>
+    <div class="grid2" style="margin-top:.5rem">
+      <ul class="clean" style="margin:0">
+        <li><strong>Who</strong> found the data</li>
+        <li><strong>When and where</strong> it was transported — and <strong>how</strong></li>
+      </ul>
+      <ul class="clean" style="margin:0">
+        <li><strong>Who</strong> had access to it</li>
+        <li><strong>What</strong> they did with it</li>
+      </ul>
+    </div>
+    <p style="margin:.7rem 0 0;font-size:.92rem">Expect the documentation to end up larger than the data you collected. It is necessary to prove your case.</p>
+  </div>
+
+  <h4>Follow one exhibit through the chain</h4>
+  <p style="font-size:.95rem;color:var(--ink3)">Select a link to see its custody entry. Then try breaking one and watch what happens to the rest.</p>
+
+  <div class="cocwrap">
+    <div class="coc" id="coc" role="group" aria-label="Chain of custody links">
+      <button class="coclink" data-i="0" aria-pressed="false"><span class="st">Link 01</span><span class="nm">Seized at scene</span><span class="who">Officer A</span><span class="sig">signed + timestamped</span></button>
+      <button class="coclink" data-i="1" aria-pressed="false"><span class="st">Link 02</span><span class="nm">Hashed &amp; sealed</span><span class="who">CFS B</span><span class="sig">signed + timestamped</span></button>
+      <button class="coclink" data-i="2" aria-pressed="false"><span class="st">Link 03</span><span class="nm">Transported</span><span class="who">Courier C</span><span class="sig">signed + timestamped</span></button>
+      <button class="coclink" data-i="3" aria-pressed="false"><span class="st">Link 04</span><span class="nm">Evidence locker</span><span class="who">Custodian D</span><span class="sig">signed + timestamped</span></button>
+      <button class="coclink" data-i="4" aria-pressed="false"><span class="st">Link 05</span><span class="nm">Duplicate examined</span><span class="who">Analyst E</span><span class="sig">signed + timestamped</span></button>
+      <button class="coclink" data-i="5" aria-pressed="false"><span class="st">Link 06</span><span class="nm">Produced in court</span><span class="who">Prosecutor F</span><span class="sig">signed + timestamped</span></button>
+    </div>
+    <div class="cocout" id="cocout" aria-live="polite">
+      <span class="h">Custody log</span>
+      <span id="cocmsg">Six links, each one signed and timestamped. Break any single link and the whole chain — and the case — is compromised.</span>
+    </div>
+    <div class="cocbtn">
+      <button class="btn btn--seal" id="breakbtn">Break a link</button>
+      <button class="btn btn--ghost" id="resetbtn">Reseal the chain</button>
+      <span class="hint" id="cochint">Watch the seal indicator in the sidebar.</span>
+    </div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · a seized laptop in an Indian cybercrime case</span>
+    <p>The device is hash-verified and sealed at the scene, a Section 65B certificate under the Indian Evidence Act is prepared for the electronic record, and every later transfer is signed on the custody form. Defence counsel attacks exactly this paperwork: an unlogged four-hour gap between seizure and the evidence locker can be enough to have the exhibit excluded, no matter how sound the technical analysis was.</p>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Four common causes of improper evidence collection</span>
+    <p>Poorly written organisational policies · no established incident response plan · lack of incident response training · a broken chain of custody.</p>
+  </div>
+
+  <div class="pull">If there is no evidence of a crime, there is no crime in the eyes of the law.<cite>Vacca, Chapter 6 summary</cite></div>
+
+  <div class="exam"><b>Exam</b><span>Define it as &ldquo;a detailed list of what was done with the original copies once collected&rdquo;, then give the four things it records, then the four common causes of improper collection. That is a full ten-mark answer.</span></div>
+</section>
+<div class="partbreak">
+  <div class="pk">Part B · Chapter 7</div>
+  <h2>Duplication and Preservation of Digital Evidence</h2>
+  <p>Digital evidence is the most easily lost evidence there is. Nothing in criminal justice is more easily damaged, corrupted or erased. Part B is about proving that the evidence is what you say it is, came from where you say it did, and has not been modified in any way since you obtained it.</p>
+</div>
+
+<!-- ===================== 14 ===================== -->
+<section class="topic" id="t14">
+  <div class="exhibit"><span class="exno">EX-14</span><span class="exsrc">Vacca Ch. 7 · &ldquo;Preserving the Digital Crime Scene&rdquo; · pp. 238–239</span></div>
+  <h3>Preserving the Digital Crime Scene</h3>
+  <p class="lede">The investigator has to worry about more than the suspect. The operating system, the applications, and the investigator's own actions are all capable of destroying the evidence before anyone has looked at it.</p>
+
+  <h4>Four threats to the scene</h4>
+  <div class="grid2">
+    <div class="card card--risk"><span class="k">Threat 1</span><h5>Destructive processes planted by the owner</h5><p>Devices and programs deliberately left behind to wipe data when triggered.</p></div>
+    <div class="card card--risk"><span class="k">Threat 2</span><h5>The operating system itself</h5><p>When Windows starts it creates new files and opens existing ones as a normal process. Erased files can be overwritten, data in the swap file can be altered or destroyed, and directory entries for files are updated automatically — and file dates matter enormously as evidence.</p></div>
+    <div class="card card--risk"><span class="k">Threat 3</span><h5>Running any program on the subject computer</h5><p>Criminals can modify the operating system so that executing a standard command destroys evidence — the <span class="mono">DIR</span> command is the textbook's example. Standard program names and familiar Windows icons can also be re-pointed at destructive processes.</p></div>
+    <div class="card card--risk"><span class="k">Threat 4</span><h5>Trusted applications</h5><p>Even Microsoft Word and WordPerfect can become the enemy. Opening and viewing a file creates temporary files, which overwrite the temporary files that were there before — and potential evidence stored in those can be lost forever.</p></div>
+  </div>
+
+  <h4>Where evidence actually hides on a disk</h4>
+  <div class="disk">
+    <div class="dseg d1"><div class="dh">Allocated files</div><div class="db">Spreadsheets, databases, word-processing files — the part the user can see.</div></div>
+    <div class="dseg d2"><div class="dh">File slack</div><div class="db">Raw memory dumped at file close, stored past the end of allocated files.</div></div>
+    <div class="dseg d3"><div class="dh">Unallocated space</div><div class="db">Erased files, and old application temporary files.</div></div>
+    <div class="dseg d4"><div class="dh">Windows swap file</div><div class="db">Fragments of Internet activity and Windows work sessions.</div></div>
+  </div>
+  <div class="disklabels">
+    <div class="dl dl-a">A standard backup copies only this</div>
+    <div class="dl dl-b">Ambient data — invisible to the user, missed by a standard backup, and overwritten just by booting</div>
+  </div>
+
+  <h4>Standard backup vs bit stream image backup</h4>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>What gets copied</th><th>Standard backup</th><th>Bit stream image backup</th></tr></thead>
+    <tbody>
+      <tr><td>Allocated files</td><td style="color:var(--verify);font-weight:600">Yes</td><td style="color:var(--verify);font-weight:600">Yes</td></tr>
+      <tr><td>File slack</td><td style="color:var(--seal);font-weight:600">No</td><td style="color:var(--verify);font-weight:600">Yes</td></tr>
+      <tr><td>Erased / unallocated space</td><td style="color:var(--seal);font-weight:600">No</td><td style="color:var(--verify);font-weight:600">Yes</td></tr>
+      <tr><td>Swap file</td><td style="color:var(--seal);font-weight:600">No</td><td style="color:var(--verify);font-weight:600">Yes</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="card card--safe">
+    <h5>The rule</h5>
+    <p>Your first objective, after securing the computer, is a <strong>complete bit stream backup of all computer data</strong> before it is reviewed or processed — normally before the computer is operated at all. A bit stream backup copies every bit of data on the storage device. For hard disk drives, make <strong>two</strong> such copies, and do all processing on one of them. The original evidence is preserved at all costs, because it is the best evidence.</p>
+  </div>
+
+  <div class="pull">To process a computer hard disk drive for evidence without a bit stream image backup is like playing with fire in a gas station.<cite>Vacca, Chapter 7</cite></div>
+
+  <div class="note note--risk">
+    <span class="nk">Real example · the helpful manager who &ldquo;just checked&rdquo;</span>
+    <p>Before the forensic team arrives, an HR manager powers on the suspect's laptop to see whether the files are really there. Windows rebuilds the page file, updates last-access times across the file table, and writes new temporary files over unallocated space. The deleted documents that would have proved the case are now partly overwritten — and defence counsel can argue every remaining timestamp was altered after seizure.</p>
+  </div>
+  <div class="note note--safe">
+    <span class="nk">Real example · doing it properly</span>
+    <p>The drive is removed and attached through a hardware write blocker, so the examination workstation physically cannot write to it. Two images are produced, each with an acquisition hash recorded on the seizure form. One is sealed as the master; the second is restored to a sterile drive and all searching and carving happens there. The original is never mounted again.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Name the four threats, name the three ambient-data areas (file slack, erased files, Windows swap file), and state the bit stream rule with the two-copy detail. &ldquo;Know your tools — you may only get one chance to do it right&rdquo; is a good closing line.</span></div>
+</section>
+
+<!-- ===================== 15 ===================== -->
+<section class="topic" id="t15">
+  <div class="exhibit"><span class="exno">EX-15</span><span class="exsrc">Vacca Ch. 7 · &ldquo;Computer Evidence Processing Steps&rdquo; · pp. 240–247</span></div>
+  <h3>Computer Evidence Processing Steps</h3>
+  <p class="lede">Computer evidence is fragile by nature, and the problem is compounded by destructive programs and hidden data. There really are no strict rules — every case is different and flexibility matters. These sixteen general steps are offered as food for thought.</p>
+
+  <p style="font-size:.95rem;color:var(--ink3)">Tick them off as you revise. The four phases are a study aid, not the textbook's own grouping.</p>
+
+  <div class="phases">
+    <div class="phase p1">
+      <h5>Secure the scene</h5>
+      <ol>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">1</span><span>Shut down the computer</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">2</span><span>Document the hardware configuration</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">3</span><span>Transport to a secure location</span></button></li>
+      </ol>
+    </div>
+    <div class="phase p2">
+      <h5>Duplicate &amp; baseline</h5>
+      <ol>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">4</span><span>Make bit stream backups of hard and floppy disks</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">5</span><span>Mathematically authenticate data on all storage devices</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">6</span><span>Document the system date and time</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">7</span><span>Make a list of key search words</span></button></li>
+      </ol>
+    </div>
+    <div class="phase p3">
+      <h5>Examine ambient data</h5>
+      <ol>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">8</span><span>Evaluate the Windows swap file</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">9</span><span>Evaluate file slack</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">10</span><span>Evaluate unallocated space (erased files)</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">11</span><span>Search files, file slack and unallocated space for keywords</span></button></li>
+      </ol>
+    </div>
+    <div class="phase p4">
+      <h5>Analyse &amp; document</h5>
+      <ol>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">12</span><span>Document file names, dates and times</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">13</span><span>Identify file, program and storage anomalies</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">14</span><span>Evaluate program functionality</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">15</span><span>Document your findings</span></button></li>
+        <li><button class="stepchk" aria-pressed="false"><span class="bx"></span><span class="sn">16</span><span>Retain copies of software used</span></button></li>
+      </ol>
+    </div>
+  </div>
+  <div class="chkbar"><span id="chkcount">0 / 16 revised</span><span class="track"><span class="fill" id="chkfill"></span></span></div>
+
+  <h4>What each step actually means</h4>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Step</th><th>The detail that matters</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Shut down</td><td>Usually pull the plug, or use the network's own shutdown commands. Screen images may be photographed at your option — but consider destructive processes running in the background, in memory or reachable through a connected modem, and a password-protected screen saver that may activate at any moment. Time is of the essence.</td></tr>
+      <tr><td>2 · Document hardware</td><td>Before dismantling, photograph the system from all angles and label every wire, so the configuration can be restored exactly at the secure location.</td></tr>
+      <tr><td>3 · Transport securely</td><td>Seized computers are too often stored insecurely. An unattended machine can be compromised, evidence planted, and crucial evidence destroyed. Without a proper chain of custody you cannot answer a lawyer who asks how you know nothing was planted after seizure.</td></tr>
+      <tr><td>4 · Bit stream backups</td><td>Do not operate the computer and do not process evidence until backups exist for all hard and floppy disks. All processing happens on a restored copy; the original is left untouched unless circumstances compel otherwise.</td></tr>
+      <tr><td>5 · Mathematically authenticate</td><td>Proves you did not alter the evidence once it came into your possession. Since 1989 agencies used a 32-bit process, accurate to roughly one in 4.3 billion — <strong>no longer accurate enough</strong> given today's processor speeds and disk capacities. A 32-bit CRC can be compromised.</td></tr>
+      <tr><td>6 · Document date and time</td><td>File dates matter only if they are accurate. A clock one hour slow because of daylight saving makes every timestamp an hour wrong. Record the settings as found.</td></tr>
+      <tr><td>7 · Key search words</td><td>Drives are too large to review file by file. Gather keywords from people familiar with the case, keep the list short, and avoid common words or words that form part of other words — surround those with spaces.</td></tr>
+      <tr><td>8 · Windows swap file</td><td>A valuable source of evidence and leads. Once took days with hex editors, now minutes with automated tools. On Windows 2000/XP/2003 it may be created dynamically and erased at shutdown, but its content can still be captured.</td></tr>
+      <tr><td>9 · File slack</td><td>Raw memory dumps written past the end of allocated files when files are closed. Up to <strong>1.1 billion bytes</strong> on a well-used drive, and roughly <strong>80 times</strong> more Internet leads than the swap file.</td></tr>
+      <tr><td>10 · Unallocated space</td><td>Billions of bytes of previously erased data — typically rich in word-processing and application temporary files.</td></tr>
+      <tr><td>11 · Keyword search</td><td>Review the output and document relevant findings. Each hit is reviewed for further keywords, which are added to the list and searched again. The process loops.</td></tr>
+      <tr><td>12 · File names, dates, times</td><td>Catalogue all allocated and erased files, sorted by name, size, content, creation date and last modified date. This produces a <strong>timeline of computer usage</strong>.</td></tr>
+      <tr><td>13 · Anomalies</td><td>Encrypted, compressed and graphic files are binary, so a text search cannot read them — manual evaluation is required. Review partitioning for hidden partitions, and check the Recycle Bin.</td></tr>
+      <tr><td>14 · Program functionality</td><td>Run programs where necessary to learn their purpose. A destructive process tied to a hot key or a common command can be used to prove <strong>willfulness</strong>.</td></tr>
+      <tr><td>15 · Document findings</td><td>Record findings as they arise, including version numbers of every forensic program used. Be legally licensed — a defence lawyer will ask, and software piracy is a criminal violation of copyright law.</td></tr>
+      <tr><td>16 · Retain the software</td><td>Archive a copy of the software alongside its output. Software is upgraded routinely and cases take years to reach trial; without the original version, results may be impossible to reproduce in court.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>Emergency guidelines — if you are not trained</h4>
+  <div class="grid3">
+    <div class="card card--risk"><h5>Don't turn on or operate the subject computer</h5><p>Back it up with bit stream software first. Running the machine risks overwriting the swap file, which holds Internet activity and fragments of work sessions. To save grief, don't run the computer.</p></div>
+    <div class="card card--risk"><h5>Don't call the resident &ldquo;computer expert&rdquo;</h5><p>Without proper training even a world-class computer scientist can do the wrong thing. Investigators are routinely called in after an internal auditor or sysadmin has already tainted the evidence. Get a trained specialist — before the machine is switched on.</p></div>
+    <div class="card card--risk"><h5>Don't read employee email unless policy allows it</h5><p>Electronic privacy laws protect electronic communications. You are on safe ground only if policy states that all computers and stored data belong to the organisation and the employee has read that policy. Check with counsel. Do things by the book.</p></div>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · metadata that identified the BTK killer, Wichita 2005</span>
+    <p>After years of silence the offender sent police a floppy disk containing a Word document. Examiners recovered deleted metadata inside the file that named a church and the first name of the person who had last saved it. That is step 12 — documenting file names, dates and times — producing the lead that ended a decades-long case. Had anyone opened the file casually on an ordinary PC first, that metadata could have been rewritten.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Learn all sixteen in order. The three highest-value details are step 5 (32-bit, one in 4.3 billion, no longer adequate), step 9 (1.1 billion bytes, 80× more leads), and step 16 (retain the software version).</span></div>
+</section>
+
+<!-- ===================== 16 ===================== -->
+<section class="topic" id="t16">
+  <div class="exhibit"><span class="exno">EX-16</span><span class="exsrc">Vacca Ch. 7 · &ldquo;Legal Aspects&rdquo; · pp. 247–252</span></div>
+  <h3>Legal Aspects of Collecting and Preserving Digital Forensic Evidence</h3>
+  <p class="lede">In simple terms, a chain of custody is a <strong>roadmap that shows how evidence was collected, analysed and preserved in order to be presented in court</strong>. Establishing it clearly is crucial because electronic evidence can be so easily altered.</p>
+
+  <div class="grid2">
+    <div class="card card--safe">
+      <h5>A chain of custody must prove, at minimum</h5>
+      <ol class="clean">
+        <li>No information has been added or changed</li>
+        <li>A complete copy was made</li>
+        <li>A reliable copying process was used</li>
+        <li>All media was secured</li>
+      </ol>
+      <p style="font-size:.9rem;margin:.4rem 0 0"><em>Proving this chain is unbroken is the prosecutor's primary tool in authenticating electronic evidence.</em></p>
+    </div>
+    <div class="card">
+      <h5>Legal requirements for log evidence</h5>
+      <ul class="clean">
+        <li><strong>U.S. Code Title 28, §1732</strong> — log files are admissible as evidence if collected in the regular course of business</li>
+        <li><strong>Federal Rules of Evidence 803(6)</strong> — logs that would otherwise be hearsay are admissible if collected during regularly conducted business activity</li>
+        <li>So log everything, all the time, and deal with the storage. Turning logging on only after an incident is suspected may render the logs inadmissible</li>
+        <li>Prove no tampering: digital signatures, a dedicated logging server, encrypted log files</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card card--cust">
+      <h5>The user's expectation of privacy</h5>
+      <p>A <strong>log-on banner</strong> is the key to establishing that a user has no right to privacy on corporate systems. CERT Advisory CA-1992-19 provides model wording, to be tailored under legal guidance: it warns that activities may be monitored and recorded, and that evidence of criminal activity may be passed to law enforcement.</p>
+    </div>
+    <div class="card card--cust">
+      <h5>O'Connor v. Ortega, 480 U.S. 709 (1987)</h5>
+      <p>The ruling implies that the legality of workplace monitoring depends primarily on whether employment policies authorising monitoring exist, and whether that policy has been clearly communicated. To prove communication, employees should sign a statement that they have read, understood and agreed to comply.</p>
+    </div>
+  </div>
+
+  <h4>The evidence collection procedure</h4>
+  <p><strong>The first rule: do not rush.</strong> Tensions will be high and people will want answers quickly, but rushing loses evidence. Bring the incident-handling procedure, an evidence collection notebook, evidence identification tags, tools and media for making reliable copies, and — if counsel wants photographs — a camera.</p>
+
+  <div class="grid3">
+    <div class="card card--dark"><span class="k">Role</span><h5>Incident coordinator</h5><p>Contacts the response team, ensures every detail of the procedure is followed, assigns tasks, and acts as liaison to legal, law enforcement, management and public relations. Ultimate responsibility for the chain of custody belongs here.</p></div>
+    <div class="card"><span class="k">Role</span><h5>Notebook keeper</h5><p>Records the who, what, where, when and how of the entire investigation process.</p></div>
+    <div class="card"><span class="k">Role</span><h5>Evidence collector(s)</h5><p>Tags all evidence and makes the reliable copies. Keep the number of people minimal to avoid confusion, and they must be highly proficient with the copying and analysis tools.</p></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h5>What goes in the evidence notebook</h5>
+      <ul class="clean">
+        <li>Who reported the incident, with time, date and circumstances</li>
+        <li>Details of the initial assessment leading to the formal investigation</li>
+        <li>Names of all persons conducting the investigation</li>
+        <li>The case number, and the reasons for the investigation</li>
+        <li>Every system involved, with full specifications and identification tag numbers</li>
+        <li>Network diagrams, and the applications running on those systems</li>
+        <li>A copy of the policies governing access to and use of those systems</li>
+        <li>The administrators responsible for routine maintenance</li>
+        <li>Every collection and analysis step: date, time, description, who, where, and the result</li>
+        <li>An access control list of who had access to the evidence, and when</li>
+      </ul>
+    </div>
+    <div class="card card--risk">
+      <h5>Rules for the notebook itself</h5>
+      <ul class="clean">
+        <li>A separate notebook for every investigation</li>
+        <li>It must <strong>not</strong> be spiral-bound</li>
+        <li>It must be bound so that the removal of a page is obvious</li>
+      </ul>
+      <h5 style="margin-top:1rem">Three characteristics of a reliable copy process</h5>
+      <ol class="clean">
+        <li>Meets industry standards for quality and reliability — a good benchmark is whether the software is used and relied on by law enforcement</li>
+        <li>The copies must be capable of independent verification</li>
+        <li>The copies must be tamperproof</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card card--cust">
+    <h5>Two copies, three destinations</h5>
+    <div class="flow" style="margin:.6rem 0 0">
+      <div class="fstep"><span class="fn">ORIGINAL</span><b>Sealed container</b><span>Never worked on. A simple file copy is not sufficient — a binary copy is the proper way to preserve evidence.</span></div>
+      <div class="fstep"><span class="fn">COPY 1</span><b>Used for analysis</b><span>All examination happens here.</span></div>
+      <div class="fstep"><span class="fn">COPY 2</span><b>Returned to the system</b><span>So the business can resume service as quickly as possible.</span></div>
+    </div>
+    <p style="margin:.8rem 0 0;font-size:.92rem">Evidence must be transported <strong>under dual control</strong>, with the log recording how it was transported, who was responsible, and the date, time and route.</p>
+  </div>
+
+  <div class="card">
+    <h5>Storage and analysis of data</h5>
+    <p>Access control cards show who entered the lab and when; video shows what they did inside. At a minimum keep an entrance and exit log. Group and store evidence by case, along with its notebook, and follow a clearly documented analysis plan. Log every analysis with the date and time, the tools used, the methodology and the results. Never leave evidence in an unsecured area — if a defence lawyer can show unauthorised persons had access, it could easily be declared inadmissible. When analysis is complete, a copy of the notebook goes to the legal team, and legal officials should provide a receipt detailing all items received into evidence.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · Section 65B of the Indian Evidence Act</span>
+    <p>India's equivalent gate is the Section 65B(4) certificate. In <em>Anvar P.V. v. P.K. Basheer</em> (2014) the Supreme Court held that electronic records produced without that certificate are inadmissible, overruling the more relaxed approach taken in the 2005 Parliament-attack case; <em>Arjun Panditrao Khotkar v. Kailash Gorantyal</em> (2020) reaffirmed it. Technically flawless imaging still fails without the certificate.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Define chain of custody as a roadmap, give the four minimum proofs, then the roles and the notebook rules. The &ldquo;not spiral-bound&rdquo; detail sounds trivial and is frequently asked — the reason is tamper evidence.</span></div>
+</section>
+
+<div class="partbreak">
+  <div class="pk">Part C · Chapter 8</div>
+  <h2>Computer Image Verification and Authentication</h2>
+  <p>As investigators became more familiar with handling evidential computer material, a number of more or less formalised procedures evolved to maintain both the continuity and the integrity of that material. Part C examines those procedures, what they cannot yet do, and what a purpose-built protocol would look like.</p>
+</div>
+
+<!-- ===================== 17 ===================== -->
+<section class="topic" id="t17">
+  <div class="exhibit"><span class="exno">EX-17</span><span class="exsrc">Vacca Ch. 8 · opening · pp. 257–258</span></div>
+  <h3>Computer Image Verification and Authentication</h3>
+  <p class="lede">The current procedure, in use by both law enforcement and computer forensics investigators, works like this.</p>
+
+  <div class="grid2">
+    <div class="card card--safe">
+      <span class="k">Copy 1</span><h5>The master copy</h5>
+      <ul class="clean">
+        <li>Sealed in the presence of the computer owner, then placed in secure storage</li>
+        <li>Opened for examination only under instruction from the court, in the event of a challenge to the evidence presented</li>
+        <li>If the computer was seized and held by law enforcement, the computer itself is <strong>best evidence</strong>. If it was not seized, the master copy becomes best evidence</li>
+      </ul>
+    </div>
+    <div class="card card--cust">
+      <span class="k">Copy 2</span><h5>The working copy</h5>
+      <p>All forensic analysis is performed on this copy. The master is never touched unless the court orders it opened.</p>
+      <p style="margin-top:.6rem"><em>At least two copies are taken of the evidential computer.</em></p>
+    </div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">The assumption — and the gap in it</span>
+    <p>The procedure assumes that while in secure storage there can be no possibility of tampering with the evidence. But this <strong>does not protect the computer owner</strong> from the possibility that the secured evidence is tampered with. The protection runs one way only. Closing that gap is what the rest of Chapter 8 is about.</p>
+  </div>
+
+  <div class="card">
+    <h5>The growing practical problem</h5>
+    <p>The difficulty is not the security or the appearance of the arrangement — it is the increasing size of the fixed disks found in computers. A disk of 2 gigabytes is no longer unusual, and it is common to find more than one fixed disk in a single machine. Media cost is falling only slowly and remains significant at this volume, even allowing for media reuse, and individual copies take a long time to complete. A sizeable saving in both time and expense might be achieved if an alternative method of evidential security could be arranged.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · sealing the master in the owner's presence</span>
+    <p>Indian practice mirrors this closely: at seizure the imaging is done before panch witnesses, the master image and its hash are recorded, and the media is sealed with signatures across the seal. When the accused later disputes the working copy, the court can order the sealed master opened and its hash recomputed — exactly the challenge mechanism the textbook describes.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Describe the two-copy procedure, say who the master is sealed in front of and when it may be opened, define which item is best evidence in each scenario, and finish with the three pressures — disk size, media cost, copying time.</span></div>
+</section>
+
+<!-- ===================== 18 ===================== -->
+<section class="topic" id="t18">
+  <div class="exhibit"><span class="exno">EX-18</span><span class="exsrc">Vacca Ch. 8 · &ldquo;Special Needs of Evidential Authentication&rdquo; · pp. 258–264</span></div>
+  <h3>Special Needs of Evidential Authentication</h3>
+  <p class="lede">A wealth of mathematical algorithms deal with secure encryption, verification and authentication. They vary in security and complexity, but all of them rely on a <strong>second channel of information</strong> — some element of the process kept secret. That is clearest in public and private key encryption, and present in other protocols too.</p>
+
+  <div class="card card--cust">
+    <h5>Why seizing the machine is not the answer</h5>
+    <p>During an investigation it may be possible to seize or impound the computer system — but that risks violating the basic principle of <em>innocent until proven guilty</em>, by depriving a possibly innocent party of the use of their system. It should be perfectly possible to copy all the information in a way that leaves the original system untouched while still making everything available for forensic analysis.</p>
+  </div>
+
+  <div class="card card--dark">
+    <h5>The requirement that follows</h5>
+    <p>When that is done, the courts may rightly insist that the copied evidence is protected from either accidental or deliberate modification, and that the investigating authority should prove this has been done.</p>
+    <p style="font-size:1.05rem;color:#fff;font-weight:600;margin-top:.7rem">It is not the content that needs protection, but its integrity.</p>
+  </div>
+
+  <h4>The protection takes two forms</h4>
+  <div class="grid2">
+    <div class="card card--safe"><span class="k">Form A</span><h5>Not altered by even a single bit</h5><p>A secure method of determining that the data has not been altered by even one bit since the copy was taken.</p></div>
+    <div class="card card--safe"><span class="k">Form B</span><h5>Genuinely the copy that was taken</h5><p>A secure method of determining that the copy is genuinely the one taken at that time, and on the computer in question.</p></div>
+  </div>
+  <p>Collectively these two are referred to as the <strong>digital image verification and authentication protocol</strong>. Note what is excluded: when considering forensic copies of computer contents, encryption of the data is not the point at issue — and the provisions of the many digital signature protocols are not appropriate to the requirements of evidential authentication either.</p>
+
+  <div class="note note--case">
+    <span class="nk">The two questions the defence will actually ask</span>
+    <p><strong>(A) &ldquo;Prove nothing changed.&rdquo;</strong> The examiner recomputes the hash over the image in open court; it matches the value on the seizure memo, so not one bit differs. <strong>(B) &ldquo;Prove this is the image you took from my machine, that day.&rdquo;</strong> That is answered not by the hash but by the seal, the signatures, the recorded drive serial number and the timestamped acquisition log. Two different problems, needing two different mechanisms.</p>
+  </div>
+
+  <h4>The textbook's worked illustration — digital IDs and Authenticode</h4>
+  <p>The chapter uses code signing to show hash-based authentication in practice. A <strong>digital ID</strong> (or digital certificate) is a form of electronic credential, issued by a trusted third party called a <strong>certification authority</strong> to establish the identity of the holder — much as a government issues a passport. It reliably links a public and private key pair to its owner. Anything signed with the publisher's private key can only be verified with the matching public key.</p>
+
+  <div class="auth">
+    <div class="authpkg">
+      <span class="t">Signed code package</span>
+      <div class="apart a1"><b>Original code</b><span>What the user wants to run</span></div>
+      <div class="apart a2"><b>Encrypted hash</b><span>Signed with the publisher's PRIVATE key</span></div>
+      <div class="apart a3"><b>Publisher's certificate</b><span>Contains the PUBLIC key</span></div>
+    </div>
+    <div class="authpaths">
+      <div class="apath"><span class="anode">Original code</span><span class="arrow">&rarr;</span><span class="anode op">2 · Hash algorithm (MD5 / SHA)</span><span class="arrow">&rarr;</span><span class="anode">One-way hash A — computed now</span></div>
+      <div class="apath"><span class="anode">Encrypted hash</span><span class="arrow">&rarr;</span><span class="anode op p2">3 · Apply the PUBLIC key</span><span class="arrow">&rarr;</span><span class="anode">One-way hash B — as signed then</span></div>
+      <p style="font-size:.82rem;color:var(--ink3);margin:.2rem 0">1 · First, inspect the certificate — the browser verifies it against the certification authority's root public key, already embedded in the application.</p>
+      <div class="acmp">4 · Compare — is A = B ?</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card card--safe"><h5>Hashes identical</h5><p><strong>Content source</strong> and <strong>content integrity</strong> both confirmed: the code came from the publisher named in the digital ID, and it has not been altered since it was signed.</p></div>
+    <div class="card card--risk"><h5>Hashes differ</h5><p>Source or integrity has failed. Note also <strong>timestamping</strong>: certificates expire after a year, so a hash of the code is timestamped at signing, letting clients distinguish code signed with a then-valid certificate from code signed with one already expired.</p></div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Where this model falls short for forensics</span>
+    <p>Digital IDs give exactly the two things identified above — source and integrity. But they need a certification authority, key issuance, key storage and key revocation. The next topic argues that the whole apparatus is unnecessary overhead for a forensic copying system.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>The single sentence to memorise: <em>it is not the content that needs protection, but its integrity</em>. Then the two forms of protection, then the four-step digital ID verification process with a diagram.</span></div>
+</section>
+
+<!-- ===================== 19 ===================== -->
+<section class="topic" id="t19">
+  <div class="exhibit"><span class="exno">EX-19</span><span class="exsrc">Vacca Ch. 8 · &ldquo;Practical Considerations&rdquo; · pp. 264–265</span></div>
+  <h3>Practical Consideration</h3>
+  <p class="lede">Before asking how a forensic data collection system can be securely protected, it is worth setting out what such a system must do. These four requirements were chosen to reflect the experience of computer forensic investigators — other experts may argue against some or all of them.</p>
+
+  <div class="grid4">
+    <div class="card card--safe"><span class="k">Requirement 1</span><h5>Complete and non-software specific</h5><p>Thus avoiding software traps and hidden partitioning.</p></div>
+    <div class="card"><span class="k">Requirement 2</span><h5>As quick and as simple as possible</h5><p>To avoid error or delay.</p></div>
+    <div class="card"><span class="k">Requirement 3</span><h5>Usable with minimum training</h5><p>It should be possible for anyone to use the system without being an expert.</p></div>
+    <div class="card"><span class="k">Requirement 4</span><h5>Minimum cost and resources</h5><p>Necessary expenditure only.</p></div>
+  </div>
+
+  <div class="card card--dark">
+    <p>To meet requirements 2, 3 and 4, the digital integrity verification and authentication protocol must be tailored to suit. For the collection phase to remain quick and simple, the protocol must <strong>not add significantly to the time required for copying</strong>, nor introduce additional, possibly complex, procedures.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card card--risk">
+      <h5>Rejected — the paraphernalia of digital signatures</h5>
+      <p>The time and effort required to introduce links with key management agencies, trusted third parties and key distribution centres is not necessary. It would add cost and complexity with little increase in security, and it would mean that only investigators issued with a valid digital signature could complete copies. Four questions follow, and none of them has a good answer:</p>
+      <ul class="clean" style="margin-top:.6rem">
+        <li>Who is to issue these?</li>
+        <li>Where are they to be stored?</li>
+        <li>How will each individual remember his or her own key?</li>
+        <li>How can misuse of keys be detected?</li>
+      </ul>
+    </div>
+    <div class="card card--safe">
+      <h5>Adopted — a virtually self-contained system</h5>
+      <ul class="clean">
+        <li>The protocol is virtually self-contained, with no external key infrastructure</li>
+        <li>Obviously, a truly self-contained encryption system cannot on its own be cryptographically secure</li>
+        <li>So within the protocol, <strong>alternative channels of security</strong> are used instead to provide a truly secure system</li>
+        <li>The result costs far less in time and in consumables</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">Why this is an engineering argument, not a cryptographic one</span>
+    <p>Nothing here says public key cryptography is weak. The argument is that a van-based evidence copier operated by someone with two days' training is the wrong place to hang a public key infrastructure. The four rhetorical questions on the left are the best material for an exam answer on this topic.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>Four numbered requirements, then the rejection of trusted third parties with at least two of the four questions, then the self-contained conclusion.</span></div>
+</section>
+
+<!-- ===================== 20 ===================== -->
+<section class="topic" id="t20">
+  <div class="exhibit"><span class="exno">EX-20</span><span class="exsrc">Vacca Ch. 8 · &ldquo;Practical Implementation&rdquo; and Summary · pp. 265–269</span></div>
+  <h3>Practical Implementation</h3>
+  <p class="lede">The emphasis is on a practical application of proven technology, such that a minimum amount of reliance is placed on the technical ability of the operator or investigator. The system, not the person, guarantees the result.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h5>During the copying process</h5>
+      <ul class="clean">
+        <li>Procedures are implemented to trap and handle hardware errors, mapping exceptions where necessary</li>
+        <li>Procedures are implemented to verify that information is copied correctly</li>
+        <li>Alongside the raw data of the suspect drive, a copy is also taken of the high section of conventional memory — including any on-board ROM areas — and of the CMOS contents via port access</li>
+      </ul>
+    </div>
+    <div class="card card--cust">
+      <h5>Why it is built this way</h5>
+      <p>Every one of the four practical considerations shows up here. Trapping hardware errors keeps it <em>complete</em>. Verifying automatically keeps it <em>quick</em>. Requiring nothing of the operator but a name, a password and the real date and time keeps it usable with <em>minimum training</em>.</p>
+    </div>
+  </div>
+
+  <h4>What is written to each cartridge in a copy series</h4>
+  <div class="cart">
+    <div class="czone cz1">
+      <h5>Reference area</h5>
+      <ul class="clean" style="margin:0">
+        <li>CPU type and speed</li>
+        <li>Hardware equipment indicators</li>
+        <li>Copying drive serial number</li>
+        <li>Cartridge sequence number</li>
+        <li>Exhibit details and reference comments</li>
+        <li>Operator name with a unique password</li>
+        <li>The real date and time, as entered by the operator</li>
+      </ul>
+    </div>
+    <div class="czone cz2">
+      <h5>Bulk data — the remainder of the cartridge</h5>
+      <p style="margin:0 0 .3rem">The information copied from the suspect drive, on a sector by sector basis.</p>
+      <div class="sectors"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <p style="margin:0;font-size:.78rem;color:var(--ink3);font-family:var(--mono)">each block hashed as it is written</p>
+    </div>
+    <div class="czone cz3">
+      <h5>The encrypted vault</h5>
+      <ul class="clean" style="margin:0">
+        <li>Holds the block hash values</li>
+        <li>Encrypted only at the end of each section of the copy</li>
+        <li>Because that happens once per section, a genuinely secure encryption algorithm is affordable</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Why the combination is secure</h4>
+  <p>The overall security of a computer image verification and authentication system rests in the <em>combination</em> of security measures, not in any one of them.</p>
+  <div class="grid2">
+    <div class="card"><span class="k">Measure 1</span><h5>Block hashes with a one-time pad simulation</h5><p>Hash values for each block are generated in conjunction with a one-time pad simulation. As well as providing continuity between blocks, this negates the redundancy found in disk data — long runs of zeroes, ASCII text and fixed structures. Repeat hash values are therefore avoided, and a possible <strong>birthday attack</strong> is thwarted.</p></div>
+    <div class="card"><span class="k">Measure 2</span><h5>Vault encryption at section boundaries</h5><p>Because encryption of the vault occurs only at the end of each section of the copy, it can be accomplished using a genuinely secure encryption algorithm rather than a fast, weak one.</p></div>
+    <div class="card card--safe"><span class="k">Measure 3</span><h5>Sealed floppies held by both parties</h5><p>Both the prosecuting and the defending parties have secure protection against evidence tampering for as long as they retain their sealed floppies. In the event of a challenge, one or both envelopes can be opened in court and verified against each other and against the cartridges.</p></div>
+    <div class="card card--risk"><span class="k">Measure 4</span><h5>Locating a tampered block</h5><p>In the event of a mismatch with the cartridge, reference to the encrypted vault stored on that cartridge will show which block has been altered — or reveal that the vault itself was the thing altered.</p></div>
+  </div>
+
+  <div class="card card--dark">
+    <p>The protection depends on none of these alone — not on how securely the copy cartridges are stored, nor on the relative security attending the storage of the floppy disks, but on the <strong>combination of all three</strong> together with the technical security of the encryption mechanisms.</p>
+  </div>
+
+  <div class="note note--real">
+    <span class="nk">Real example · the modern descendant of this design</span>
+    <p>The EnCase evidence format (<span class="mono">.E01</span>) does almost exactly what the book describes: a header carrying case number, examiner name, acquisition date and drive details; the disk stored in fixed-size chunks with a CRC after each chunk; and an overall acquisition hash written when the image closes. Read the textbook's reference area, block hashes and vault, and you are reading the ancestor of the file format every lab uses today.</p>
+  </div>
+
+  <div class="exam"><b>Exam</b><span>List the seven items in the reference area, describe the three zones of a cartridge, then give the four security measures. The birthday-attack point in measure 1 is the technically interesting one and is worth stating explicitly.</span></div>
+</section>
+<!-- ===================== SUMMARY ===================== -->
+<section class="topic" id="summary">
+  <div class="exhibit"><span class="exno">REVISION</span><span class="exsrc">One line for each of the twenty topics</span></div>
+  <h3>The Whole Unit in Twenty Lines</h3>
+  <p class="lede">If you can write these twenty sentences from memory, you can answer any two-mark question in this unit and you have the skeleton of every ten-mark answer.</p>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#8A98A9;font-weight:600">Part A · Evidence Collection and Data Seizure</h4>
+    <div class="sumrow"><span class="sn">01</span><span class="st">Reasons to collect</span><span class="sd">Two reasons: future prevention, and responsibility — the attacker's for the damage, the victim's to the community.</span></div>
+    <div class="sumrow"><span class="sn">02</span><span class="st">Collection options</span><span class="sd">Pull it offline and collect, or leave it online and monitor. Disconnecting risks a dead man switch; monitoring risks tipping off the attacker and incurring liability.</span></div>
+    <div class="sumrow"><span class="sn">03</span><span class="st">Obstacles</span><span class="sd">Speed, anywhere-to-anywhere reach, encryption, anonymity, no intrinsic identifiers and self-destroying audit records — and an identifier is not a person.</span></div>
+    <div class="sumrow"><span class="sn">04</span><span class="st">Types of evidence</span><span class="sd">Real speaks for itself; testimonial comes from a direct witness; hearsay is secondhand and generally inadmissible.</span></div>
+    <div class="sumrow"><span class="sn">05</span><span class="st">Rules of evidence</span><span class="sd">Admissible, Authentic, Complete, Reliable, Believable — plus the do's and don'ts derived from them.</span></div>
+    <div class="sumrow"><span class="sn">06</span><span class="st">Volatile evidence</span><span class="sd">Registers and cache, routing tables, ARP cache, process table, kernel statistics, main memory, temporary file systems, secondary memory, router configuration, network topology.</span></div>
+    <div class="sumrow"><span class="sn">07</span><span class="st">General procedure</span><span class="sd">Identification, preservation, analysis, presentation.</span></div>
+    <div class="sumrow"><span class="sn">08</span><span class="st">Collection and archiving</span><span class="sd">Log continuously, secure and back up the logs, sign and encrypt the important ones, prefer a remote syslog server, and monitor traffic and users with a disclaimer at logon.</span></div>
+    <div class="sumrow"><span class="sn">09</span><span class="st">Methods of collection</span><span class="sd">Freezing the scene (snapshot to removable non-volatile media, with digests) and honeypotting (a replica system, or sandboxing on the real host). They combine; watch cost and entrapment.</span></div>
+    <div class="sumrow"><span class="sn">10</span><span class="st">Artifacts</span><span class="sd">Code fragments, trojaned programs, running processes, sniffer logs. Never analyse them on the compromised system; use checksums, because size and MAC times can be faked.</span></div>
+    <div class="sumrow"><span class="sn">11</span><span class="st">Collection steps</span><span class="sd">Find the evidence, find the relevant data, create an order of volatility, remove external avenues of change, collect the evidence, document everything.</span></div>
+    <div class="sumrow"><span class="sn">12</span><span class="st">Controlling contamination</span><span class="sd">Examine verified duplicates on a clean isolated host, never the original. Never change the clock; record drift; normalise to GMT.</span></div>
+    <div class="sumrow"><span class="sn">13</span><span class="st">Chain of custody</span><span class="sd">A detailed list of what was done with the originals once collected: who found it, when and where and how it moved, who had access, what they did.</span></div>
+  </div>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#8A98A9;font-weight:600">Part B · Duplication and Preservation</h4>
+    <div class="sumrow"><span class="sn">14</span><span class="st">Preserving the scene</span><span class="sd">The OS, the applications and the investigator are all threats. Evidence hides in file slack, erased files and the swap file. Make a bit stream backup — two copies — before the machine is operated.</span></div>
+    <div class="sumrow"><span class="sn">15</span><span class="st">Processing steps</span><span class="sd">Shut down, document hardware, transport securely, bit stream backup, mathematically authenticate, document date and time, keywords, swap file, slack, unallocated space, search, file times, anomalies, program functionality, document findings, retain software.</span></div>
+    <div class="sumrow"><span class="sn">16</span><span class="st">Legal aspects</span><span class="sd">Chain of custody is a roadmap. Prove nothing was added or changed, a complete copy was made, a reliable process was used, all media secured. Log in the regular course of business; use a log-on banner; keep a bound, non-spiral notebook.</span></div>
+  </div>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#8A98A9;font-weight:600">Part C · Image Verification and Authentication</h4>
+    <div class="sumrow"><span class="sn">17</span><span class="st">Image verification</span><span class="sd">At least two copies. One sealed before the owner as the master, opened only on court instruction; analysis on the second. Disk size, media cost and copying time drive the search for something better.</span></div>
+    <div class="sumrow"><span class="sn">18</span><span class="st">Special needs</span><span class="sd">Protect integrity, not content. Two forms: prove not one bit changed since the copy, and prove this is genuinely the copy taken then, from that machine.</span></div>
+    <div class="sumrow"><span class="sn">19</span><span class="st">Practical consideration</span><span class="sd">Complete and non-software specific; quick and simple; usable with minimal training; low cost. Reject key management agencies and trusted third parties as unnecessary paraphernalia.</span></div>
+    <div class="sumrow"><span class="sn">20</span><span class="st">Practical implementation</span><span class="sd">Each cartridge carries a reference area, the sector-by-sector bulk copy, and an encrypted vault of block hashes. Security comes from the combination, not any single measure.</span></div>
+  </div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section class="topic" id="quiz">
+  <div class="exhibit"><span class="exno">SELF-CHECK</span><span class="exsrc">Twelve questions across the whole unit</span></div>
+  <h3>Check Yourself</h3>
+  <p class="lede">One attempt per question. Pick an answer and the explanation appears — including why the wrong options are wrong.</p>
+
+  <div class="quiz" id="quizbox">
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q1</span>Which of these is <em>not</em> one of the five rules of evidence?</p>
+      <div class="opts">
+        <button class="opt">Authentic</button>
+        <button class="opt">Encrypted</button>
+        <button class="opt">Complete</button>
+        <button class="opt">Believable</button>
+      </div>
+      <p class="qfb">The five are Admissible, Authentic, Complete, Reliable and Believable. Encryption is a protective measure, not a property evidence must have.</p>
+    </div>
+
+    <div class="q" data-a="0">
+      <p class="qt"><span class="qn">Q2</span>An audit log written automatically by a firewall, shown to be free from contamination, is which type of evidence?</p>
+      <div class="opts">
+        <button class="opt">Real evidence</button>
+        <button class="opt">Testimonial evidence</button>
+        <button class="opt">Hearsay</button>
+        <button class="opt">Exculpatory evidence</button>
+      </div>
+      <p class="qfb">Real evidence speaks for itself without relying on anything else. Testimonial needs a witness; hearsay comes from someone with no direct knowledge; exculpatory describes evidence that tends to clear a suspect, which is a role rather than a type.</p>
+    </div>
+
+    <div class="q" data-a="2">
+      <p class="qt"><span class="qn">Q3</span>In the order of volatility, which should be collected first?</p>
+      <div class="opts">
+        <button class="opt">Secondary memory (disk)</button>
+        <button class="opt">Router configuration</button>
+        <button class="opt">Registers and cache</button>
+        <button class="opt">Network topology</button>
+      </div>
+      <p class="qfb">Registers and cache sit at the top of the list because they survive for the shortest time. Disk, router configuration and network topology are the three most persistent items and come last.</p>
+    </div>
+
+    <div class="q" data-a="3">
+      <p class="qt"><span class="qn">Q4</span>What is the specific risk of pulling a compromised system off the network?</p>
+      <div class="opts">
+        <button class="opt">The attacker may sue for damages</button>
+        <button class="opt">Logs become hearsay</button>
+        <button class="opt">The system clock resets</button>
+        <button class="opt">A dead man switch may destroy evidence on disconnect</button>
+      </div>
+      <p class="qfb">The textbook names the dead man switch: a mechanism that wipes evidence the moment the system detects it has gone offline. The liability risk belongs to the <em>other</em> option — leaving it online while it attacks others.</p>
+    </div>
+
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q5</span>Freezing the scene and honeypotting are&hellip;</p>
+      <div class="opts">
+        <button class="opt">Mutually exclusive — you must choose one</button>
+        <button class="opt">Not mutually exclusive — they can be combined</button>
+        <button class="opt">Two names for the same technique</button>
+        <button class="opt">Only usable by law enforcement</button>
+      </div>
+      <p class="qfb">The text is explicit: you can collect frozen information after or during any honeypotting. Sandboxing is the related third technique — the real host, with capability limited.</p>
+    </div>
+
+    <div class="q" data-a="2">
+      <p class="qt"><span class="qn">Q6</span>Two copies of <span class="mono">/bin/ls</span> have identical file size, MAC times and permissions, but different SHA-256 values. What does that tell you?</p>
+      <div class="opts">
+        <button class="opt">Nothing — hashes vary between runs</button>
+        <button class="opt">The disk has bad sectors</button>
+        <button class="opt">The suspect binary is an artifact and must be examined on an isolated host</button>
+        <button class="opt">The baseline must be wrong</button>
+      </div>
+      <p class="qfb">Size, timestamps and permissions are all attacker-controllable; the cryptographic hash is not. A differing hash with identical metadata is the signature of a trojaned binary — copy it to a clean, isolated examination host and never run it on the victim machine.</p>
+    </div>
+
+    <div class="q" data-a="0">
+      <p class="qt"><span class="qn">Q7</span>Which step is <em>not</em> among the six collection steps?</p>
+      <div class="opts">
+        <button class="opt">Notify the press</button>
+        <button class="opt">Create an order of volatility</button>
+        <button class="opt">Remove external avenues of change</button>
+        <button class="opt">Document everything</button>
+      </div>
+      <p class="qfb">The six are: find the evidence, find the relevant data, create an order of volatility, remove external avenues of change, collect the evidence, document everything. On freezing the scene the text says the opposite of notifying the press — inform the authorities, but do not tell the world yet.</p>
+    </div>
+
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q8</span>Why must the evidence notebook not be spiral-bound?</p>
+      <div class="opts">
+        <button class="opt">Spiral bindings damage evidence bags</button>
+        <button class="opt">So that the removal of a page would be obvious</button>
+        <button class="opt">Because courts require hardback documents</button>
+        <button class="opt">To fit inside a standard evidence locker</button>
+      </div>
+      <p class="qfb">It is a tamper-evidence requirement. The notebook must be bound in such a way that it is obvious if a page or pages have been removed — and a separate notebook is used for each investigation.</p>
+    </div>
+
+    <div class="q" data-a="3">
+      <p class="qt"><span class="qn">Q9</span>Why is a standard backup insufficient for forensic work?</p>
+      <div class="opts">
+        <button class="opt">It is too slow for large drives</button>
+        <button class="opt">It cannot be hashed</button>
+        <button class="opt">It changes the file permissions</button>
+        <button class="opt">It omits file slack and erased file space</button>
+      </div>
+      <p class="qfb">A standard backup copies the files the file system knows about. A bit stream backup copies every bit on the device, which is the only way to capture file slack, unallocated space and the swap file — where much of the evidence actually is.</p>
+    </div>
+
+    <div class="q" data-a="0">
+      <p class="qt"><span class="qn">Q10</span>In the current image verification procedure, when may the sealed master copy be opened?</p>
+      <div class="opts">
+        <button class="opt">Only under instruction from the court, if the evidence is challenged</button>
+        <button class="opt">Whenever the working copy is damaged</button>
+        <button class="opt">At the investigator's discretion</button>
+        <button class="opt">After the trial concludes</button>
+      </div>
+      <p class="qfb">The master is sealed in the presence of the computer owner and placed in secure storage. It is opened for examination only under instruction from the court, in the event of a challenge to the evidence presented after analysis of the second copy.</p>
+    </div>
+
+    <div class="q" data-a="2">
+      <p class="qt"><span class="qn">Q11</span>According to the special needs of evidential authentication, what actually needs protecting?</p>
+      <div class="opts">
+        <button class="opt">The confidentiality of the content</button>
+        <button class="opt">The investigator's private key</button>
+        <button class="opt">The integrity of the copy</button>
+        <button class="opt">The bandwidth used during copying</button>
+      </div>
+      <p class="qfb">The chapter states it plainly: it is not the content that needs protection, but its integrity. Two forms follow — proving not a single bit changed since the copy, and proving the copy is genuinely the one taken at that time from that machine.</p>
+    </div>
+
+    <div class="q" data-a="1">
+      <p class="qt"><span class="qn">Q12</span>Why are block hashes generated in conjunction with a one-time pad simulation?</p>
+      <div class="opts">
+        <button class="opt">To compress the cartridge contents</button>
+        <button class="opt">To avoid repeat hash values and thwart a birthday attack</button>
+        <button class="opt">To allow the vault to be decrypted without a key</button>
+        <button class="opt">To speed up sector-by-sector copying</button>
+      </div>
+      <p class="qfb">Disk data is highly redundant — long runs of zeroes, ASCII text and fixed structures. Hashing it naively produces repeated hash values, which invites a birthday attack. The one-time pad simulation removes that redundancy and also provides continuity between blocks.</p>
+    </div>
+
+    <div class="score" id="score">Answered 0 of 12.</div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer class="foot">
+  <div class="foot-in">
+    <b>Digital Forensics · 20CS41020 · Unit II</b><br>
+    Evidence Collection and Data Seizure · Duplication and Preservation of Digital Evidence · Computer Image Verification and Authentication<br>
+    B.Tech CSE (AIML), IV Year I Sem · AR22 · Geethanjali College of Engineering and Technology<br><br>
+    <b>Prescribed text:</b> John R. Vacca, <i>Computer Forensics: Computer Crime Scene Investigation</i>, Chapters 6, 7 and 8.<br>
+    <b>Also referenced:</b> Nelson, Phillips, Enfinger &amp; Steuart, <i>Computer Forensics and Investigations</i>.<br>
+    Indian legal references (Section 65B, Anvar P.V. v. P.K. Basheer, Arjun Panditrao Khotkar) are added for local context and are not in the prescribed text.<br><br>
+    The TechCorp breach is a teaching scenario. Named incidents are real and are cited for illustration.
+  </div>
+</footer>
+
+</main>
+</div><!-- /shell -->
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- mobile nav ---------- */
+  var rail=document.getElementById('rail'),
+      scrim=document.getElementById('scrim'),
+      menubtn=document.getElementById('menubtn');
+  function setNav(open){
+    rail.classList.toggle('open',open);
+    scrim.classList.toggle('on',open);
+    menubtn.setAttribute('aria-expanded',open?'true':'false');
+  }
+  menubtn.addEventListener('click',function(){setNav(!rail.classList.contains('open'));});
+  scrim.addEventListener('click',function(){setNav(false);});
+  rail.addEventListener('click',function(e){ if(e.target.closest('a')) setNav(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') setNav(false); });
+
+  /* ---------- scroll progress + custody rail state ---------- */
+  var links=Array.prototype.slice.call(document.querySelectorAll('.chain a')),
+      sections=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}),
+      prog=document.getElementById('prog'),
+      ticking=false;
+
+  function update(){
+    ticking=false;
+    var doc=document.documentElement,
+        max=doc.scrollHeight-doc.clientHeight,
+        y=window.scrollY||doc.scrollTop;
+    prog.style.width=(max>0?(y/max*100):0)+'%';
+
+    var current=-1;
+    for(var i=0;i<sections.length;i++){
+      if(!sections[i]) continue;
+      if(sections[i].getBoundingClientRect().top<=140) current=i;
+    }
+    for(var j=0;j<links.length;j++){
+      var li=links[j].parentNode;
+      li.classList.toggle('seen', j<=current);
+      li.classList.toggle('here', j===current);
+    }
+  }
+  function onScroll(){ if(!ticking){ ticking=true; window.requestAnimationFrame(update); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  update();
+
+  /* ---------- order of volatility ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.volitem'),function(b){
+    b.addEventListener('click',function(){
+      var open=b.getAttribute('aria-expanded')==='true';
+      b.setAttribute('aria-expanded',open?'false':'true');
+    });
+  });
+
+  /* ---------- chain of custody ---------- */
+  var entries=[
+    ["Link 01 · Seized at scene","Officer A recovers the device at 08:14, records make, model and serial, photographs it in place, and signs the seizure memo. Nothing is powered on."],
+    ["Link 02 · Hashed and sealed","Computer forensics specialist B images the drive through a write blocker, records the acquisition hash on the form, and seals the master in the owner's presence."],
+    ["Link 03 · Transported","Courier C moves the sealed exhibit under dual control. The log records the route, the departure and arrival times, and both signatures."],
+    ["Link 04 · Evidence locker","Custodian D books the exhibit in, assigns an identification number, and stores it where it cannot intermingle with other evidence. Entry and exit times are logged."],
+    ["Link 05 · Duplicate examined","Analyst E works only on the verified duplicate, on a clean isolated host, logging the date and time, the tools used, the methodology and the results."],
+    ["Link 06 · Produced in court","Prosecutor F produces the exhibit. The hash is recomputed in open court and matches the value recorded at link 02. The chain holds."]
+  ];
+  var coc=document.getElementById('coc'),
+      cocmsg=document.getElementById('cocmsg'),
+      cochint=document.getElementById('cochint'),
+      sealtxt=document.getElementById('sealtxt'),
+      links6=Array.prototype.slice.call(coc.querySelectorAll('.coclink'));
+
+  function clearPressed(){ links6.forEach(function(b){ b.setAttribute('aria-pressed','false'); }); }
+  links6.forEach(function(b){
+    b.addEventListener('click',function(){
+      if(document.body.classList.contains('broken')) return;
+      var i=+b.dataset.i, was=b.getAttribute('aria-pressed')==='true';
+      clearPressed();
+      if(was){ cocmsg.textContent='Six links, each one signed and timestamped. Break any single link and the whole chain — and the case — is compromised.'; return; }
+      b.setAttribute('aria-pressed','true');
+      cocmsg.innerHTML='<strong>'+entries[i][0]+'</strong><br>'+entries[i][1];
+    });
+  });
+
+  document.getElementById('breakbtn').addEventListener('click',function(){
+    var i=Math.floor(Math.random()*6);
+    clearPressed();
+    document.body.classList.add('broken');
+    links6.forEach(function(b,k){ b.classList.toggle('snapped',k===i); });
+    cocmsg.innerHTML='<strong>Custody broken at link 0'+(i+1)+' — '+entries[i][0].split('· ')[1]+'</strong><br>'+
+      'There is an unlogged gap here: no signature, no timestamp, no record of who held the exhibit. Defence counsel does not need to prove that anything was actually changed — only that it <em>could</em> have been. Every later link is now tainted, and the exhibit may be excluded no matter how sound the technical analysis was.';
+    sealtxt.textContent='Chain broken';
+    cochint.textContent='One gap taints everything downstream.';
+  });
+
+  document.getElementById('resetbtn').addEventListener('click',function(){
+    document.body.classList.remove('broken');
+    clearPressed();
+    links6.forEach(function(b){ b.classList.remove('snapped'); });
+    cocmsg.textContent='Chain resealed. Six links, each one signed and timestamped.';
+    sealtxt.textContent='Chain intact';
+    cochint.textContent='Watch the seal indicator in the sidebar.';
+  });
+
+  /* ---------- 16-step checklist ---------- */
+  var chks=Array.prototype.slice.call(document.querySelectorAll('.stepchk')),
+      chkcount=document.getElementById('chkcount'),
+      chkfill=document.getElementById('chkfill');
+  function chkUpdate(){
+    var n=chks.filter(function(b){return b.getAttribute('aria-pressed')==='true';}).length;
+    chkcount.textContent=n+' / 16 revised';
+    chkfill.style.width=(n/16*100)+'%';
+  }
+  chks.forEach(function(b){
+    b.addEventListener('click',function(){
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true'?'false':'true');
+      chkUpdate();
+    });
+  });
+
+  /* ---------- quiz ---------- */
+  var qs=Array.prototype.slice.call(document.querySelectorAll('.q')),
+      scoreEl=document.getElementById('score'),
+      done=0, right=0;
+  qs.forEach(function(q){
+    var correct=+q.dataset.a,
+        opts=Array.prototype.slice.call(q.querySelectorAll('.opt')),
+        fb=q.querySelector('.qfb'),
+        answered=false;
+    opts.forEach(function(o,i){
+      o.addEventListener('click',function(){
+        if(answered) return;
+        answered=true; done++;
+        if(i===correct) right++;
+        opts.forEach(function(x,k){
+          if(k===correct) x.classList.add('right');
+          else if(k===i) x.classList.add('wrong');
+          x.disabled=true;
+        });
+        fb.classList.add('show');
+        scoreEl.textContent='Answered '+done+' of 12 · '+right+' correct.'+(done===12?(right>=10?'  Solid.':'  Worth another read of the sections you missed.'):'');
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
