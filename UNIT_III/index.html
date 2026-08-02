@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit III — Analysis &amp; Validation, Network Forensics, Crime Scenes</title>
+<meta name="description" content="A plain-language guide to Unit III of Digital Forensics (20CS41020): forensic analysis and validation, data-hiding techniques, remote and live acquisitions, network forensics, the Honeynet Project, and processing crime and incident scenes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================= TOKENS ================= */
+:root{
+  --paper:#EDF0F3; --panel:#FFFFFF; --panel2:#F6F8FA; --panel3:#E3E9EF;
+  --ink:#0F1620; --ink2:#374350; --ink3:#5A6673;
+  --rule:#D4DBE2; --rule2:#BEC8D3;
+  --custody:#23456E; --custody2:#35618F; --custodybg:#E9EEF5; --custodyline:#C3D2E3;
+  --seal:#AE202A; --sealbg:#FBEDEE; --sealline:#E9C5C8;
+  --verify:#0B6E5A; --verifybg:#E7F3F0; --verifyline:#B7DBD2;
+  --tag:#8F6206; --tagbg:#FCF3DE; --tagline:#E8D5A4;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --rail:274px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.2rem;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;font-optical-sizing:auto}
+img,svg{max-width:100%;display:block}
+a{color:var(--custody);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--custody2);outline-offset:2px;border-radius:2px}
+p{margin:0 0 .9rem}
+strong{font-weight:600}
+
+/* ================= LAYOUT ================= */
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:.7rem 1rem;z-index:300;font-family:var(--sans);font-weight:600}
+.skip:focus{left:.5rem;top:.5rem}
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);max-width:1520px;margin:0 auto}
+.main{min-width:0;padding:0 clamp(1rem,3.2vw,3rem) 6rem}
+.wrap{max-width:900px;margin:0 auto}
+
+/* ================= CUSTODY RAIL (signature) ================= */
+.rail{position:sticky;top:0;height:100vh;background:var(--ink);color:#C7D2DE;display:flex;flex-direction:column;z-index:60}
+.railhead{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid #222B36;flex:0 0 auto}
+.railkick{font-family:var(--mono);font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#96A5B6}
+.railtitle{font-family:var(--sans);font-weight:800;font-size:1rem;letter-spacing:-.01em;color:#fff;margin:.35rem 0 .2rem;line-height:1.22}
+.railsub{font-family:var(--mono);font-size:.64rem;color:#8595A6;letter-spacing:.03em}
+.railseal{margin-top:.75rem;display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase}
+.railseal .dot{width:.5rem;height:.5rem;border-radius:50%;background:#2FA98A;box-shadow:0 0 0 3px rgba(47,169,138,.18)}
+.railseal .txt{color:#57C0A4}
+body.broken .railseal .dot{background:#E0525C;box-shadow:0 0 0 3px rgba(224,82,92,.2)}
+body.broken .railseal .txt{color:#F08A92}
+.railscroll{overflow-y:auto;padding:.85rem .5rem 3rem 1.2rem;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:#2B3644 transparent}
+.railscroll::-webkit-scrollbar{width:6px}
+.railscroll::-webkit-scrollbar-thumb{background:#2B3644;border-radius:3px}
+.railpart{font-family:var(--mono);font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:#8595A6;margin:1.15rem 0 .45rem;padding-left:1.5rem}
+.railpart:first-of-type{margin-top:.15rem}
+.chain{list-style:none;margin:0;padding:0;position:relative}
+.chain::before{content:"";position:absolute;left:.43rem;top:.6rem;bottom:.6rem;width:2px;background:#222C38}
+.chain li{position:relative}
+.chain a{display:flex;gap:.5rem;align-items:baseline;padding:.3rem .5rem .3rem 1.5rem;text-decoration:none;color:#AAB8C7;font-family:var(--sans);font-size:.79rem;line-height:1.32;font-weight:500;border-radius:4px;transition:color .18s,background .18s}
+.chain a:hover{color:#fff;background:#1A222C}
+.chain a::before{content:"";position:absolute;left:.18rem;top:.6rem;width:.52rem;height:.52rem;border:2px solid #35414E;background:var(--ink);border-radius:1px;transition:background .22s,border-color .22s}
+.chain a .n{font-family:var(--mono);font-size:.62rem;color:#8595A6;flex:0 0 auto}
+.chain li.seen > a::before{background:#3C6E93;border-color:#4E86AE}
+.chain li.here > a{color:#fff;background:#1B242F}
+.chain li.here > a::before{background:#E9B949;border-color:#E9B949}
+.chain li.here > a .n{color:#E9B949}
+body.broken .chain li.seen > a::before{background:#8A3038;border-color:#A83E47}
+
+/* mobile nav */
+.mobar{display:none;position:sticky;top:0;z-index:70;background:var(--ink);color:#fff;align-items:center;gap:.7rem;padding:.6rem .9rem;border-bottom:1px solid #222B36}
+.mobar b{font-family:var(--sans);font-size:.86rem;font-weight:700;letter-spacing:-.01em}
+.mobar small{font-family:var(--mono);font-size:.62rem;color:#96A5B6;letter-spacing:.08em;text-transform:uppercase}
+.menubtn{margin-left:auto;background:#1D2733;color:#fff;border:1px solid #2E3A48;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .7rem;border-radius:3px;cursor:pointer}
+.progress{position:fixed;top:0;left:0;height:3px;background:#E9B949;width:0;z-index:90;transition:width .1s linear}
+
+/* ================= HERO / CASE FILE ================= */
+.hero{background:var(--ink);color:#E7EDF3;margin:0 calc(-1*clamp(1rem,3.2vw,3rem));padding:clamp(2rem,5vw,3.6rem) clamp(1rem,3.2vw,3rem) clamp(2rem,4vw,3rem);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px);pointer-events:none}
+.hero-in{max-width:900px;margin:0 auto;position:relative;z-index:1}
+.filebar{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#A2B0C0;border-bottom:1px solid #26303C;padding-bottom:.8rem;margin-bottom:1.6rem}
+.filebar .stamp{color:#0F1620;background:#E9B949;padding:.2rem .5rem;border-radius:2px;font-weight:600;letter-spacing:.1em}
+.hero h1{font-family:var(--sans);font-weight:800;font-size:clamp(2rem,5.4vw,3.5rem);line-height:1.03;letter-spacing:-.028em;margin:0 0 1rem;color:#fff;text-wrap:balance}
+.hero h1 em{font-style:normal;color:#E9B949}
+.hero .lede{font-size:clamp(1.02rem,1.7vw,1.18rem);color:#B7C4D2;max-width:60ch;margin:0 0 1.8rem}
+.herometa{display:flex;flex-wrap:wrap;gap:.5rem}
+.pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;padding:.35rem .65rem;border:1px solid #2E3A48;border-radius:2px;color:#AEBCCB;background:#161E28}
+
+/* case timeline */
+.tl{margin:2.2rem 0 0;border-top:1px solid #26303C;padding-top:1.5rem}
+.tl h2{font-family:var(--mono);font-size:.66rem;letter-spacing:.17em;text-transform:uppercase;color:#A2B0C0;font-weight:500;margin:0 0 1rem}
+.tlgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:tl}
+.tlstep{position:relative;padding:.9rem .8rem .9rem 0;border-top:2px solid #2E3A48}
+.tlstep:nth-child(1){border-top-color:#E9B949}
+.tlstep::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;background:#2E3A48;border-radius:1px}
+.tlstep:nth-child(1)::before{background:#E9B949}
+.tltime{font-family:var(--mono);font-size:.78rem;color:#E9B949;font-weight:500;display:block;margin-bottom:.25rem}
+.tltxt{font-size:.86rem;line-height:1.4;color:#AEBCCB;font-family:var(--sans)}
+@media (max-width:820px){.tlgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.tlgrid{grid-template-columns:1fr}}
+
+/* ================= SECTION / TOPIC ================= */
+.partbreak{margin:4.5rem 0 2.5rem;padding-top:2rem;border-top:3px solid var(--ink)}
+.partbreak .pk{font-family:var(--mono);font-size:.66rem;letter-spacing:.19em;text-transform:uppercase;color:var(--seal);font-weight:600}
+.partbreak h2{font-family:var(--sans);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.15rem);letter-spacing:-.022em;margin:.5rem 0 .5rem;line-height:1.12}
+.partbreak p{color:var(--ink2);max-width:62ch;margin:0}
+
+.topic{scroll-margin-top:1.2rem;padding:2.6rem 0 0;border-top:1px solid var(--rule);margin-top:2.6rem}
+.topic:first-of-type{border-top:0;margin-top:0}
+.exhibit{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin-bottom:.85rem}
+.exno{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.1em;background:var(--tagbg);color:var(--tag);border:1px solid var(--tagline);padding:.24rem .55rem;border-radius:2px}
+.exsrc{font-family:var(--mono);font-size:.66rem;color:var(--ink3);letter-spacing:.03em}
+.topic h3{font-family:var(--sans);font-weight:700;font-size:clamp(1.42rem,3vw,2rem);letter-spacing:-.022em;line-height:1.14;margin:0 0 .7rem;text-wrap:balance}
+.lede{font-size:1.06rem;color:var(--ink2);max-width:66ch;margin:0 0 1.4rem}
+h4{font-family:var(--sans);font-weight:700;font-size:1.02rem;letter-spacing:-.008em;margin:1.8rem 0 .7rem}
+h5{font-family:var(--sans);font-weight:700;font-size:.85rem;letter-spacing:.02em;margin:0 0 .5rem;text-transform:none}
+
+/* ================= PANELS & CARDS ================= */
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.25rem;margin:1.1rem 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media (max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.05rem 1.1rem}
+.card h5{font-size:.95rem;margin-bottom:.4rem}
+.card p{font-size:.94rem;margin:0;color:var(--ink2)}
+.card .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:.4rem}
+.card--risk{background:var(--sealbg);border-color:var(--sealline)}
+.card--risk h5{color:var(--seal)}
+.card--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.card--safe h5{color:var(--verify)}
+.card--cust{background:var(--custodybg);border-color:var(--custodyline)}
+.card--cust h5{color:var(--custody)}
+.card--dark{background:var(--ink);border-color:var(--ink)}
+.card--dark h5{color:#E9B949}
+.card--dark p,.card--dark li{color:#C2CEDA}
+.card--dark .k{color:#A2B0C0}
+
+/* notes */
+.note{border-radius:6px;padding:1rem 1.1rem 1rem 1.15rem;margin:1.2rem 0;border:1px solid;font-size:.95rem}
+.note .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:.35rem}
+.note p:last-child{margin-bottom:0}
+.note--case{background:var(--custodybg);border-color:var(--custodyline)}
+.note--case .nk{color:var(--custody)}
+.note--real{background:var(--tagbg);border-color:var(--tagline)}
+.note--real .nk{color:var(--tag)}
+.note--risk{background:var(--sealbg);border-color:var(--sealline)}
+.note--risk .nk{color:var(--seal)}
+.note--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.note--safe .nk{color:var(--verify)}
+
+/* exam pointer */
+.exam{display:flex;gap:.8rem;align-items:flex-start;margin:1.3rem 0 .3rem;padding:.75rem .95rem;background:var(--panel2);border-left:3px solid var(--ink);border-radius:0 4px 4px 0;font-size:.92rem}
+.exam b{font-family:var(--mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);flex:0 0 auto;padding-top:.16rem}
+.exam span{color:var(--ink2)}
+
+/* lists */
+ul.clean,ol.clean{margin:.4rem 0 1rem;padding-left:1.15rem}
+ul.clean li,ol.clean li{margin-bottom:.42rem;font-size:.97rem}
+ul.clean li::marker{color:var(--custody2)}
+ol.clean li::marker{font-family:var(--mono);font-size:.82rem;color:var(--custody2)}
+ul.ticks{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.ticks li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.ticks li::before{content:"";position:absolute;left:0;top:.52em;width:.62rem;height:.62rem;border:2px solid var(--verify);border-radius:1px}
+ul.crosses{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.crosses li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.crosses li::before{content:"\00d7";position:absolute;left:.06rem;top:-.05em;color:var(--seal);font-weight:700;font-size:1.1rem}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:1.1rem 0;font-size:.93rem;background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.tbl th{font-family:var(--sans);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;text-align:left;background:var(--ink);color:#DCE4EC;padding:.6rem .8rem;font-weight:600}
+.tbl td{padding:.65rem .8rem;border-top:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+.tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--ink);font-size:.9rem}
+.tbl tr:nth-child(even) td{background:var(--panel2)}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* mono chip */
+.mono{font-family:var(--mono);font-size:.86em;background:var(--panel3);padding:.1em .38em;border-radius:3px;color:var(--ink)}
+.hash{font-family:var(--mono);font-size:.8rem;letter-spacing:.02em}
+
+/* pull quote */
+.pull{border-left:3px solid var(--tag);padding:.3rem 0 .3rem 1.1rem;margin:1.4rem 0;font-size:1.1rem;line-height:1.5;color:var(--ink);font-style:italic}
+.pull cite{display:block;font-style:normal;font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:.5rem}
+</style>
+<style>
+/* ================= GUI WINDOW CHROME (signature) ================= */
+.app{border:1px solid #9AA6B4;border-radius:6px;overflow:hidden;margin:1.2rem 0;
+  box-shadow:0 4px 18px rgba(15,22,32,.13);background:#F3F5F8;font-family:var(--sans)}
+.app-bar{background:linear-gradient(#3E4A5A,#2C3644);color:#EAF0F6;padding:.42rem .7rem;
+  display:flex;align-items:center;gap:.55rem;font-size:.78rem;font-weight:600}
+.app-bar .dots{display:flex;gap:.28rem;margin-right:.3rem}
+.app-bar .dots i{width:.62rem;height:.62rem;border-radius:50%;background:#6B7787;display:block}
+.app-bar .dots i:nth-child(1){background:#E0655F}
+.app-bar .dots i:nth-child(2){background:#E0B35F}
+.app-bar .dots i:nth-child(3){background:#5FBF7A}
+.app-menu{background:#E7EBF0;border-bottom:1px solid #C6CFDA;padding:.3rem .7rem;
+  display:flex;gap:1rem;font-size:.73rem;color:#3C4854}
+.app-menu span.on{color:var(--custody);font-weight:600;border-bottom:2px solid var(--custody)}
+.app-body{padding:.85rem .9rem;background:#F8FAFC;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.app-split{display:grid;grid-template-columns:11rem 1fr;gap:0}
+@media (max-width:640px){.app-split{grid-template-columns:1fr}}
+.app-pane{background:#EEF2F6;border-right:1px solid #C6CFDA;padding:.7rem .6rem;font-size:.76rem}
+.app-pane .tw{padding:.18rem 0 .18rem .8rem;position:relative;color:#3C4854}
+.app-pane .tw::before{content:"\25B8";position:absolute;left:0;color:#7A899A;font-size:.7rem}
+.app-pane .tw.open::before{content:"\25BE"}
+.app-pane .tw.sub{padding-left:1.7rem}
+.app-pane .tw.sel{background:var(--custody);color:#fff;border-radius:3px}
+.app-pane .tw.sel::before{color:#fff}
+.app-status{background:#E7EBF0;border-top:1px solid #C6CFDA;padding:.28rem .7rem;
+  font-family:var(--mono);font-size:.66rem;color:#5A6673;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+
+.chk{display:flex;align-items:center;gap:.45rem;padding:.2rem 0;font-size:.78rem;color:#25303C}
+.chk i{width:.82rem;height:.82rem;border:1.5px solid #7A899A;border-radius:2px;background:#fff;
+  display:inline-block;position:relative;flex:0 0 auto}
+.chk.on i{background:var(--custody);border-color:var(--custody)}
+.chk.on i::after{content:"";position:absolute;left:.22rem;top:.02rem;width:.19rem;height:.4rem;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chk.off{color:#8A96A4}
+.btnrow{display:flex;gap:.4rem;justify-content:flex-end;margin-top:.7rem;flex-wrap:wrap}
+.wbtn{font-family:var(--sans);font-size:.75rem;padding:.32rem .85rem;border-radius:3px;
+  border:1px solid #9AA6B4;background:linear-gradient(#FDFEFF,#E9EEF3);color:#25303C}
+.wbtn.pri{background:var(--custody);border-color:var(--custody);color:#fff;font-weight:600}
+.field{display:flex;align-items:center;gap:.5rem;margin:.35rem 0;font-size:.77rem;flex-wrap:wrap}
+.field label{color:#3C4854;min-width:6.5rem}
+.field .inp{flex:1;min-width:8rem;background:#fff;border:1px solid #A9B4C0;border-radius:3px;
+  padding:.28rem .45rem;font-family:var(--mono);font-size:.72rem;color:#25303C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field .inp.mono-out{background:#F2F5F8;color:var(--custody);font-weight:600}
+.tblmini{width:100%;border-collapse:collapse;font-size:.74rem;background:#fff;border:1px solid #C6CFDA}
+.tblmini th{background:#E7EBF0;text-align:left;padding:.32rem .5rem;font-weight:600;color:#3C4854;border-bottom:1px solid #C6CFDA}
+.tblmini td{padding:.3rem .5rem;border-bottom:1px solid #EAEFF4;font-family:var(--mono);font-size:.71rem;color:#3C4854}
+.tblmini tr.hi td{background:var(--custodybg);color:var(--custody);font-weight:600}
+.caption{font-family:var(--mono);font-size:.66rem;color:var(--ink3);text-align:center;margin:-.6rem 0 1.3rem}
+
+/* disk management strip */
+.dmstrip{display:flex;gap:2px;margin:.6rem 0 .3rem;height:3.4rem;border:1px solid #C6CFDA;background:#C6CFDA}
+.dmpart{background:#fff;display:flex;flex-direction:column;justify-content:center;padding:.3rem .5rem;font-size:.7rem}
+.dmpart b{font-family:var(--sans);font-size:.74rem;color:#25303C}
+.dmpart span{font-family:var(--mono);font-size:.66rem;color:#5A6673}
+.dmpart .bar{height:.3rem;background:var(--custody);border-radius:2px;margin-top:.25rem}
+.dmpart.hidden{background-color:#FBEDEE;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0) 0 7px,rgba(174,32,42,.10) 7px 14px)}
+.dmpart.hidden b{color:var(--seal)}
+.dmpart.hidden span{color:#8E1A22}
+.dmpart.hidden .bar{background:var(--seal)}
+
+/* bit shift lab */
+.lab{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.2rem;margin:1.2rem 0}
+.lab h5{font-size:.96rem;margin-bottom:.25rem}
+.lab .hint{font-size:.86rem;color:var(--ink3);margin:0 0 .8rem}
+.labrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:.7rem 0}
+.labrow input[type=text]{flex:1;min-width:12rem;font-family:var(--mono);font-size:.85rem;
+  padding:.45rem .6rem;border:1px solid var(--rule2);border-radius:4px;background:#fff;color:var(--ink)}
+.byteview{font-family:var(--mono);font-size:.78rem;background:#0F1620;color:#9FD4C4;
+  padding:.7rem .8rem;border-radius:5px;overflow-x:auto;white-space:pre;line-height:1.6;margin:.5rem 0}
+.byteview .lbl{color:#7A899A}
+.byteview .chg{color:#E9B949}
+.hashout{display:grid;grid-template-columns:6.5rem 1fr;gap:.5rem .7rem;align-items:baseline;
+  font-size:.8rem;margin-top:.7rem}
+@media (max-width:560px){.hashout{grid-template-columns:1fr}}
+.hashout .k{font-family:var(--sans);font-weight:600;color:var(--ink2)}
+.hashout .v{font-family:var(--mono);font-size:.74rem;word-break:break-all;color:var(--custody)}
+.hashout .v.changed{color:var(--seal)}
+.verdict{margin-top:.8rem;padding:.6rem .85rem;border-radius:5px;font-size:.88rem;
+  background:var(--verifybg);border:1px solid var(--verifyline);color:var(--verify)}
+.verdict.bad{background:var(--sealbg);border-color:var(--sealline);color:var(--seal)}
+
+/* decision tree */
+.tree{margin:1.2rem 0}
+.tnode{background:var(--panel);border:1.5px solid var(--rule2);border-radius:6px;padding:.75rem .9rem;margin:0 auto;max-width:34rem;text-align:center}
+.tnode b{font-family:var(--sans);font-size:.92rem;display:block}
+.tsplit{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.7rem}
+@media (max-width:620px){.tsplit{grid-template-columns:1fr}}
+.tbranch{border-radius:6px;padding:.75rem .85rem;font-size:.86rem}
+.tbranch .lb{font-family:var(--mono);font-size:.65rem;letter-spacing:.11em;text-transform:uppercase;display:block;margin-bottom:.3rem}
+.tbranch.a{background:var(--verifybg);border:1.5px solid var(--verifyline)}
+.tbranch.a .lb{color:var(--verify)}
+.tbranch.b{background:var(--tagbg);border:1.5px solid var(--tagline)}
+.tbranch.b .lb{color:var(--tag)}
+.tarrow{text-align:center;font-family:var(--mono);color:var(--ink3);margin:.35rem 0;font-size:1.1rem}
+
+/* modern-practice callout */
+.now{background:#0F1620;border-radius:6px;padding:1rem 1.15rem;margin:1.2rem 0;color:#C2CEDA;font-size:.92rem}
+.now .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:#5FBF9A;display:block;margin-bottom:.4rem;font-weight:600}
+.now p:last-child{margin-bottom:0}
+.now strong{color:#fff}
+.now a{color:#7FC7E8}
+
+/* annotated log line */
+.annot{background:#0F1620;border-radius:6px;padding:1rem 1.1rem;margin:1.1rem 0;overflow-x:auto}
+.annot code{font-family:var(--mono);font-size:.82rem;color:#DCE4EC;display:block;white-space:pre;line-height:1.9}
+.annot .p1{color:#E9B949}.annot .p2{color:#7FC7E8}.annot .p3{color:#9FD4C4}
+.annot .p4{color:#E58F8F}.annot .p5{color:#C9A6E0}
+.annotkey{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin-top:.7rem;font-family:var(--mono);font-size:.68rem}
+.annotkey span{color:#8A98A9}
+.annotkey b{font-weight:500}
+
+/* TCP header */
+.tcph{border:1.5px solid var(--ink);border-radius:5px;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.72rem}
+.tcprow{display:flex;border-top:1px solid var(--rule2);min-width:23rem}
+.tcprow:first-child{border-top:0}
+.tcprow div{flex:1;padding:.42rem .5rem;text-align:center;border-left:1px solid var(--rule2);background:var(--panel)}
+.tcprow div:first-child{border-left:0}
+.tcprow div.flag{flex:0 0 2rem;background:var(--panel2);font-weight:600}
+.tcprow div.flag.syn{background:var(--seal);color:#fff}
+.tcprow div.hd{background:var(--ink);color:#DCE4EC;font-weight:600}
+
+/* steps with GUI */
+.gsteps{counter-reset:g;list-style:none;margin:1rem 0;padding:0}
+.gsteps li{counter-increment:g;position:relative;padding:.55rem 0 .55rem 2.4rem;font-size:.94rem;border-top:1px solid var(--rule)}
+.gsteps li:first-child{border-top:0}
+.gsteps li::before{content:counter(g);position:absolute;left:0;top:.6rem;width:1.55rem;height:1.55rem;
+  border-radius:4px;background:var(--custody);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-family:var(--mono);font-size:.75rem;font-weight:600}
+.gsteps li .path{font-family:var(--mono);font-size:.8rem;background:var(--panel3);padding:.08em .4em;border-radius:3px}
+
+/* ===== shared components ===== */
+/* flow diagram */
+.flow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:stretch;margin:1.1rem 0}
+.fstep{flex:1 1 8rem;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:.65rem .7rem;position:relative}
+.fstep .fn{font-family:var(--mono);font-size:.6rem;color:var(--custody2);letter-spacing:.1em}
+.fstep b{display:block;font-family:var(--sans);font-size:.86rem;font-weight:700;margin:.2rem 0 .18rem;line-height:1.2}
+.fstep span{font-size:.8rem;color:var(--ink3);line-height:1.35;display:block}
+.fstep--dark{background:var(--ink);border-color:var(--ink)}
+.fstep--dark b{color:#fff}.fstep--dark span{color:#AEBCCB}.fstep--dark .fn{color:#E9B949}
+/* summary table */
+.sumcard{background:var(--ink);border-radius:8px;padding:1.4rem 1.5rem;margin:1.3rem 0;color:#DCE4EC}
+.sumcard h4{color:#fff;margin-top:0}
+.sumrow{display:grid;grid-template-columns:1.5rem 11rem 1fr;gap:.7rem;padding:.6rem 0;border-top:1px solid #232C38;align-items:baseline}
+.sumrow:first-of-type{border-top:0}
+.sumrow .sn{font-family:var(--mono);font-size:.7rem;color:#E9B949}
+.sumrow .st{font-family:var(--sans);font-weight:600;font-size:.86rem;color:#E9B949}
+.sumrow .sd{font-size:.88rem;color:#BCC9D6;line-height:1.45}
+@media (max-width:700px){.sumrow{grid-template-columns:1.5rem 1fr}.sumrow .sd{grid-column:2}}
+/* footer */
+.foot{margin:5rem calc(-1*clamp(1rem,3.2vw,3rem)) 0;background:var(--ink);color:#A2B0C0;padding:2.4rem clamp(1rem,3.2vw,3rem)}
+.foot-in{max-width:900px;margin:0 auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;line-height:1.8}
+.foot b{color:#DCE4EC;font-weight:500}
+/* print */
+@media print{
+  .rail,.mobar,.progress,.cocbtn,.btn,.quiz{display:none!important}
+  .shell{grid-template-columns:1fr}
+  body{background:#fff;font-size:11pt}
+  .hero,.foot{background:#fff;color:#000;margin:0;padding:0 0 1rem}
+  .hero h1{color:#000}.hero .lede{color:#333}
+  .topic{break-inside:avoid;page-break-inside:avoid}
+  .volitem .why{display:block!important}
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);transform:translateX(-102%);transition:transform .28s ease;box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .rail.open{transform:none}
+  .mobar{display:flex}
+  .scrim{position:fixed;inset:0;background:rgba(6,10,15,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.on{opacity:1;pointer-events:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="prog"></div>
+
+<div class="mobar">
+  <div><small>Digital Forensics</small><br><b>Unit III — Analysis, Network &amp; Crime Scenes</b></div>
+  <button class="menubtn" id="menubtn" aria-expanded="false" aria-controls="rail">Contents</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Unit III contents">
+  <div class="railhead">
+    <div class="railkick">20CS41020 · Unit III</div>
+    <div class="railtitle">Analysis, Network Forensics &amp; Crime Scenes</div>
+    <div class="railsub">B.Tech CSE (AIML) · AR22</div>
+    <div class="railseal"><span class="dot"></span><span class="txt" id="sealtxt">0 / 18 sections</span></div>
+  </div>
+  <div class="railscroll">
+    <div class="railpart">A · Analysis &amp; Validation</div>
+    <ul class="chain" id="chain">
+      <li><a href="#t01"><span class="n">01</span><span>Determining What Data to Collect</span></a></li>
+      <li><a href="#t02"><span class="n">02</span><span>Validating Forensic Data</span></a></li>
+      <li><a href="#t03"><span class="n">03</span><span>Addressing Data-Hiding Techniques</span></a></li>
+      <li><a href="#t04"><span class="n">04</span><span>Performing Remote Acquisitions</span></a></li>
+    </ul>
+    <div class="railpart">B · Network Forensics</div>
+    <ul class="chain">
+      <li><a href="#t05"><span class="n">05</span><span>Network Forensics Overview</span></a></li>
+      <li><a href="#t06"><span class="n">06</span><span>Performing Live Acquisitions</span></a></li>
+      <li><a href="#t07"><span class="n">07</span><span>Standard Procedures for Network Forensics</span></a></li>
+      <li><a href="#t08"><span class="n">08</span><span>Using Network Tools</span></a></li>
+      <li><a href="#t09"><span class="n">09</span><span>Examining the Honeynet Project</span></a></li>
+    </ul>
+    <div class="railpart">C · Crime &amp; Incident Scenes</div>
+    <ul class="chain">
+      <li><a href="#t10"><span class="n">10</span><span>Identifying Digital Evidence</span></a></li>
+      <li><a href="#t11"><span class="n">11</span><span>Private-Sector Incident Scenes</span></a></li>
+      <li><a href="#t12"><span class="n">12</span><span>Law Enforcement Crime Scenes</span></a></li>
+      <li><a href="#t13"><span class="n">13</span><span>Preparing for a Search</span></a></li>
+      <li><a href="#t14"><span class="n">14</span><span>Securing the Scene</span></a></li>
+      <li><a href="#t15"><span class="n">15</span><span>Seizing Digital Evidence</span></a></li>
+      <li><a href="#t16"><span class="n">16</span><span>Storing Digital Evidence</span></a></li>
+      <li><a href="#t17"><span class="n">17</span><span>Obtaining a Digital Hash</span></a></li>
+      <li><a href="#t18"><span class="n">18</span><span>Reviewing a Case</span></a></li>
+    </ul>
+    <div class="railpart">Revision</div>
+    <ul class="chain">
+      <li><a href="#summary"><span class="n">S</span><span>One-line Summary of All 18</span></a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main" id="main">
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="filebar">
+      <span class="stamp">Case File</span>
+      <span>Ref: DF/U-III/AR22</span>
+      <span>Subject: 20CS41020 Digital Forensics</span>
+      <span>Source: Nelson et al., Ch. 3, 4, 9, 10</span>
+    </div>
+    <h1>You have the image.<br>Now <em>prove what it says.</em></h1>
+    <p class="lede">Unit III is the working half of the subject. Eighteen topics covering how you decide what to analyse, how you prove the data has not changed, how suspects hide things and how you find them anyway, how you capture a live network, and how a crime scene is processed from the front door to the evidence locker.</p>
+    <div class="herometa">
+      <span class="pill">18 topics</span>
+      <span class="pill">Recreated tool screens</span>
+      <span class="pill">Live hash demo</span>
+      <span class="pill">Step-by-step procedures</span>
+      <span class="pill">Current practice notes</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="v">1 bit</span><span class="l">is all it takes to change a file's hash completely</span></div>
+      <div class="stat"><span class="v">~450 GB</span><span class="l">of packet capture per hour at 1&nbsp;Gbps sustained traffic</span></div>
+      <div class="stat"><span class="v">3 prongs</span><span class="l">to the Horton test before plain-view seizure is lawful</span></div>
+      <div class="stat"><span class="v">Sec. 63</span><span class="l">of the BSA 2023 now governs electronic evidence in India</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="partbreak">
+  <div class="pk">Part A · Chapter 9</div>
+  <h2>Digital Forensics Analysis and Validation</h2>
+  <p>You have an image of the suspect drive. Part A is what happens next: deciding how much of it to examine, proving mathematically that it has not changed, finding what the suspect deliberately hid, and reaching a machine you cannot physically visit.</p>
+</div>
+
+<!-- ============ 01 ============ -->
+<section class="topic" id="t01">
+  <div class="exhibit"><span class="exno">01</span><span class="exsrc">Nelson et al., Ch. 9 · pp. 378–381</span></div>
+  <h3>Determining What Data to Collect and Analyze</h3>
+  <p class="lede">What you examine depends on the nature of the investigation and the amount of data to process. Criminal investigations are limited to finding data defined in the <strong>search warrant</strong>. Civil investigations are limited by <strong>court orders for discovery</strong>. Private-sector investigations might examine only specific items, such as email. Narrowing the target simplifies and speeds up processing enormously.</p>
+
+  <h4>Scope creep — the thing that ruins schedules</h4>
+  <p>In the private sector, especially where litigation is involved or anticipated, the company attorney often directs you to recover <em>as much information as possible</em>. That becomes a major undertaking with many hours of tedious work, and it invites <strong>scope creep</strong>: the investigation expands beyond its original description because of unexpected evidence you find, prompting the attorney to ask you to examine other areas.</p>
+
+  <div class="note note--risk">
+    <span class="nk">Why scope creep is getting worse</span>
+    <p>Defence attorneys typically have the right of <strong>full discovery</strong> of digital evidence used against their clients. New evidence can surface while complying with that request — and the defence is under no obligation to hand it back to the prosecution; they use it to defend the accused. So prosecution teams must now analyse evidence exhaustively <em>before</em> trial. Always document any request for additional investigation, so you can explain later why the case took longer than planned.</p>
+  </div>
+
+  <h4>The ten standard steps for any investigation</h4>
+  <ol class="gsteps">
+    <li><b>Wipe and prepare the target drive.</b> IACIS recommends recently wiped media, reformatted and inspected for viruses. Tools: X-Ways Security, Digital Intelligence PDWipe, WhiteCanyon SecureClean. Some commercial tools wipe only up to 2 TB; the Linux zero method has no limit — <span class="path">sudo dd if=/dev/zero of=/dev/sdb</span>. Check the <span class="path">of=</span> device twice.</li>
+    <li><b>Inventory the hardware</b> on the suspect's computer and note its condition when seized.</li>
+    <li><b>Check CMOS date and time.</b> For static acquisitions, remove the original drive if practical, then read the system clock values.</li>
+    <li><b>Record how you acquired the data</b> — that you created a bit-stream image, and which tool. The tool should also produce an MD5 or SHA-1 hash for validating the image.</li>
+    <li><b>Process methodically and logically</b> when examining the image.</li>
+    <li><b>List all folders and files.</b> Autopsy and similar tools export the full listing to Excel or HTML. Note where each item of evidence was found and how it relates to the investigation.</li>
+    <li><b>Examine the contents of all data files</b> from the root directory down — except where a warrant or discovery demand defines a narrower scope, in which case look only for the listed items.</li>
+    <li><b>Recover password-protected files</b> that might be relevant, using OSForensics, AccessData PRTK, or Passware Kit Forensic.</li>
+    <li><b>Identify every executable</b> that does not match a known hash value. Note system files that are out of place, such as anything odd in <span class="path">System32</span>.</li>
+    <li><b>Maintain control of all evidence and findings</b>, documenting everything as you go.</li>
+  </ol>
+
+  <h4>Known File Filter — eliminating the noise</h4>
+  <p>Most files on any drive are operating-system and application files that have nothing to do with the case. Autopsy carries an indexed copy of the NIST <strong>National Software Reference Library (NSRL)</strong> of MD5 hashes, which lets you filter every known-good file out of view and concentrate on what remains. You can also build a <strong>known-bad</strong> hash set from files you have already identified, so the same contraband is flagged instantly on the next drive you examine.</p>
+
+  <div class="app">
+    <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Autopsy — Configure Ingest Modules</div>
+    <div class="app-menu"><span>File</span><span>View</span><span class="on">Tools</span><span>Window</span><span>Help</span></div>
+    <div class="app-split">
+      <div class="app-pane">
+        <div class="chk on"><i></i>Hash Lookup</div>
+        <div class="chk on"><i></i>File Type Identification</div>
+        <div class="chk on"><i></i>Keyword Search</div>
+        <div class="chk on"><i></i>PhotoRec Carver</div>
+        <div class="chk off"><i></i>Embedded File Extractor</div>
+        <div class="chk off"><i></i>Exif Parser</div>
+        <div class="chk off"><i></i>Email Parser</div>
+      </div>
+      <div class="app-body">
+        <p style="font-size:.8rem;color:#3C4854;margin:0 0 .5rem"><strong>Hash Lookup</strong> — select known hash databases to use:</p>
+        <div class="chk on"><i></i>NSRL-256 (known good — filter from view)</div>
+        <div class="chk on"><i></i>Special Project-A (known bad — flag on match)</div>
+        <div style="margin-top:.8rem;border-top:1px solid #C6CFDA;padding-top:.55rem">
+          <div class="chk on"><i></i>Process Unallocated Space</div>
+        </div>
+        <div class="btnrow"><span class="wbtn">Back</span><span class="wbtn pri">Next &rsaquo;</span><span class="wbtn">Cancel</span></div>
+      </div>
+    </div>
+    <div class="app-status"><span>Case: InChap09</span><span>Data source: InChap09.dd</span></div>
+  </div>
+  <p class="caption">Recreated: the ingest configuration that decides how much of the drive you will actually have to read</p>
+
+  <div class="note note--case">
+    <span class="nk">Worked example · the employee running a side business</span>
+    <p>An employee is accused of running an online business on company time. You use the working hours as a time filter, and because the allegation is unauthorised Internet use you focus on <strong>temporary Internet files, Internet history and email</strong>. That narrow plan saves days. Then, while reading the emails, you find references to spreadsheets holding the business's financial figures — so you deliberately widen the plan to include those file types. Start with a plan, stay flexible, and revise it on purpose rather than searching haphazardly.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>The filtering idea has not changed but the volume has. A single modern endpoint can hold a terabyte, so examiners increasingly run <strong>targeted triage collection</strong> first — pulling only the artefacts that answer the question (browser history, event logs, $MFT, prefetch, registry hives) — and only image the full disk if triage justifies it. Tools such as <strong>Velociraptor</strong> and <strong>KAPE</strong> exist for exactly this. NSRL is still published by NIST and still the standard known-good reference set.</p>
+  </div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="topic" id="t02">
+  <div class="exhibit"><span class="exno">02</span><span class="exsrc">Nelson et al., Ch. 9 · pp. 388–394</span></div>
+  <h3>Validating Forensic Data</h3>
+  <p class="lede">Validating digital evidence is one of the most critical aspects of the whole discipline, because ensuring the integrity of what you collect is what makes it presentable in court. Most forensics tools can hash an image file. Tools have limits, though, so advanced <strong>hexadecimal editors</strong> are needed for finer work.</p>
+
+  <h4>What a hex editor gives you that a forensics suite does not</h4>
+  <p>A full-featured hex editor can hash <strong>specific files or individual sectors</strong> rather than whole images. That matters when you are hunting a particular known file — say a known contraband image. Two files with exactly the same content have the same hash value <em>even if the names are different</em>, so with the hash in hand you can search for a file that has been renamed to look innocuous.</p>
+
+  <div class="app">
+    <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> WinHex — Compute hash</div>
+    <div class="app-body">
+      <div class="field"><label>Algorithm</label><span class="inp">MD5 (128 bit) &#9662;</span></div>
+      <div class="field"><label>Source</label><span class="inp">Jeffersonian quotes.doc — selection, offset 0 to 1FF</span></div>
+      <div class="field"><label>Selection size</label><span class="inp">512 bytes (1 sector)</span></div>
+      <div class="field"><label>Result</label><span class="inp mono-out">a91f3c07b6d24e8815ff90cc2a7b4d7c</span></div>
+      <div class="btnrow"><span class="wbtn pri">OK</span><span class="wbtn">Copy</span><span class="wbtn">Close</span></div>
+    </div>
+    <div class="app-status"><span>Offset: 1FF</span><span>Block: 0 &ndash; 511</span><span>Mode: read-only</span></div>
+  </div>
+  <p class="caption">Recreated: hashing one selected 512-byte sector rather than the whole file</p>
+
+  <h4>Block-wise hashing — finding a fragment, not a file</h4>
+  <p>Hashing a whole file only helps if the whole file survives. <strong>Block-wise hashing</strong> hashes each sector or block separately, so if a suspect deleted a contraband image and only three of its clusters survive in unallocated space, those three clusters still match their known block hashes. Whole-file hashing would find nothing at all.</p>
+
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Validation method</th><th>What it proves</th><th>When you use it</th></tr></thead>
+    <tbody>
+      <tr><td>Acquisition hash</td><td>The image is a faithful copy of the source drive</td><td>At acquisition, and again before any analysis</td></tr>
+      <tr><td>File hash</td><td>This exact file exists on the drive, whatever it has been renamed to</td><td>Matching against known-good or known-bad sets</td></tr>
+      <tr><td>Sector / block hash</td><td>This fragment came from a known file even though the file is gone</td><td>Carving, unallocated space, sparse acquisitions</td></tr>
+      <tr><td>Byte-by-byte comparison</td><td>Two files really are identical — settles a suspected hash collision</td><td>Rare; when a collision is alleged. <span class="mono">comp</span> on Windows, <span class="mono">diff</span> on Linux</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">Worked example · the renamed file</span>
+    <p>A suspect renames <span class="mono">evidence.jpg</span> to <span class="mono">winsock32.dll</span> and drops it in a system folder. A filename search finds nothing. A hash search against the known-bad set matches instantly, because renaming a file changes not one bit of its content. This is why hashes, not names, are the identity of a file in forensics.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>The book's examples use MD5 and SHA-1. Both are now <strong>cryptographically broken</strong> for collision resistance — deliberate collisions have been demonstrated — so current practice is to record <strong>SHA-256</strong>, usually alongside MD5 for backwards compatibility with older case records. They remain acceptable for <em>integrity checking</em> of evidence, because an accidental collision is still vanishingly unlikely, but no new system should rely on them alone. India's Section 63 BSA certificate now expects the <strong>hash value of the record to be stated on the certificate itself</strong>.</p>
+  </div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="topic" id="t03">
+  <div class="exhibit"><span class="exno">03</span><span class="exsrc">Nelson et al., Ch. 9 · pp. 395–405</span></div>
+  <h3>Addressing Data-Hiding Techniques</h3>
+  <p class="lede">Data hiding involves changing or manipulating a file to conceal information. The techniques are: hiding entire partitions, changing file extensions, setting the hidden attribute, marking clusters bad, bit-shifting, steganography, encryption and password protection.</p>
+
+  <h4>1 · Hiding files using the operating system</h4>
+  <p>The simplest trick is changing the file extension — an incriminating <span class="mono">.xlsx</span> renamed to <span class="mono">.jpg</span>. Open it in Excel and you get an error. But advanced forensics tools <strong>check file headers and compare them to the extension</strong>; a mismatch is flagged as an altered file needing more analysis. The other basic technique is the Hidden attribute in a file's Properties dialog, which any forensics tool sees straight through.</p>
+
+  <h4>2 · Hiding partitions</h4>
+  <p>Using <span class="path">diskpart remove letter</span> at a PowerShell prompt unassigns a partition's drive letter, which hides it from File Explorer. <span class="path">diskpart assign letter</span> puts it back. To detect this, <strong>account for all disk space</strong> on the evidence drive and analyse anything you cannot account for. Normal gaps between partitions are around 128 bytes in Windows Vista and later — anything much larger deserves a look.</p>
+
+  <div class="app">
+    <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Disk Management — Disk 2</div>
+    <div class="app-body">
+      <div class="dmstrip">
+        <div class="dmpart" style="flex:3"><b>H:</b><span>NTFS · Healthy · 1.20 GB</span><div class="bar"></div></div>
+        <div class="dmpart hidden" style="flex:1"><b>PART HIDDEN</b><span>no letter · 200 MB</span><div class="bar"></div></div>
+        <div class="dmpart" style="flex:3"><b>I:</b><span>NTFS · Healthy · 1.20 GB</span><div class="bar"></div></div>
+      </div>
+      <p style="font-size:.78rem;color:#3C4854;margin:.5rem 0 0">A normal inter-partition gap is about 128 bytes. A 200 MB gap with no assigned letter is not a gap — it is a partition someone unassigned.</p>
+    </div>
+    <div class="app-status"><span>Disk 2 · Basic · 2.60 GB · Online</span><span>Unallocated: 200 MB</span></div>
+  </div>
+  <p class="caption">Recreated: the gap that gives away a hidden partition</p>
+
+  <p><strong>How the tools show it.</strong> In WinHex a hidden partition appears with <em>no drive letter</em> against it, and the tool labels the boot partition &ldquo;Start sectors&rdquo; and the unallocated area &ldquo;Unpartitionable space&rdquo;. In Autopsy the same partition appears under Data Sources as a numbered volume — but only when you are viewing a <strong>forensic disk image</strong>, not when viewing in live mode.</p>
+
+  <h4>3 · Marking clusters bad</h4>
+  <p>An older FAT technique: using a disk editor such as Norton DiskEdit you type the letter <strong>B</strong> in the FAT entry for a good cluster, and the OS then treats it as unusable. Data can still be written and read there with a disk editor, but it is invisible to the operating system. Two things matter for the exam: if that FAT partition is later <strong>converted to NTFS the bad markings survive</strong>, and most GUI tools skip clusters marked bad — which is precisely why they may hold evidence.</p>
+
+  <h4>4 · Bit-shifting</h4>
+  <p>Bit-shifting changes data from readable code into something that looks like binary executable code, by rearranging the bits of each byte. Shift left to scramble, shift right to restore. Some malware uses this to hide its payload from antivirus hashing; malware attacking Office files sometimes embeds executable code at the end of a document, bit-shifted, and reverses the shift at runtime.</p>
+
+  <div class="lab">
+    <h5>Try it: bit-shift a string and watch its hash change</h5>
+    <p class="hint">Type any text, then shift the bits. Note that shifting left and then right returns the original bytes — and the original hash.</p>
+    <div class="labrow">
+      <input type="text" id="bsInput" value="TEST FILE" aria-label="Text to bit-shift" maxlength="24">
+      <button class="btn" id="bsLeft">&laquo; Shift left 1 bit</button>
+      <button class="btn btn--ghost" id="bsRight">Shift right 1 bit &raquo;</button>
+      <button class="btn btn--ghost" id="bsReset">Reset</button>
+    </div>
+    <div class="byteview" id="bsView">loading…</div>
+    <div class="hashout">
+      <span class="k">Original</span><span class="v" id="bsHashOrig">—</span>
+      <span class="k">Current</span><span class="v" id="bsHashNow">—</span>
+    </div>
+    <div class="verdict" id="bsVerdict">Hashes match — the data is unchanged.</div>
+    <p style="font-size:.82rem;color:var(--ink3);margin:.7rem 0 0">Shift count: <span class="mono" id="bsCount">0</span>. SHA-256 is computed live in your browser.</p>
+  </div>
+
+  <h4>5 · Steganography and steganalysis</h4>
+  <p>Steganography is hiding a message so that only the intended recipient knows it is there. Detecting and analysing it is <strong>steganalysis</strong>. A useful tell: two images that look identical and may even have the same file size will have <em>different hash values</em> if one carries an invisible watermark or payload. Johnson and Jajodia named five steganalysis attacks — which one you can use depends entirely on what you happen to have.</p>
+
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Attack</th><th>What you have</th><th>How it works</th></tr></thead>
+    <tbody>
+      <tr><td>Stego-only</td><td>Only the suspected file</td><td>The hardest of the five. Similar to a ciphertext-only attack — you analyse the suspect file alone.</td></tr>
+      <tr><td>Known cover</td><td>The original file <em>and</em> the stego file</td><td>Compare the two to identify common patterns that help decipher the message.</td></tr>
+      <tr><td>Known message</td><td>The hidden message, revealed later</td><td>Comparative analysis, but easier, because you already know what you are looking for.</td></tr>
+      <tr><td>Chosen stego</td><td>The stego tool and the stego file</td><td>Because the tool is known, apply password or passphrase recovery against it.</td></tr>
+      <tr><td>Chosen message</td><td>The tool, and time to experiment</td><td>Create your own stego files, learn how the tool arranges data, then match those patterns against the suspect file.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>6 · Encryption and password recovery</h4>
+  <p>Encrypted files are encoded to prevent unauthorised access; without the passphrase, recovery is difficult. Key sizes from 128 to 4096 bits make brute force effectively impossible with current technology. Some commercial encryption uses <strong>key escrow</strong> — designed so users can recover data after forgetting a passphrase, and usable by examiners for the same purpose. The textbook's blunt advice still holds: <em>if you encounter encrypted data, make an effort to persuade the suspect to reveal the passphrase.</em></p>
+
+  <div class="grid3">
+    <div class="card"><span class="k">Method 1</span><h5>Dictionary attack</h5><p>Tries common words from a dictionary. Most crackers ship dictionaries in many languages, and you can import unique words extracted from the evidence itself.</p></div>
+    <div class="card"><span class="k">Method 2</span><h5>Brute-force attack</h5><p>Every possible letter, number and character. Eventually cracks any password, but needs enormous time and processing power as length grows.</p></div>
+    <div class="card"><span class="k">Method 3</span><h5>Rainbow table</h5><p>A file of precomputed hash values for every possible password. No conversion needed at run time, so it is <strong>much faster</strong> than the other two.</p></div>
+  </div>
+  <div class="note note--safe">
+    <span class="nk">The counter-measure: salting</span>
+    <p>A <strong>hybrid attack</strong> builds a profile of the suspect — relatives' names, pets, favourite colours, schools — because people reuse what they are comfortable with. Against rainbow tables, the defence is <strong>salting</strong>: extra bits are added to the password before hashing, which alters the hash value and makes precomputed tables useless. Named tools in the text: Last Bit, AccessData PRTK, ophcrack, John the Ripper, Passware.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>Full-disk encryption has changed the balance. BitLocker, FileVault and LUKS are on by default on much modern hardware, and a powered-down encrypted laptop is often simply unreadable. This is the single strongest argument for <strong>live acquisition</strong> (Topic 6): while the machine is running, the decryption key is in RAM and the volume is mounted in the clear. Pull the plug and you may lose the case. Practically, examiners now hunt for the recovery key in cloud accounts, in enterprise key escrow (Active Directory, Intune, MDM) or in a RAM capture — not in a brute-force run.</p>
+  </div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="topic" id="t04">
+  <div class="exhibit"><span class="exno">04</span><span class="exsrc">Nelson et al., Ch. 3 · pp. 129–132</span></div>
+  <h3>Performing Remote Acquisitions</h3>
+  <p class="lede">Remote acquisition means connecting to a suspect computer over a network and copying data from it — the whole disk, or sparse or logical fragments. It saves the travel, and it <strong>minimises the chance the suspect notices an investigation is under way</strong>. Almost all remote acquisitions are <em>live</em> acquisitions rather than static ones.</p>
+
+  <div class="grid2">
+    <div class="card card--safe">
+      <h5>Why it appeals</h5>
+      <ul class="ticks">
+        <li>No travel to the suspect's location</li>
+        <li>Far less chance of tipping off the suspect</li>
+        <li>Some tools push an agent through an encrypted link with no manual step at the far end</li>
+        <li>Volatile state can be captured that a static acquisition would lose</li>
+      </ul>
+    </div>
+    <div class="card card--risk">
+      <h5>What gets in the way</h5>
+      <ul class="crosses">
+        <li>Antivirus, antispyware and firewall tools may block or alert on the agent</li>
+        <li>If suspects have administrator rights they can install their own security tools that alarm on remote access</li>
+        <li>Advanced privileges are required to push agent applications at all</li>
+        <li>Data transfer speed and network access permissions</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>How the connection is built</h4>
+  <div class="flow">
+    <div class="fstep fstep--dark"><span class="fn">EXAMINER</span><b>Forensic workstation</b><span>Runs the console — ProDiscover IR, EnCase Endpoint Investigator, F-Response</span></div>
+    <div class="fstep"><span class="fn">LINK</span><b>Encrypted channel</b><span>256-bit AES or Twofish, GUID-tagged packets, password protected</span></div>
+    <div class="fstep"><span class="fn">SUSPECT</span><b>Remote agent</b><span>e.g. PDServer — must be installed on the suspect machine first</span></div>
+  </div>
+
+  <p><strong>Three ways to get the agent onto the target.</strong> The textbook uses ProDiscover's PDServer as its worked example:</p>
+  <ol class="gsteps">
+    <li><b>Trusted CD.</b> A special CD, DVD or USB containing the agent, loaded manually on the suspect computer.</li>
+    <li><b>Preinstallation.</b> The agent is baked into the standard OS build for high-risk machines, so security staff can respond to attacks quickly. Management tools such as DameWare or Hyena then initiate the connection.</li>
+    <li><b>Pushing out and running remotely.</b> The agent is downloaded to the remote computer on demand, and data is collected in real time.</li>
+  </ol>
+
+  <div class="note note--case">
+    <span class="nk">The five security features that make it evidentially sound</span>
+    <p><strong>Password protection</strong> — the agent is password-protected and the password is encrypted at all times. <strong>Encryption</strong> — 256-bit AES or Twofish on all traffic. <strong>Secure protocol</strong> — every connection carries globally unique identifiers (GUIDs) so packets cannot be inserted into the stream. <strong>Write-protected trusted binaries</strong> — the agent can run from read-only media. <strong>Digital signatures</strong> — the agent and its driver are signed, proving they were not tampered with before or during the connection.</p>
+    <p style="margin-top:.5rem">The agent can also run in <em>stealth mode</em>; Task Manager would otherwise list the process by name, so the process name can be changed to look like an OS function.</p>
+  </div>
+
+  <h4>What a remote tool can do besides imaging</h4>
+  <ul class="clean">
+    <li>Capture volatile system state information</li>
+    <li>Analyse currently running processes on the remote system</li>
+    <li>Locate unseen files and processes that might be malware or spyware</li>
+    <li>Remotely view and listen to IP ports on a compromised system</li>
+    <li>Run hash comparisons on the remote system to search for known Trojans and rootkits</li>
+    <li>Create a hash inventory of all files remotely — a baseline to compare against if the machine is later attacked</li>
+  </ul>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>This is now the mainstream way large organisations do forensics, not the exception. <strong>Velociraptor</strong> (open source, acquired by Rapid7 in 2025) can collect targeted artefacts and even memory across thousands of endpoints at once using its own query language, VQL. <strong>F-Response</strong> remains the vendor-neutral way to expose a remote disk read-only to any tool you like. Commercial EDR platforms increasingly ship the same capability. The forensic principles are unchanged — you still need authorisation, an audit trail, and a hash of everything you pull — but &ldquo;go to the machine&rdquo; is no longer the default.</p>
+  </div>
+</section>
+<div class="partbreak">
+  <div class="pk">Part B · Chapter 10</div>
+  <h2>Network Forensics</h2>
+  <p>Disk forensics asks what is on this machine. Network forensics asks how the attacker got there, what moved across the wire, and whether they are still inside. The evidence is transient, often never written to permanent storage, and the trail goes cold fast.</p>
+</div>
+
+<!-- ============ 05 ============ -->
+<section class="topic" id="t05">
+  <div class="exhibit"><span class="exno">05</span><span class="exsrc">Nelson et al., Ch. 10 · pp. 435–437</span></div>
+  <h3>Network Forensics Overview</h3>
+  <p class="lede"><strong>Network forensics</strong> is the process of collecting and analysing raw network data and tracking network traffic systematically, to ascertain how an attack was carried out or how an event occurred on a network.</p>
+
+  <div class="note note--case">
+    <span class="nk">The core idea: know what normal looks like</span>
+    <p>When intruders break into a network they leave a trail, and spotting <em>variations</em> in traffic is how you find it — so knowing your network's typical patterns is essential. If a company's peak use is normally between 6 a.m. and 6 p.m., that is when spikes belong. A usage spike in the middle of the night is unusual activity and the administrator should investigate it. Network forensics also tells you whether you are <em>really</em> under attack, or whether someone installed an untested patch or a buggy custom program. A lot of time gets wasted proving that an &ldquo;attack&rdquo; was a bug.</p>
+  </div>
+
+  <h4>Hardening comes before forensics</h4>
+  <p>Network forensics determines how a breach happened, but steps must be taken to harden the network <em>before</em> one does. Hardening ranges from applying the latest patches to adopting a <strong>layered network defence strategy</strong> — layers of protection that hide the most valuable data at the innermost part of the network, so the deeper an attacker gets, the harder access becomes.</p>
+
+  <h4>Defense in Depth — the NSA's three modes</h4>
+  <p>The NSA's <strong>defense in depth (DiD)</strong> strategy has three modes of protection. If one mode fails, the others can still thwart the attack.</p>
+  <div class="grid3">
+    <div class="card card--cust"><span class="k">Mode 1</span><h5>People</h5><p>Hire well-qualified people and treat them well, so they have no reason to seek revenge. Train them adequately in security procedures and make sure they know the security policy. Physical and personnel security sit here.</p></div>
+    <div class="card card--cust"><span class="k">Mode 2</span><h5>Technology</h5><p>A strong network architecture and tested tools — intrusion detection systems, firewalls. Regular penetration testing with risk assessment. Also the systems that allow quick, thorough analysis when a breach does occur.</p></div>
+    <div class="card card--cust"><span class="k">Mode 3</span><h5>Operations</h5><p>Day-to-day work: updating security patches, antivirus and operating systems, plus assessment and monitoring procedures and disaster recovery plans.</p></div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Where the threat actually comes from</span>
+    <p>In the early-to-mid 1990s roughly <strong>70% of network attacks came from employees</strong>. That was then compounded by contract staff, who often hold the same network privileges as full-time employees. Increasing Internet use has since raised external threats sharply, so the split is now <strong>about 50-50</strong>. Small companies of fewer than ten employees often think internal precautions are unnecessary, which makes them more vulnerable to staff passing proprietary information to competitors.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>Two things have shifted. First, <strong>encryption is now the default</strong>: the vast majority of web traffic is TLS, so payload inspection is often impossible and modern network forensics leans heavily on <em>metadata</em> — who talked to whom, when, how much, over which protocol. Second, the perimeter has dissolved; with cloud and remote work, the equivalent evidence increasingly lives in <strong>VPC/NSG flow logs, CloudTrail and identity-provider sign-in logs</strong> rather than a span port in a server room. The analytical logic — baseline, then look for deviation — is unchanged.</p>
+  </div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section class="topic" id="t06">
+  <div class="exhibit"><span class="exno">06</span><span class="exsrc">Nelson et al., Ch. 10 · pp. 434–435</span></div>
+  <h3>Performing Live Acquisitions</h3>
+  <p class="lede">Live acquisitions are especially useful with active network intrusions and attacks, or where you suspect employees are accessing areas they should not. They are increasingly a necessity, because attacks may leave footprints <strong>only in running processes or RAM</strong> — some malware disappears entirely once the system restarts.</p>
+
+  <div class="note note--risk">
+    <span class="nk">The uncomfortable trade-off you must state in an exam answer</span>
+    <p>After a live acquisition, information on the system <em>has changed</em>, because your actions affect RAM and running processes. Which means the result <strong>cannot be reproduced</strong>. Live acquisitions therefore do not follow typical forensics procedures — and that is exactly why documenting every action and its reason is critical.</p>
+  </div>
+
+  <h4>The order of volatility governs everything</h4>
+  <p>The <strong>order of volatility (OOV)</strong> determines how long a piece of information lasts on a system. RAM and running processes might exist for milliseconds; files on the hard drive might last for years. You always collect the most volatile first.</p>
+
+  <h4>The six-step live acquisition procedure</h4>
+  <ol class="gsteps">
+    <li><b>Prepare and test your boot media.</b> Create or download a bootable forensic CD or USB drive and test it before using it on a suspect drive. If the suspect system is on your network and reachable remotely, add the network forensics tools to your workstation instead.</li>
+    <li><b>Start the log.</b> Keep a log of all your actions. Documenting your actions <em>and the reasons for them</em> is critical.</li>
+    <li><b>Set up somewhere to put the data.</b> A network drive is ideal. If none is available, connect an external drive to the suspect system — and note that step in your log.</li>
+    <li><b>Copy the physical memory.</b> This is the step that justifies the whole exercise. Tools: WindowsScope, Magnet AXIOM, OSForensics, FTK Imager, Belkasoft RAM Capturer, Mandiant Memoryze.</li>
+    <li><b>Vary by incident.</b> For an intrusion you might check for a rootkit, access the firmware to see whether it has changed, image the drive over the network, or shut down and make a static acquisition later.</li>
+    <li><b>Hash everything you recovered</b> during the live acquisition, so it cannot be altered later without detection.</li>
+  </ol>
+
+  <div class="note note--case">
+    <span class="nk">Worked example · why step 4 comes before step 5</span>
+    <p>A workstation is beaconing to an unknown IP. The responder captures RAM first. That capture contains the injected process (which has no file on disk), the decryption key for the malware's configuration, and the live socket to the command-and-control server. Only then is the disk imaged. Had the machine been powered off first — the instinctive &ldquo;safe&rdquo; move — all three would have been gone, and the disk image alone would have shown almost nothing.</p>
+  </div>
+
+  <div class="note note--safe">
+    <span class="nk">GUI tools versus command line</span>
+    <p>GUI tools are easy to use but often demand a lot of system resources, and some can give <strong>false readings on Windows</strong>. Command-line tools generally give you more control — which is why the textbook recommends becoming familiar with Sleuth Kit and similar. Kali Linux carries over 300 tools including password crackers, network sniffers and freeware forensics utilities.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>Memory forensics has become routine rather than specialist. <strong>Volatility 3</strong> is the standard analysis framework and no longer needs exact OS profiles, so it works against current Windows builds. For capture, <strong>Magnet RAM Capture</strong>, <strong>DumpIt</strong>, <strong>Belkasoft RAM Capturer</strong> and <strong>LiME</strong> (Linux kernel module) are the common free choices. In cloud environments you generally <em>cannot</em> attach a tool to hypervisor memory — you either pre-install an agent or use the provider's run-command facility, which is a decision that has to be made before the incident, not during it.</p>
+  </div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section class="topic" id="t07">
+  <div class="exhibit"><span class="exno">07</span><span class="exsrc">Nelson et al., Ch. 10 · p. 438</span></div>
+  <h3>Developing Standard Procedures for Network Forensics</h3>
+  <p class="lede">Network administrators want to find compromised machines, get them offline and restore them as fast as possible to minimise downtime. Taking the time to follow standard procedures is what ensures <em>all</em> compromised systems have been found, and that the attack method is understood well enough to prevent a repeat.</p>
+
+  <p>Procedures must be based on the organisation's needs and should complement its network infrastructure. Administrators need to learn how to stop intruders and determine how they got in, what they copied, altered or deleted, and <strong>whether they are still on the network</strong>.</p>
+
+  <h4>The five-step standard procedure</h4>
+  <ol class="gsteps">
+    <li><b>Always use a standard installation image</b> for systems on the network. This is not a bit-stream image — it is an image containing all the standard applications in use. Keep MD5 and SHA-1 hash values of every application and OS file.</li>
+    <li><b>Fix the vulnerability first.</b> When an intrusion happens, make sure the hole has been closed so other attackers cannot use the same opening while you investigate.</li>
+    <li><b>Retrieve all volatile data</b> — RAM and running processes — by doing a live acquisition <em>before</em> turning the system off.</li>
+    <li><b>Acquire the compromised drive</b> and make a forensic image of it.</li>
+    <li><b>Compare against the standard image.</b> Compare hash values of common files such as system executables and standard DLLs, and establish which have changed.</li>
+  </ol>
+
+  <div class="note note--case">
+    <span class="nk">The step that makes the other four work</span>
+    <p>Step 1 is done <em>before</em> any incident. Without a known-good baseline image and its hashes, step 5 is impossible — you would have no way of telling a trojaned <span class="mono">svchost.exe</span> from the real one. Every organisation that skips step 1 discovers the cost of it during its first real intrusion.</p>
+  </div>
+
+  <div class="note note--safe">
+    <span class="nk">A difference from disk forensics worth stating</span>
+    <p>In disk forensics you work from the image to find deleted or hidden files. In network forensics you often have to <strong>restore the image to a physical drive and run it</strong>, because the only way to understand how the attacker's malware behaves is to watch it work. Intruders might have transmitted a Trojan that gives them access and then installed a <strong>rootkit</strong> — a collection of tools performing network reconnaissance, keylogging and similar.</p>
+  </div>
+
+  <p>The standards landscape the textbook points at is still the right one: NIST <strong>SP 800-86, &ldquo;Guide to Integrating Forensic Techniques into Incident Response&rdquo;</strong> remains the reference document for building these procedures, alongside published frameworks from military, law-enforcement and industry perspectives.</p>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>Two additions to the five steps. First, most organisations now run <strong>continuous</strong> collection rather than post-incident collection — Zeek logs, EDR telemetry and flow records are already being written before anything happens, so step 3 partly answers itself. Second, breach-notification law now imposes clocks on the procedure: GDPR gives 72 hours from awareness to notify the supervisory authority, and India's CERT-In directions require reporting of specified cyber incidents within 6 hours. Your procedure has to fit inside those windows.</p>
+  </div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section class="topic" id="t08">
+  <div class="exhibit"><span class="exno">08</span><span class="exsrc">Nelson et al., Ch. 10 · pp. 438–443</span></div>
+  <h3>Using Network Tools</h3>
+  <p class="lede">Network logs record traffic in and out of a network — servers, routers, firewalls and other devices record the activities and events that move through them. The tools that read those records are the working instruments of network forensics.</p>
+
+  <h4>Reading a tcpdump line</h4>
+  <p>A common way to examine traffic is the <span class="mono">tcpdump</span> command-line program, which can produce thousands of lines of records. Every line follows the same format.</p>
+
+  <div class="annot">
+    <code><span class="p1">Fri Dec 15 15:06:33 2017</span>; <span class="p2">TCP</span>; <span class="p3">eth0</span>; <span class="p4">1296 bytes</span>; from
+  <span class="p5">204.146.114.10:1916</span> to <span class="p5">156.26.62.201:126</span></code>
+    <div class="annotkey">
+      <b class="p1">time</b><span>when it happened</span>
+      <b class="p2">protocol</b><span>TCP</span>
+      <b class="p3">interface</b><span>Ethernet 0</span>
+      <b class="p4">size</b><span>1296 bytes</span>
+      <b class="p5">source &rarr; destination</b><span>the number after the colon is the port</span>
+    </div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">What to look for in the port numbers</span>
+    <p>Port information gives you clues. A particular IP address arriving frequently on an unusual port is worth investigating, and <strong>a receiving port above 1024 should raise a flag</strong>. Check assigned port numbers against the Internet Assigned Numbers Authority (IANA) list. Aggregating the logs — top ten external sites visited, top ten internal users by bytes — reveals patterns such as an employee transmitting data to one particular address again and again.</p>
+  </div>
+
+  <h4>Packet analyzers</h4>
+  <p><strong>Packet analyzers</strong> are devices or software placed on a network to monitor traffic. Most administrators use them for security and for tracking bottlenecks — but attackers use them to get information covertly. Most work at Layer 2 or 3 of the OSI model; understanding what is really happening often means looking at higher layers using the custom software that comes with switches and routers.</p>
+
+  <p>Nearly everything reads the <strong>Pcap</strong> (packet capture) format — Libpcap on Linux, Winpcap on Windows. Because of that shared format, many investigators <em>capture with tcpdump and then analyse in Wireshark</em>, taking the strengths of each.</p>
+
+  <div class="app">
+    <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Wireshark — capture from eth0</div>
+    <div class="app-menu"><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Capture</span><span class="on">Analyze</span><span>Statistics</span></div>
+    <div class="app-body">
+      <div class="field"><label>Display filter</label><span class="inp">tcp.flags.syn == 1 &amp;&amp; tcp.flags.ack == 0</span></div>
+      <table class="tblmini" style="margin-top:.6rem">
+        <thead><tr><th>No.</th><th>Time</th><th>Source</th><th>Destination</th><th>Proto</th><th>Info</th></tr></thead>
+        <tbody>
+          <tr><td>412</td><td>3.104822</td><td>204.146.114.10</td><td>156.26.62.201</td><td>TCP</td><td>1916 &rarr; 126 [SYN]</td></tr>
+          <tr class="hi"><td>413</td><td>3.104903</td><td>204.146.114.10</td><td>156.26.62.201</td><td>TCP</td><td>1917 &rarr; 126 [SYN]</td></tr>
+          <tr><td>414</td><td>3.104951</td><td>204.146.114.10</td><td>156.26.62.201</td><td>TCP</td><td>1918 &rarr; 126 [SYN]</td></tr>
+          <tr><td>415</td><td>3.105002</td><td>204.146.114.10</td><td>156.26.62.201</td><td>TCP</td><td>1919 &rarr; 126 [SYN]</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.76rem;color:#3C4854;margin:.55rem 0 0">Right-click a frame &rarr; <strong>Follow</strong> &rarr; <strong>TCP Stream</strong> to rebuild the whole conversation from its packets.</p>
+    </div>
+    <div class="app-status"><span>Packets: 12,418</span><span>Displayed: 3,902 (31.4%)</span><span>Profile: Default</span></div>
+  </div>
+  <p class="caption">Recreated: four SYNs to the same port in under a millisecond — the signature of a SYN flood</p>
+
+  <h4>Why the SYN flag matters</h4>
+  <p>In a <strong>SYN flood attack</strong> the attacker keeps asking your server to establish a connection. A server can handle thousands of established connections but only a limited number of <em>establishing</em> ones. To find these packets, tcpdump and similar tools are programmed to examine TCP headers for the SYN flag.</p>
+
+  <div class="tcph">
+    <div class="tcprow"><div class="hd">16-bit</div><div class="hd">16-bit</div></div>
+    <div class="tcprow"><div>Source port</div><div>Destination port</div></div>
+    <div class="tcprow"><div>Sequence number</div></div>
+    <div class="tcprow"><div>Acknowledgement number (ACK)</div></div>
+    <div class="tcprow">
+      <div>Offset</div><div>reserved</div>
+      <div class="flag">U</div><div class="flag">A</div><div class="flag">P</div>
+      <div class="flag">R</div><div class="flag syn">S</div><div class="flag">F</div>
+      <div>Window</div>
+    </div>
+    <div class="tcprow"><div>Checksum</div><div>Urgent pointer</div></div>
+    <div class="tcprow"><div>Options and padding</div></div>
+  </div>
+  <p class="caption">The TCP header. <strong>S</strong> is the SYN flag — the one a flood detector filters on</p>
+
+  <h4>The tool families named in the text</h4>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Tool</th><th>What it is for</th></tr></thead>
+    <tbody>
+      <tr><td>tcpdump</td><td>Command-line capture; the standard source of Pcap files</td></tr>
+      <tr><td>Wireshark</td><td>Analysis and session rebuilding; Follow TCP Stream reassembles a conversation</td></tr>
+      <tr><td>Tcpslice</td><td>Extracting a time window from very large Libpcap files, and combining files</td></tr>
+      <tr><td>Tcpreplay</td><td>Replaying recorded traffic to test IDSs, switches and routers</td></tr>
+      <tr><td>Etherape</td><td>Viewing network traffic graphically</td></tr>
+      <tr><td>Netdude</td><td>An easier interface for inspecting very large tcpdump files</td></tr>
+      <tr><td>Argus</td><td>Session data probe, collector and analysis — a real-time flow monitor</td></tr>
+      <tr><td>Tripwire</td><td>Audit control program that detects traffic anomalies and alerts automatically</td></tr>
+      <tr><td>Splunk, Nagios, Cacti, Spiceworks</td><td>Monitoring devices and use; records can prove an employee ran a program without permission</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">The warning attached to all of them</span>
+    <p>These tools are equally useful to an attacker who obtains administrative rights. The textbook's own classroom example: one student logged on to another student's server and shut it down remotely, because no password had been set for the default account. And when your investigation turns up <em>other</em> companies that have been compromised, do not make that public — contact them and enlist their help tracking the intruder.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>Wireshark and tcpdump remain the standard for single-host analysis, but at enterprise scale the stack has moved on. <strong>Zeek</strong> (formerly Bro) produces structured protocol logs — HTTP, DNS, SSL, files — rather than raw packets, and is what most detection pipelines actually consume. <strong>Arkime</strong> (formerly Moloch) does indexed full-packet capture with a searchable web interface. <strong>Security Onion</strong> bundles both with dashboards. The practical constraint is storage: at 1 Gbps sustained, full capture generates roughly 450 GB per hour, so most organisations keep Zeek metadata long-term and full packets only for a short rolling window.</p>
+  </div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section class="topic" id="t09">
+  <div class="exhibit"><span class="exno">09</span><span class="exsrc">Nelson et al., Ch. 10 · pp. 444–445</span></div>
+  <h3>Examining the Honeynet Project</h3>
+  <p class="lede">The Honeynet Project was developed to make information widely available in an attempt to thwart Internet and network attackers. Many people participate in this worldwide project, which is now a <strong>non-profit organisation</strong>.</p>
+
+  <div class="grid3">
+    <div class="card card--cust"><span class="k">Objective 1</span><h5>Awareness</h5><p>Make people and organisations aware that threats exist and that they might be targets.</p></div>
+    <div class="card card--cust"><span class="k">Objective 2</span><h5>Information</h5><p>Provide information on how to protect against those threats — including how attackers operate, how they communicate, and what tactics they use.</p></div>
+    <div class="card card--cust"><span class="k">Objective 3</span><h5>Tools</h5><p>For people who want to do their own research, offer the tools and the methods.</p></div>
+  </div>
+
+  <h4>The two threats it was built to study</h4>
+  <div class="grid2">
+    <div class="card card--risk">
+      <h5>Distributed denial-of-service (DDoS)</h5>
+      <p>Hundreds or even thousands of machines are used. These machines are called <strong>zombies</strong>, because they have unwittingly become part of the attack. A trace of a DDoS attack might run through other organisations' networks, not just yours or your ISP's. When the first DDoS attacks began, the main concerns were the high monetary impact and the time it took to track them down.</p>
+    </div>
+    <div class="card card--risk">
+      <h5>Zero day attacks</h5>
+      <p>Attackers look for holes in networks and operating systems and <strong>exploit them before patches are available</strong>. Vendors usually are not aware the vulnerabilities exist, so no patch has been developed or released. Penetration testers try to break in to find undiscovered vulnerabilities and predict where the next wave of attacks will come from.</p>
+    </div>
+  </div>
+
+  <h4>Honeypots and honeywalls</h4>
+  <p>The project works by installing honeypots and honeywalls at different locations around the world.</p>
+
+  <div class="flow">
+    <div class="fstep fstep--dark" style="background:var(--seal);border-color:var(--seal)"><span class="fn" style="color:#FBDDDF">ATTACKER</span><b>Internet</b><span style="color:#F6D9DB">Scans, finds the exposed service, connects</span></div>
+    <div class="fstep" style="border-color:var(--tagline);background:var(--tagbg)"><span class="fn">HONEYPOT</span><b>The decoy machine</b><span>A computer set up to look like any other machine on your network. Its purpose is to lure attackers — <strong>it contains no information of real value</strong>. You can take it offline to analyse it without affecting the running of your network.</span></div>
+    <div class="fstep" style="border-color:var(--custodyline);background:var(--custodybg)"><span class="fn">HONEYWALL</span><b>The watcher</b><span>A computer set up to monitor what is happening to the honeypots on your network and <strong>record what attackers are doing</strong>.</span></div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">The one-line distinction students get wrong</span>
+    <p>The <strong>honeypot</strong> is the bait. The <strong>honeywall</strong> is the camera. They are two different machines with two different jobs, and an exam answer that describes only the honeypot has answered half the question.</p>
+  </div>
+
+  <div class="note note--safe">
+    <span class="nk">The value-versus-cost judgement</span>
+    <p>In any organisation you have to determine the value of the data you are protecting and weigh it against the price of the defence system you plan to install. When an attack strikes, your first response is to stop it and prevent it going further. Then you review which defence procedures worked and what additional ones are needed. <em>Training and informing IT staff is critical.</em></p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>The Honeynet Project is still running as a non-profit and still publishes tools and research. The deployment model has moved to containers: <strong>T-Pot</strong>, maintained by Deutsche Telekom Security, bundles around twenty honeypots with Elastic dashboards and an attack map in a single Docker stack, and is what most universities now use for practical work. <strong>Cowrie</strong> is the standard SSH/Telnet honeypot, <strong>Dionaea</strong> the standard malware collector across SMB, HTTP, FTP and SIP. The newest research direction is LLM-backed honeypots that generate convincing shell responses on the fly, because static emulated shells are now easy to fingerprint. The defining property has not changed: a honeypot has no legitimate users, so <strong>any interaction with it is malicious by definition</strong> — which is why it produces almost no false positives.</p>
+  </div>
+</section>
+<div class="partbreak">
+  <div class="pk">Part C · Chapter 4</div>
+  <h2>Processing Crime and Incident Scenes</h2>
+  <p>Everything so far assumed the evidence was already in your hands. Part C is how it gets there — the law that governs the search, the preparation before you arrive, the decisions at the door, and the paperwork that keeps it admissible for the years before trial.</p>
+</div>
+
+<!-- ============ 10 ============ -->
+<section class="topic" id="t10">
+  <div class="exhibit"><span class="exno">10</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 144–145</span></div>
+  <h3>Identifying Digital Evidence</h3>
+  <p class="lede"><strong>Digital evidence</strong> is any information stored or transmitted in digital form. Because you cannot see or touch it directly, it is difficult to explain and describe — is it real, or merely a representation of real information? Courts have settled the question: digital evidence is accepted as <strong>physical evidence</strong>, meaning digital data is treated as a tangible object, like a weapon or a paper document.</p>
+
+  <h4>The four general tasks</h4>
+  <div class="grid4">
+    <div class="card"><span class="k">Task 1</span><h5>Identify</h5><p>Identify digital information or artefacts that can be used as evidence.</p></div>
+    <div class="card"><span class="k">Task 2</span><h5>Collect</h5><p>Collect, preserve and document the evidence.</p></div>
+    <div class="card"><span class="k">Task 3</span><h5>Analyse</h5><p>Analyse, identify and organise the evidence.</p></div>
+    <div class="card"><span class="k">Task 4</span><h5>Reproduce</h5><p>Rebuild the evidence or repeat the situation to verify that the results can be reproduced reliably.</p></div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">One team, or one procedure</span>
+    <p>Collecting digital devices must be done systematically. To minimise confusion, reduce the risk of losing evidence and avoid damaging it, <strong>only one team should collect and catalogue digital evidence</strong> at a scene or lab, if practical. Where there is too much evidence for one team, all examiners must follow the same established operating procedures and a <strong>lead or managing examiner</strong> must control collecting and cataloguing. Use standardised forms for tracking, so evidence is handled consistently.</p>
+  </div>
+
+  <h4>The standards that make evidence portable between countries</h4>
+  <p>Establishing recognised standards is a real challenge. Consider raids conducted simultaneously in many countries, or anti-cartel investigations running in several locations at once — hundreds of drives, phones and storage devices seized across multiple sites. If the organisations in those countries have agreed on proper procedures, the evidence can be presented in any jurisdiction confidently. The working rule is that <strong>the highest control standard should be applied to evidence collection in all jurisdictions</strong>.</p>
+  <ul class="clean">
+    <li><strong>ISO/IEC 27037</strong> — guidance on identifying, collecting, acquiring and preserving digital evidence; the international reference for both criminal and civil procedure</li>
+    <li><strong>SWGDE</strong>, the Scientific Working Group on Digital Evidence — sets standards for recovering, preserving and examining digital evidence</li>
+    <li><strong>NIJ, &ldquo;Electronic Crime Scene Investigation: A Guide for First Responders&rdquo;</strong> — guidelines for those who protect an electronic crime scene and search for, collect and preserve evidence</li>
+  </ul>
+  <p>Note the limits: laws in only about 40% of the world are based on English or Dutch common law, each country interprets what can be presented differently, and evidence collection is now further complicated by mobile devices and cloud storage becoming the norm.</p>
+
+  <div class="now">
+    <span class="nk">In practice today — India</span>
+    <p>For Indian students this is the most important update in the unit. The <strong>Indian Evidence Act 1872 was replaced by the Bharatiya Sakshya Adhiniyam (BSA) 2023 with effect from 1 July 2024</strong>. The familiar Section 65B certificate is now <strong>Section 63</strong>. Two changes matter for practical work: the certificate must be signed by <em>both</em> the person in charge of the device <em>and</em> an expert, and it must <strong>state the hash value of the electronic record</strong>. Section 63 also broadens &ldquo;computer&rdquo; to &ldquo;computer or any communication device&rdquo;. Technically flawless imaging still fails in an Indian court without a properly executed Section 63 certificate.</p>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section class="topic" id="t11">
+  <div class="exhibit"><span class="exno">11</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 153–157</span></div>
+  <h3>Collecting Evidence in Private-Sector Incident Scenes</h3>
+  <p class="lede">Investigating and controlling incident scenes in the private sector is <strong>much easier</strong> than at a crime scene. The scene is usually a workplace — a contained office or manufacturing area — where everything from the computers to the surrounding facility is under a controlled authority: company management.</p>
+
+  <div class="grid2">
+    <div class="card card--safe">
+      <h5>The advantages you have</h5>
+      <ul class="ticks">
+        <li>Businesses typically hold inventory databases of hardware and software, so you know what you are walking into</li>
+        <li>Knowing which applications are on the machine tells you which forensic tools you need and how to conduct the analysis</li>
+        <li>Knowing the company's standard browser lets you build standard examination procedures for downloaded data</li>
+        <li>With a policy in place you can conduct covert surveillance with little or no cause, and access company systems <strong>without a warrant</strong> — something law enforcement cannot do</li>
+      </ul>
+    </div>
+    <div class="card card--risk">
+      <h5>The condition attached to all of it</h5>
+      <p>If a company does <strong>not</strong> display a warning banner or publish a policy reserving the right to inspect digital assets, employees have an <strong>expectation of privacy</strong>, and that prevents the employer from legally conducting an intrusive investigation.</p>
+      <p style="margin-top:.6rem">A well-defined policy should state that the employer has the right to examine, inspect or access any company-owned digital asset. As standard practice companies should use <strong>both</strong> a warning banner and a policy statement — if an incident escalates to a criminal complaint, prosecutors prefer showing juries a warning banner rather than a policy manual, because it leaves a much stronger impression.</p>
+    </div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">When may you actually start?</span>
+    <p>Having a policy is not the same as having a reason. Organisations must also have a well-defined process describing when an investigation can be initiated. At a minimum, most policies require <strong>reasonable suspicion</strong> that a law or policy is being violated. Example: a policy forbids using company computers for outside business, and a supervisor notices a change in work behaviour suggesting an employee is doing exactly that. Generally that is enough to warrant an investigation.</p>
+  </div>
+
+  <h4>What to do if you find evidence of an actual crime</h4>
+  <ol class="gsteps">
+    <li><b>Determine whether it meets the elements of criminal law.</b> You may have to consult your organisation's attorney to decide whether the situation is a potential crime at all.</li>
+    <li><b>Inform management.</b> They may have concerns you do not — particularly protecting confidential business data mixed in with the criminal evidence, known as <strong>commingled data</strong>.</li>
+    <li><b>Protect the commingled data.</b> Coordinate with management and the attorney. Once you submit evidence containing sensitive information to the police it becomes public record; there are exceptions for protecting sensitive company information, but ultimately a judge decides what is protected.</li>
+    <li><b>Stop your investigation.</b> This is the step people get wrong. Once you have discovered, documented and reported the crime, stop — so that you do not violate constitutional restrictions on obtaining evidence.</li>
+    <li><b>Do not gather more on police instructions.</b> If you keep collecting at the direction of the police without a warrant, you risk becoming an <strong>agent of law enforcement</strong>. The police and prosecutor should issue a subpoena for any new evidence, which minimises your exposure to civil liability.</li>
+    <li><b>Keep all documentation</b> of evidence collected during the internal policy investigation.</li>
+  </ol>
+
+  <div class="note note--risk">
+    <span class="nk">The one case where you must stop immediately</span>
+    <p>If child sexual abuse material is discovered, the company or its agents must <strong>notify law enforcement immediately</strong>. A private-sector investigator is not permitted to examine those files at all — the material is contraband and must not be stored by any person or organisation other than a law enforcement agency. Stop what you are doing and call the authorities.</p>
+  </div>
+
+  <p><strong>ISPs are a special category.</strong> They may investigate computer abuse committed by their own employees but <em>not</em> by customers, and must preserve customer privacy, especially with email. They can, however, be called on to investigate customer activity that creates an <strong>emergency situation</strong> — defined as the immediate risk of death or personal injury, such as a bomb threat found in an email.</p>
+</section>
+
+<!-- ============ 12 ============ -->
+<section class="topic" id="t12">
+  <div class="exhibit"><span class="exno">12</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 158–160</span></div>
+  <h3>Processing Law Enforcement Crime Scenes</h3>
+  <p class="lede">To process a crime scene correctly you must be familiar with the criminal rules of search and seizure. A law enforcement officer can search for and seize criminal evidence only with <strong>probable cause</strong> — the standard specifying whether an officer has the right to make an arrest, conduct a search, or obtain a warrant.</p>
+
+  <h4>How specific must a warrant be?</h4>
+  <p>Warrants may only be issued &ldquo;particularly describing the place to be searched and the persons or things to be seized&rdquo;. The courts read <em>particularly</em> strictly: a warrant can authorise a search only of a <strong>specific place</strong> for a <strong>specific thing</strong>.</p>
+  <div class="grid2">
+    <div class="card card--risk"><h5>Too general</h5><p>&ldquo;A house on Elm Avenue between Broadway and Main Street&rdquo; — unless only one house fits that description. A weak warrant creates problems later during prosecution, and a judge can exclude everything obtained under it.</p></div>
+    <div class="card card--safe"><h5>Specific enough</h5><p>&ldquo;123 Elm Avenue&rdquo;. For the items, courts have allowed more general wording for digital evidence — you can say &ldquo;computer and all associated parts&rdquo; rather than naming an exact model.</p></div>
+  </div>
+
+  <h4>Two terms you must know</h4>
+  <p><strong>Innocent information</strong> is unrelated material included with the evidence you are trying to recover — personal records of innocent people, or confidential business information. When you find commingled evidence, judges often issue a <strong>limiting phrase</strong> to the warrant, which allows police to separate innocent information from evidence. The warrant must list which items can be seized.</p>
+
+  <h4>The plain view doctrine</h4>
+  <p>Objects falling in the direct sight of an officer who has a right to be in a location are subject to seizure without a warrant and can be introduced into evidence. Three criteria must be met.</p>
+  <div class="grid3">
+    <div class="card"><span class="k">Criterion 1</span><h5>Lawful presence</h5><p>The officer is where he or she has a legal right to be.</p></div>
+    <div class="card"><span class="k">Criterion 2</span><h5>Unaided senses</h5><p>Ordinary senses must not be enhanced by advanced technology — binoculars, for instance.</p></div>
+    <div class="card"><span class="k">Criterion 3</span><h5>By chance</h5><p>Any discovery must be by chance. Police are not permitted to move objects to get a better view.</p></div>
+  </div>
+  <p>In <em>Arizona v. Hicks</em> (1987) the officer acted unlawfully because he <strong>moved stereo equipment</strong>, without probable cause, to record its serial numbers. The doctrine has since been expanded to plain feel, plain smell and plain hearing.</p>
+
+  <div class="note note--case">
+    <span class="nk">The Horton three-prong test (1990)</span>
+    <p><em>Horton v. California</em> removed the requirement that discovery be <em>inadvertent</em>, because that term proved hard to define. The test now requires three things: the officer must be <strong>lawfully present</strong> where the evidence can be plainly viewed; the officer must have a <strong>lawful right of access</strong> to the object; and the incriminating character of the object must be <strong>immediately apparent</strong>.</p>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Why plain view is being rejected for digital searches</span>
+    <p>A forensic examiner sees thousands of files while searching, so it is tempting to argue everything on the drive is in plain view. Courts increasingly disagree. Example: a warrant authorises searching a computer for drug-trafficking evidence; during the search the examiner opens an <span class="mono">.avi</span> file and finds child abuse material. At that point she must <strong>get an additional warrant or an expansion of the existing one</strong> before continuing. In <em>United States v. Comprehensive Drug Testing</em> (2010) a warrant covering ten baseball players led to 200 more being implicated during the examination — investigators argued plain view, and the court disagreed. A separate warrant was required.</p>
+  </div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section class="topic" id="t13">
+  <div class="exhibit"><span class="exno">13</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 160–166</span></div>
+  <h3>Preparing for a Search</h3>
+  <p class="lede">Preparing for search and seizure is <strong>probably the most important step</strong> in digital investigations. The better you prepare, the smoother the investigation. Information comes from the victim (the complainant) and an informant — who could be the detective assigned to the case, a law enforcement witness, or a manager or co-worker of the <strong>person of interest</strong>.</p>
+
+  <h4>The seven preparation tasks</h4>
+  <ol class="gsteps">
+    <li><b>Identify the nature of the case.</b> Private or public sector? A private case might be Internet abuse or an EEO or harassment complaint; a law enforcement case could be anything from check fraud to homicide. The nature dictates how you proceed and what resources you need.</li>
+    <li><b>Identify the type of OS or digital device.</b> Estimate storage size and how many devices you must process. Windows, Linux, macOS, iOS, Android; PCs, smartphones, tablets, laptops, wearables. Private-sector investigators have configuration management databases to consult; law enforcement often does not, because the scene is not controlled.</li>
+    <li><b>Determine whether you can seize the devices.</b> Law enforcement needs a warrant to remove computers. If removing them would <strong>irreparably harm a business</strong>, they should not be taken offsite unless you have disclosed that effect to the judge. Also consider files stored offsite and accessed remotely, and cloud storage — which essentially cannot be located physically.</li>
+    <li><b>Get a detailed description of the location.</b> Environmental and <strong>safety</strong> issues are the main concern. Identify potential hazards before you arrive.</li>
+    <li><b>Determine who is in charge.</b> Private-sector investigations usually need only one responder. Law enforcement often needs additional staff, and large-scale investigations need a designated <strong>crime or incident scene leader</strong> whom everyone cooperates with.</li>
+    <li><b>Decide whether you need additional technical expertise.</b> A data centre with RAID arrays and high-end Linux servers may need a server specialist; an Oracle installation may need a database specialist; mobile devices need someone who can handle them. If you recruit a non-investigator, <strong>train them in investigative technique</strong> — an untrained specialist can destroy evidence unintentionally no matter how carefully you brief them.</li>
+    <li><b>Determine the tools you need.</b> Being overprepared is better than being underprepared, particularly when you cannot take the machine back to the lab.</li>
+  </ol>
+
+  <div class="note note--risk">
+    <span class="nk">Hazardous scenes — the part of task 4 that gets its own procedure</span>
+    <p>Some scenes involve a methamphetamine lab or biological, chemical or nuclear contaminants. There you rely on a <strong>HAZMAT team</strong>. If decontamination would destroy the electronic evidence, a HAZMAT specialist or an investigator in HAZMAT gear must image the drive — and if you have to coach the specialist, be <em>exact and articulate</em>, because ambiguous instructions destroy evidence.</p>
+    <p style="margin-top:.5rem">Practical technique: put the target drive in a HAZMAT bag with the data and power cables led out through an airtight seal, so contaminants cannot reach the drive. Acquire, power down, disconnect, then let the technician decontaminate the bag. Above 80&nbsp;°F take measures against overheating — sealed ice packs or double-wrapped bags of ice, so no moisture leaks onto the drive. In extreme cases you may have to sacrifice cables entirely, or accept that contamination makes acquisition impossible.</p>
+  </div>
+
+  <h4>The two field kits</h4>
+  <div class="grid2">
+    <div class="card card--cust">
+      <h5>Initial-response field kit</h5>
+      <p style="margin-bottom:.5rem">Lightweight and easy to transport — arrive, acquire, return to the lab quickly.</p>
+      <ul class="clean" style="margin:0">
+        <li>Small computer toolkit; JIS and ANSI screwdriver sets</li>
+        <li>Large-capacity target drive; USB drives or a portable hard drive</li>
+        <li>Two antistatic wrist bands; ten antistatic computer evidence bags</li>
+        <li>IDE ribbon and SATA cables; laptop 40-to-44-pin adapter</li>
+        <li>Forensic boot media containing an acquisition utility</li>
+        <li>FireWire or USB dual <strong>write-protect</strong> external bay</li>
+        <li>Laptop or tablet; flashlight</li>
+        <li>Digital camera with spare batteries</li>
+        <li>Ten evidence log forms; twenty evidence labels, tape and tags</li>
+        <li>Notebook or digital dictation recorder; permanent ink marker</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h5>Extensive-response field kit</h5>
+      <p style="margin-bottom:.5rem">Everything you can afford to take. On arrival you extract only what you need, which protects the equipment and reduces how much you must track at the scene.</p>
+      <ul class="clean" style="margin:0">
+        <li>The complete initial-response field kit</li>
+        <li>Assorted technical manuals, from OS references to forensic analysis guides</li>
+        <li>Laptop or tablet with cables and connectors</li>
+        <li>Two electrical power strips</li>
+        <li>Additional hand tools — bolt cutters, pry bar, hacksaw</li>
+        <li>Leather gloves and disposable latex gloves in assorted sizes</li>
+        <li>External USB drives</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 14 ============ -->
+<section class="topic" id="t14">
+  <div class="exhibit"><span class="exno">14</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 166–167</span></div>
+  <h3>Securing a Computer Incident or Crime Scene</h3>
+  <p class="lede">The goal of securing a scene is to preserve the evidence and keep information confidential. The guiding rule is to define a perimeter <strong>wider than you think you need</strong>, because you can always shrink it later — you cannot re-secure ground people have already walked over.</p>
+
+  <div class="grid2">
+    <div class="card card--safe">
+      <h5>What to do</h5>
+      <ul class="ticks">
+        <li>Use whatever is practical — barrier tape, closed doors, a posted officer — so only authorised people can enter</li>
+        <li>Remove anyone who is not investigating, unless you need their help (the network administrator may be needed to recover data)</li>
+        <li>Let nothing in the area move until you have recorded it</li>
+        <li>Be professional and courteous to onlookers, but give out no information; refer journalists to a public information officer</li>
+        <li>Legal authority differs: law enforcement secures the scene under a warrant, corporate investigators under company authority</li>
+      </ul>
+    </div>
+    <div class="card card--risk">
+      <h5>Professional curiosity — the commonest way evidence dies</h5>
+      <p>Evidence is routinely lost or corrupted because of <strong>professional curiosity</strong>: the presence of police officers and other professionals who are not part of the processing team, but have a compelling interest in seeing what happened. Their presence can contaminate the scene directly or indirectly.</p>
+      <p style="margin-top:.5rem">Even people authorised and trained to search crime scenes alter evidence inadvertently. Starting a computer without forensic boot media changes date and last-access timestamps immediately.</p>
+    </div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">The story the textbook tells to make the point stick</span>
+    <p>A lead detective recovered a good latent fingerprint from a homicide scene. It matched neither the victim nor anyone who knew her, so he kept it on file for years, convinced it belonged to the murderer. When his department bought an <strong>Automated Fingerprint Identification System</strong>, he asked the acceptance-testing team to run it. Within minutes AFIS found a near-perfect match — <em>the print was his own</em>.</p>
+    <p style="margin-top:.5rem">Fingerprints have an escape route from this: elimination prints can be taken from everyone with access to the scene. <strong>Digital evidence has no equivalent elimination process.</strong> There is no way to subtract your own contamination afterwards, which is why nobody may examine a suspect's computer before you have captured and preserved an image.</p>
+  </div>
+</section>
+
+<!-- ============ 15 ============ -->
+<section class="topic" id="t15">
+  <div class="exhibit"><span class="exno">15</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 167–172</span></div>
+  <h3>Seizing Digital Evidence at the Scene</h3>
+  <p class="lede">With proper search warrants, law enforcement can seize all digital systems and peripherals. In private-sector investigations you might have only the authority to <strong>make an image</strong> of the suspect's drive — investigators there rarely have authority to seize everything.</p>
+
+  <h4>Three questions to ask before you collect anything</h4>
+  <ul class="clean">
+    <li>Do you need the entire computer and all peripherals and media in the immediate area — and how will you protect them in transport, <strong>including blocking devices from reaching wireless networks</strong> on the way?</li>
+    <li>Is the computer powered on when you arrive?</li>
+    <li>Is the suspect in the immediate area? Could they damage or destroy the machine? Will you have to separate them from it?</li>
+  </ul>
+  <p>For a criminal case involving, say, a drug dealer's computer, you take the entire machine plus every peripheral and item of media in the area — smartphones, USB devices, discs, printers, cameras, scanners, and increasingly smart TVs, gaming systems and other network-attached devices. For employee misconduct you may need only a few specific items.</p>
+
+  <h4>Recording the scene, in order</h4>
+  <ol class="gsteps">
+    <li><b>Keep a journal.</b> Date and time you arrived, the people you encounter, and notes on every important task. Update it as you go.</li>
+    <li><b>Video and still recordings.</b> Start with the overall scene, then close-ups — including the back of every computer. <strong>Label every cable with a number or letter before recording the back</strong>, so the configuration can be rebuilt at the lab. Record the floor, the ceiling, all access points such as doors and windows, and look under tables and desk drawers for anything taped out of sight. Remove false ceiling tiles and record that space too. Pan slowly to avoid blurring, and keep a camera log.</li>
+    <li><b>Sketch the scene.</b> A rough draft with dimensions and distances between fixed objects — &ldquo;the suspect's computer is on the south wall, three metres from the southeast corner&rdquo;. Redraw it cleanly, preferably in drawing software, for the report.</li>
+    <li><b>Check the state of every device</b> as soon as possible, because digital data is volatile. On, off, hibernating or asleep?</li>
+  </ol>
+
+  <h4>The decision everything turns on</h4>
+  <div class="tree">
+    <div class="tnode"><b>Is the computer powered on?</b></div>
+    <div class="tarrow">&#9660;</div>
+    <div class="tsplit">
+      <div class="tbranch a">
+        <span class="lb">If it is OFF</span>
+        <strong>Leave it off.</strong> There is nothing to gain and everything to lose by powering it on. Photograph, label, bag and tag.
+      </div>
+      <div class="tbranch b">
+        <span class="lb">If it is ON</span>
+        <strong>Use professional judgement.</strong> Standard practice used to be to kill the power, and that is still generally acceptable on older Windows and MS-DOS systems, where cutting power usually preserves data. On most modern Windows, UNIX and Linux computers you should generally do an <strong>orderly shutdown</strong> first — but every shutdown carries risk, so you or your supervisor may have to decide the best procedure.
+      </div>
+    </div>
+  </div>
+
+  <div class="note note--risk">
+    <span class="nk">Why the rule changed — and why it is a judgement call</span>
+    <p>More investigations now revolve around network and Internet cases which rely heavily on <strong>log file data</strong>. Certain files, such as the Windows Event log and Security log, can lose essential network activity records if power is terminated without a proper shutdown. Some government agencies still teach investigators to &ldquo;pull the plug&rdquo;. Ultimately it is the <strong>Digital Evidence First Responder's</strong> call.</p>
+    <p style="margin-top:.5rem">There are also self-destruct mechanisms to consider. A classic trick altered the DOS <span class="mono">command.com</span> so that typing <span class="mono">dir</span> actually ran <span class="mono">deltree</span>, wiping every folder. More advanced versions overwrite the drive, and some owners set the machine to erase itself if the wrong screensaver password is entered.</p>
+  </div>
+
+  <h4>If it is on and you are staying live</h4>
+  <ul class="clean">
+    <li>Save data in current applications as safely as possible, and record all active windows or shell sessions</li>
+    <li><strong>Do not examine folders or network connections or press any keys unless necessary</strong></li>
+    <li>Photograph the screens. Minimised windows may safely be expanded and photographed. As a precaution, write down each window's contents too</li>
+    <li>Save screen contents to external media — a Word file to an external drive, a web page to a USB drive. If the machine has an active connection to a server with space, you can save there with the network administrator's cooperation</li>
+    <li>If you cannot save to external media, save to the suspect drive under a <strong>new filename</strong>, so you do not overwrite an existing file. This is not ideal and is for emergencies only</li>
+    <li>When closing applications, if prompted to save — <strong>do not save</strong>. Then perform an orderly shutdown</li>
+    <li>Note every action in your journal so you can explain it in your report</li>
+  </ul>
+
+  <div class="note note--case">
+    <span class="nk">Worked example · the covert swap</span>
+    <p>An employee is suspected of writing a book on company time and saving personal files locally. His supervisors do not want him to know he is being investigated. Using imaging software you copy the hard drive onto another drive, install the <em>duplicate</em> in his computer, and take the original to the lab. Note what this is: not a bit-for-bit forensic copy for analysis, but a working copy so business continues, with the original preserved as evidence.</p>
+    <p style="margin-top:.5rem">Because people notice when their desk has been touched, you photograph the scene, <strong>measure the height of his chair</strong>, and record the position of every item you have to move — then put everything back exactly. The tradecraft is as important as the imaging.</p>
+  </div>
+
+  <p>After recording, shutting down and bagging and tagging: <strong>assign one person to collect and log all evidence</strong>, minimising the number of people who handle it.</p>
+</section>
+
+<!-- ============ 16 ============ -->
+<section class="topic" id="t16">
+  <div class="exhibit"><span class="exno">16</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 174–176</span></div>
+  <h3>Storing Digital Evidence</h3>
+  <p class="lede">The choice of media depends on how long you need to keep the evidence. If you investigate criminal matters, <strong>store it as long as you can</strong> — cold cases from twenty, thirty or fifty years ago are now being solved because of advances in technology, and you never know when a case will go to trial.</p>
+
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Medium</th><th>Capacity / life</th><th>Verdict in the text</th></tr></thead>
+    <tbody>
+      <tr><td>CD / DVD</td><td>Expected lifespan now 2–5 years</td><td>Used to be the ideal. No longer.</td></tr>
+      <tr><td>Solid-state USB drives</td><td>Varies</td><td><strong>The optimum choice now.</strong> More expensive than optical media but far more durable.</td></tr>
+      <tr><td>4 mm DAT magnetic tape</td><td>40–72 GB or more</td><td>Usable, but slow to read and write. Test by copying back to disk and doing an MD5 comparison.</td></tr>
+      <tr><td>DLT cartridge</td><td>Up to 80 GB compressed; ~30-year life</td><td>Good if a 30-year lifespan is acceptable. Faster than optical. Drive costs $400–800 and tapes about $40 — the only real drawback.</td></tr>
+      <tr><td>Super-DLT (SDLT)</td><td>More than 1 TB</td><td>Designed for large RAID backups; smaller external units connect by SCSI.</td></tr>
+      <tr><td>External USB drives / encrypted cloud</td><td>1 TB and up</td><td>Other viable options, including reliable offsite storage.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note note--safe">
+    <span class="nk">The rule that outranks the media choice</span>
+    <p>Do not rely on one storage method. <strong>Make two copies of every image</strong>, and if practical <strong>use different tools to create them</strong>, because every tool has strengths and weaknesses. For example, create the first image with the Linux <span class="mono">dd</span> command and the second with FTK Imager Lite.</p>
+  </div>
+
+  <h4>Evidence retention and the storage area</h4>
+  <ul class="clean">
+    <li>Restrict access to the lab and the evidence storage area. While the lab is open, authorised personnel must keep those areas under constant supervision; when closed, at least two security workers should guard the storage cabinets and facilities</li>
+    <li>Keep a <strong>sign-in roster for all visitors</strong>. Most labs use a manual log maintained by an authorised technician whenever an evidence container is opened and closed</li>
+    <li>Retain those logs for a period based on legal requirements — statute of limitations, maximum sentence, and expiry of appeal periods — and make them available for management inspection</li>
+    <li>Law enforcement work may require retaining evidence <strong>indefinitely</strong> depending on the crime; check with the prosecuting attorney's office. In the private sector, the general counsel sets retention standards</li>
+  </ul>
+
+  <div class="app">
+    <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Evidence Activity Log — one form per item of evidence</div>
+    <div class="app-body">
+      <div class="field"><label>Case Number</label><span class="inp">2026-CY-0418</span></div>
+      <div class="field"><label>Evidence Number</label><span class="inp">EX-03 / drive 1 of 2</span></div>
+      <div class="field"><label>Description</label><span class="inp">Seagate 1 TB SATA, S/N 9WK2H8LR, sealed bag 0041882</span></div>
+      <table class="tblmini" style="margin-top:.6rem">
+        <thead><tr><th>Examiner's name</th><th>Date out</th><th>Time</th><th>Date in</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr><td>A. Rao</td><td>18-04-2026</td><td>09:14</td><td>18-04-2026</td><td>17:02</td></tr>
+          <tr><td>S. Menon</td><td>21-04-2026</td><td>10:30</td><td>21-04-2026</td><td>13:45</td></tr>
+          <tr class="hi"><td>A. Rao</td><td>02-05-2026</td><td>11:05</td><td>—</td><td>OUT</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.76rem;color:#3C4854;margin:.55rem 0 0">An evidence custody form must <strong>identify the evidence</strong>, <strong>identify who has handled it</strong>, and <strong>list the dates and times it was handled</strong>. Add a section for MD5 and SHA-256 hash values.</p>
+    </div>
+    <div class="app-status"><span>Storage: Cabinet C, Shelf 2</span><span>Retention: indefinite (criminal)</span></div>
+  </div>
+  <p class="caption">Recreated: the log that answers &ldquo;who had this, and when?&rdquo; years later</p>
+
+  <div class="note note--case">
+    <span class="nk">Practical detail worth a mark</span>
+    <p>Evidence bags carry labels or forms for documentation. <strong>Write on the bag while it is empty</strong>, not once it holds the evidence — so your writing is legible and so you do not damage what is inside. Use <strong>antistatic bags</strong> for electronic components.</p>
+  </div>
+</section>
+
+<!-- ============ 17 ============ -->
+<section class="topic" id="t17">
+  <div class="exhibit"><span class="exno">17</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 176–179</span></div>
+  <h3>Obtaining a Digital Hash</h3>
+  <p class="lede">A hash is a mathematical formula that generates a hexadecimal value based on the contents of a file, a folder or an entire drive. <strong>If a single bit or byte changes, the hash value changes.</strong> Hash before you process, hash after you process; if the two match, you have mathematical proof that the file did not change.</p>
+
+  <h4>The algorithms, in the order they arrived</h4>
+  <div class="grid4">
+    <div class="card"><span class="k">First</span><h5>CRC-32</h5><p>Cyclic Redundancy Check — determines whether a file's contents have changed. The most recent version is CRC-32. <strong>Not considered a forensic hashing algorithm.</strong></p></div>
+    <div class="card"><span class="k">Second</span><h5>MD5</h5><p>Message Digest 5 — the first algorithm used for digital forensics. Still widely used despite known flaws.</p></div>
+    <div class="card"><span class="k">Third</span><h5>SHA-1</h5><p>Secure Hash Algorithm version 1, developed by NIST. Has slowly replaced MD5 and CRC-32.</p></div>
+    <div class="card card--safe"><span class="k">Now</span><h5>SHA-256</h5><p>Newer versions such as SHA-256 are already in use, and are what you should record today.</p></div>
+  </div>
+
+  <div class="note note--case">
+    <span class="nk">The three rules for forensic hashes</span>
+    <p>From the work of Wang Xiaoyun and colleagues at Tsinghua University and Shandong University of Technology:</p>
+    <ol class="clean" style="margin-top:.5rem">
+      <li>You cannot predict the hash value of a file or device.</li>
+      <li>No two hash values can be the same. <em>(Collisions have occurred in research using supercomputers.)</em></li>
+      <li>If anything changes in the file or device, the hash value must change.</li>
+    </ol>
+  </div>
+
+  <h4>Try it — change one character and watch</h4>
+  <div class="lab">
+    <h5>Live SHA-256 of your own text</h5>
+    <p class="hint">Type in the box. The hash is recomputed in your browser on every keystroke. Delete a single character and compare — the new value has no visible relationship to the old one. That property is called the avalanche effect, and it is the whole reason hashing works as evidence.</p>
+    <div class="labrow">
+      <input type="text" id="hInput" value="This is a test to see how a digital hash works." aria-label="Text to hash" maxlength="90">
+      <button class="btn btn--ghost" id="hSnap">Set as baseline</button>
+    </div>
+    <div class="hashout">
+      <span class="k">Baseline</span><span class="v" id="hBase">—</span>
+      <span class="k">Current</span><span class="v" id="hNow">—</span>
+    </div>
+    <div class="verdict" id="hVerdict">Hashes match — evidence integrity verified.</div>
+    <p style="font-size:.82rem;color:var(--ink3);margin:.7rem 0 0">Length: <span class="mono" id="hLen">0</span> characters &middot; output is always 64 hex characters (256 bits), whatever the input length.</p>
+  </div>
+
+  <h4>Keyed and nonkeyed hash sets</h4>
+  <div class="grid2">
+    <div class="card card--cust">
+      <h5>Nonkeyed hash set</h5>
+      <p>A unique hash number generated by a software tool such as the Linux <span class="mono">md5sum</span> command. Satisfies most forensic needs. Its advantage is that it <strong>identifies known files</strong> — executables, viruses, contraband images — that hide by changing their names. Rename the file and the extension all you like; the hash value does not move.</p>
+    </div>
+    <div class="card card--cust">
+      <h5>Keyed hash set</h5>
+      <p>Created by an encryption utility's <strong>secret key</strong>. You use the key to produce a unique hash value for a file. It <em>cannot</em> identify files the way a nonkeyed hash can, but it produces a hash set unique to your evidence — nobody without the key can reproduce it.</p>
+    </div>
+  </div>
+
+  <div class="note note--safe">
+    <span class="nk">When a collision is alleged</span>
+    <p>In both MD5 and SHA-1 collisions have occurred — two different files with the same hash value. They are rare, and both algorithms are still used for validating digital evidence. If a collision <em>is</em> suspected, settle it with a <strong>byte-by-byte comparison</strong>: the MS-DOS <span class="mono">comp</span> command or the Linux <span class="mono">diff</span> command.</p>
+  </div>
+
+  <div class="now">
+    <span class="nk">In practice today</span>
+    <p>MD5 and SHA-1 are both broken for <em>collision resistance</em> — deliberate collisions can now be manufactured on ordinary hardware — so no new system should rely on them alone. They remain acceptable for detecting accidental change, which is why case records still carry them. Current practice records <strong>SHA-256 alongside MD5</strong>. For Indian students there is a legal edge to this: the Section 63 BSA certificate expects the <strong>hash value of the electronic record to appear on the certificate</strong>, so the hash is no longer just good practice — it is part of the document that makes the evidence admissible.</p>
+  </div>
+</section>
+
+<!-- ============ 18 ============ -->
+<section class="topic" id="t18">
+  <div class="exhibit"><span class="exno">18</span><span class="exsrc">Nelson et al., Ch. 4 · pp. 179–182</span></div>
+  <h3>Reviewing a Case</h3>
+  <p class="lede">Every digital forensics case, whatever its size, runs through the same five general tasks. Reviewing a case means walking back through them and asking what you would do differently.</p>
+
+  <div class="flow">
+    <div class="fstep"><span class="fn">TASK 1</span><b>Identify the case requirements</b><span>What is alleged, what is in scope, what must be proved</span></div>
+    <div class="fstep"><span class="fn">TASK 2</span><b>Plan your investigation</b><span>Goal, scope, materials needed, tasks to perform</span></div>
+    <div class="fstep"><span class="fn">TASK 3</span><b>Conduct the investigation</b><span>Acquire, validate, analyse — documenting throughout</span></div>
+  </div>
+  <div class="flow">
+    <div class="fstep"><span class="fn">TASK 4</span><b>Complete the case report</b><span>Understandable to a layman, technically correct, defensible</span></div>
+    <div class="fstep fstep--dark"><span class="fn">TASK 5</span><b>Critique the case</b><span>The step everyone skips. What worked, what did not, what to change next time</span></div>
+  </div>
+
+  <h4>A sample civil investigation — the widget email</h4>
+  <p>Most private-sector cases are <strong>low-level investigations</strong>, or noncriminal cases. That does not mean unimportant; it means less effort than a major criminal case.</p>
+  <div class="note note--case">
+    <span class="nk">The facts</span>
+    <p>Mr Jones at Company A claims to have received an order for $200,000 of widgets from Mr Smith, the purchasing manager at Company B. Company A manufactures them and notifies Company B they are ready. Mr Smith replies that they ordered nothing and will not pay. Company A produces an email requesting the widgets that appears to be from Mr Smith; Company B says it did not originate from their mail server. Company A sues. Both sides demand discovery on the other's computer — Company A hoping to find the original message, Company B believing the email is a fake.</p>
+  </div>
+  <p>You are dispatched to Company A to examine Mr Jones's computer. The discovery order authorises you to recover <strong>only his Outlook mail folder, the <span class="mono">.pst</span> file</strong>. Nothing else.</p>
+  <ol class="gsteps">
+    <li><b>Exit Outlook</b> on Mr Jones's computer.</li>
+    <li><b>Locate the <span class="mono">.pst</span> file</b> in File Explorer; you may need Windows Search to find files with that extension.</li>
+    <li><b>Check its size</b> and connect a suitable storage device, such as a USB drive.</li>
+    <li><b>Copy the <span class="mono">.pst</span> to the USB drive</b>, then remove the drive.</li>
+    <li><b>Fill out your evidence form</b> — where on the disk you found the file, and the date and time you did it.</li>
+    <li><b>Return to the lab</b> and place the USB drive in your evidence safe.</li>
+  </ol>
+  <p style="font-size:.94rem;color:var(--ink3)">For most civil investigations you collect only the specific items that lawyers or Human Resources have determined to be germane. Notice how much of the discipline in this list is about <em>not</em> doing things.</p>
+
+  <h4>Covert surveillance in the private sector</h4>
+  <p>Another common private-sector activity is <strong>covert surveillance</strong> of employees abusing their computing privileges. It must be well defined in company policy before it can be carried out — if no policy informs employees they have no privacy rights on company equipment, <strong>no surveillance can be conducted</strong> without exposing the company to civil or even criminal liability. If no policy exists, one must be created and every employee notified. The legal department should draft language appropriate to the jurisdiction.</p>
+  <p>The mechanics: real-time surveillance requires <strong>sniffing</strong> data transmissions between the suspect's computer and a network server. Network sniffers such as Wireshark show what is being transmitted. Screen-capture and keylogger programs collect screens and keystrokes and are usually disguised as other programs in Task Manager. Enterprise tools can activate agents over the network to remote workstations so examiners can work in real time through a remote connection.</p>
+
+  <h4>A sample criminal investigation — check fraud</h4>
+  <div class="note note--case">
+    <span class="nk">The facts</span>
+    <p>Because high-quality printers are now cheap, one of the most common computer-related crimes is <strong>check fraud</strong> — and many of these cases also involve manufacturing false ID cards such as driving licences. Police received a tip that a check-forging operation was running in an apartment building. After contacting a reliable informant, the detective had enough for a <strong>search warrant</strong> and asked the patrol division to help serve it. On entering and conducting a preliminary search he found a network of six high-end workstations.</p>
+  </div>
+  <p>That single fact — six networked machines rather than one PC — changes everything covered in Topic 13: the number of examiners needed, the storage capacity to bring, whether the machines can be seized without irreparable harm, and whether additional technical expertise is required for the server and network configuration. Which is the point of reviewing cases at all: the preparation tasks are only as good as the information you had when you did them.</p>
+</section>
+
+<!-- ===================== SUMMARY ===================== -->
+<section class="topic" id="summary">
+  <div class="exhibit"><span class="exno">REVISION</span><span class="exsrc">One line for each of the eighteen topics</span></div>
+  <h3>The Whole Unit in Eighteen Lines</h3>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#A2B0C0;font-weight:600">A · Analysis and Validation</h4>
+    <div class="sumrow"><span class="sn">01</span><span class="st">What to collect</span><span class="sd">Scope comes from the warrant, the discovery order or company policy. Beware scope creep; document every request to widen. Ten standard steps from wiping the target drive to maintaining control of findings.</span></div>
+    <div class="sumrow"><span class="sn">02</span><span class="st">Validating data</span><span class="sd">Hash before and after. Hex editors hash individual files and sectors; block-wise hashing finds fragments of a file that no longer exists. Two files with the same content have the same hash whatever they are named.</span></div>
+    <div class="sumrow"><span class="sn">03</span><span class="st">Data hiding</span><span class="sd">Extensions, hidden attribute, hidden partitions, clusters marked bad, bit-shifting, steganography, encryption and passwords. Five steganalysis attacks. Recovery by dictionary, brute force or rainbow table — defeated by salting.</span></div>
+    <div class="sumrow"><span class="sn">04</span><span class="st">Remote acquisitions</span><span class="sd">Connect over the network and copy; almost always a live acquisition. An agent must be installed by trusted CD, preinstallation, or push. Five security features: password, encryption, GUIDs, trusted binaries, digital signatures.</span></div>
+  </div>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#A2B0C0;font-weight:600">B · Network Forensics</h4>
+    <div class="sumrow"><span class="sn">05</span><span class="st">Overview</span><span class="sd">Collecting and analysing raw network data to ascertain how an attack was carried out. Know your normal traffic patterns. Harden first: layered defence, and the NSA's DiD — people, technology, operations.</span></div>
+    <div class="sumrow"><span class="sn">06</span><span class="st">Live acquisitions</span><span class="sd">Needed because attacks may leave traces only in RAM. Results cannot be reproduced, so document everything. Six steps: test boot media, log actions, prepare storage, copy RAM, act on the incident type, hash everything.</span></div>
+    <div class="sumrow"><span class="sn">07</span><span class="st">Standard procedures</span><span class="sd">Keep a standard installation image with hashes; fix the vulnerability; retrieve volatile data live; image the compromised drive; compare hashes against the baseline.</span></div>
+    <div class="sumrow"><span class="sn">08</span><span class="st">Network tools</span><span class="sd">tcpdump captures, Wireshark analyses and rebuilds sessions via Follow TCP Stream. Watch receiving ports above 1024. SYN flag detection catches SYN floods. Tcpslice, Tcpreplay, Etherape, Netdude, Argus, Tripwire.</span></div>
+    <div class="sumrow"><span class="sn">09</span><span class="st">Honeynet Project</span><span class="sd">Non-profit, three objectives: awareness, information, tools. Built to study DDoS (using zombies) and zero day attacks. A honeypot is the decoy with no real data; a honeywall monitors and records what attackers do to it.</span></div>
+  </div>
+
+  <div class="sumcard">
+    <h4 style="font-family:var(--sans);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#A2B0C0;font-weight:600">C · Crime and Incident Scenes</h4>
+    <div class="sumrow"><span class="sn">10</span><span class="st">Identifying evidence</span><span class="sd">Any information stored or transmitted in digital form; courts treat it as physical evidence. Identify, collect, analyse, reproduce. Standards: ISO/IEC 27037, SWGDE, NIJ first-responder guide. In India, Section 63 BSA 2023.</span></div>
+    <div class="sumrow"><span class="sn">11</span><span class="st">Private-sector scenes</span><span class="sd">Easier because everything is under company authority — but only if a policy statement and warning banner exist, otherwise employees have an expectation of privacy. On finding a crime: assess, inform management, protect commingled data, stop.</span></div>
+    <div class="sumrow"><span class="sn">12</span><span class="st">Law enforcement scenes</span><span class="sd">Probable cause, then a warrant particularly describing place and things. Innocent information, limiting phrase. Plain view doctrine and the Horton three-prong test — increasingly rejected for digital searches.</span></div>
+    <div class="sumrow"><span class="sn">13</span><span class="st">Preparing for a search</span><span class="sd">Nature of the case, type of OS or device, whether you can seize, description of the location, who is in charge, additional expertise, tools. Initial-response and extensive-response field kits.</span></div>
+    <div class="sumrow"><span class="sn">14</span><span class="st">Securing the scene</span><span class="sd">Define a wider perimeter than you need. Remove everyone not investigating. Professional curiosity destroys evidence, and digital evidence has no elimination-print equivalent.</span></div>
+    <div class="sumrow"><span class="sn">15</span><span class="st">Seizing evidence</span><span class="sd">Journal, video and stills with every cable labelled, sketch, then check power state. If off, leave it off. If on, orderly shutdown on modern systems — a first responder's judgement call because logs may be lost.</span></div>
+    <div class="sumrow"><span class="sn">16</span><span class="st">Storing evidence</span><span class="sd">Solid-state USB is now the optimum; CDs and DVDs last only 2–5 years. Make two copies with two different tools. Restrict lab access, keep a sign-in roster, retain logs to legal requirements.</span></div>
+    <div class="sumrow"><span class="sn">17</span><span class="st">Digital hash</span><span class="sd">CRC-32 (not forensic), MD5, SHA-1, SHA-256. Three rules: unpredictable, unique, changes if anything changes. Nonkeyed identifies known files; keyed uses a secret key. Collisions settled byte-by-byte.</span></div>
+    <div class="sumrow"><span class="sn">18</span><span class="st">Reviewing a case</span><span class="sd">Identify requirements, plan, conduct, report, critique. Civil example: recovering only the .pst file under a discovery order. Criminal example: a check-forging operation found to be six networked workstations.</span></div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer class="foot">
+  <div class="foot-in">
+    <b>Digital Forensics · 20CS41020 · Unit III</b><br>
+    Digital Forensics Analysis and Validation · Network Forensics · Processing Crime and Incident Scenes<br>
+    B.Tech CSE (AIML), IV Year I Sem · AR22 · Geethanjali College of Engineering and Technology<br><br>
+    <b>Primary text:</b> Nelson, Phillips &amp; Steuart, <i>Guide to Computer Forensics and Investigations</i>, Chapters 3, 4, 9 and 10.<br>
+    <b>Syllabus references drawn on:</b> Jones, Bejtlich &amp; Rose, <i>Real Digital Forensics</i> · Sammes &amp; Jenkinson, <i>Forensic Computing: A Practitioner's Guide</i> · Brown, <i>Computer Evidence Collection &amp; Presentation</i> · Mena, <i>Homeland Security Techniques &amp; Technologies</i> · Slade, <i>Software Forensics</i> · Steel, <i>Windows Forensics</i>.<br>
+    <b>Current-practice notes</b> draw on NIST SP 800-86, ISO/IEC 27037, the Honeynet Project, Zeek, Arkime, Velociraptor and Volatility documentation, and the Bharatiya Sakshya Adhiniyam 2023.<br>
+    Tool screens are recreations for teaching, not screenshots. Named cases are real; scenarios are teaching illustrations.
+  </div>
+</footer>
+
+</main>
+</div><!-- /shell -->
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- mobile nav ---------- */
+  var rail=document.getElementById('rail'),
+      scrim=document.getElementById('scrim'),
+      menubtn=document.getElementById('menubtn');
+  function setNav(open){
+    rail.classList.toggle('open',open);
+    scrim.classList.toggle('on',open);
+    menubtn.setAttribute('aria-expanded',open?'true':'false');
+  }
+  menubtn.addEventListener('click',function(){setNav(!rail.classList.contains('open'));});
+  scrim.addEventListener('click',function(){setNav(false);});
+  rail.addEventListener('click',function(e){ if(e.target.closest('a')) setNav(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') setNav(false); });
+
+  /* ---------- scroll progress + rail ---------- */
+  var links=Array.prototype.slice.call(document.querySelectorAll('.chain a')),
+      sections=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}),
+      prog=document.getElementById('prog'),
+      sealtxt=document.getElementById('sealtxt'),
+      ticking=false;
+  function update(){
+    ticking=false;
+    var doc=document.documentElement, max=doc.scrollHeight-doc.clientHeight,
+        y=window.scrollY||doc.scrollTop;
+    prog.style.width=(max>0?(y/max*100):0)+'%';
+    var current=-1;
+    for(var i=0;i<sections.length;i++){
+      if(!sections[i]) continue;
+      if(sections[i].getBoundingClientRect().top<=140) current=i;
+    }
+    for(var j=0;j<links.length;j++){
+      var li=links[j].parentNode;
+      li.classList.toggle('seen', j<=current);
+      li.classList.toggle('here', j===current);
+    }
+    sealtxt.textContent=Math.max(0,Math.min(current+1,18))+' / 18 sections';
+  }
+  function onScroll(){ if(!ticking){ ticking=true; window.requestAnimationFrame(update); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  update();
+
+  /* ---------- hashing helpers ---------- */
+  function fallbackHash(str){
+    // clearly-labelled demo hash used only where SubtleCrypto is unavailable
+    var h1=0x811c9dc5, h2=0x01000193, out='';
+    for(var i=0;i<str.length;i++){
+      h1=(h1^str.charCodeAt(i))>>>0; h1=Math.imul(h1,16777619)>>>0;
+      h2=(h2+Math.imul(h1^str.charCodeAt(i),2654435761))>>>0;
+    }
+    for(var k=0;k<8;k++){
+      h1=Math.imul(h1^(h1>>>15),2246822507)>>>0;
+      h2=Math.imul(h2^(h2>>>13),3266489909)>>>0;
+      out+=((h1^h2)>>>0).toString(16).padStart(8,'0');
+    }
+    return out;
+  }
+  function sha256(str){
+    if(window.crypto && window.crypto.subtle && window.isSecureContext){
+      var data=new TextEncoder().encode(str);
+      return window.crypto.subtle.digest('SHA-256',data).then(function(buf){
+        return Array.prototype.map.call(new Uint8Array(buf),function(b){
+          return b.toString(16).padStart(2,'0');}).join('');
+      });
+    }
+    return Promise.resolve(fallbackHash(str));
+  }
+
+  /* ---------- bit-shift lab ---------- */
+  var bsInput=document.getElementById('bsInput'),
+      bsView=document.getElementById('bsView'),
+      bsCount=document.getElementById('bsCount'),
+      bsHashOrig=document.getElementById('bsHashOrig'),
+      bsHashNow=document.getElementById('bsHashNow'),
+      bsVerdict=document.getElementById('bsVerdict'),
+      shift=0;
+
+  function bytesOf(str){ var a=[]; for(var i=0;i<str.length;i++) a.push(str.charCodeAt(i)&0xFF); return a; }
+  function applyShift(bytes,n){
+    if(n===0) return bytes.slice();
+    return bytes.map(function(b){
+      var v=b;
+      for(var i=0;i<Math.abs(n);i++){ v = n>0 ? ((v<<1)&0xFF) : (v>>1); }
+      return v;
+    });
+  }
+  function hex(b){ return b.toString(16).padStart(2,'0').toUpperCase(); }
+  function printable(b){ return (b>=32&&b<=126)?String.fromCharCode(b):'.'; }
+
+  function bsRender(){
+    var base=bytesOf(bsInput.value||''), cur=applyShift(base,shift);
+    var l1='<span class="lbl">original  </span>', l2='<span class="lbl">current   </span>', l3='<span class="lbl">as text   </span>';
+    for(var i=0;i<base.length;i++){
+      l1+=hex(base[i])+' ';
+      l2+=(base[i]===cur[i]?hex(cur[i]):'<span class="chg">'+hex(cur[i])+'</span>')+' ';
+      l3+=' '+(base[i]===cur[i]?printable(cur[i]):'<span class="chg">'+printable(cur[i])+'</span>')+' ';
+    }
+    bsView.innerHTML=l1+'\n'+l2+'\n'+l3;
+    bsCount.textContent=shift;
+    var origStr=base.map(function(b){return String.fromCharCode(b);}).join('');
+    var curStr=cur.map(function(b){return String.fromCharCode(b);}).join('');
+    Promise.all([sha256(origStr),sha256(curStr)]).then(function(r){
+      bsHashOrig.textContent=r[0];
+      bsHashNow.textContent=r[1];
+      var same=(r[0]===r[1]);
+      bsHashNow.classList.toggle('changed',!same);
+      bsVerdict.classList.toggle('bad',!same);
+      bsVerdict.textContent = same
+        ? 'Hashes match — the bytes are back to their original values.'
+        : 'Hashes differ — the file now looks like meaningless binary, and no hash-based tool will recognise it.';
+    });
+  }
+  document.getElementById('bsLeft').addEventListener('click',function(){ if(shift<4){shift++; bsRender();} });
+  document.getElementById('bsRight').addEventListener('click',function(){ if(shift>-4){shift--; bsRender();} });
+  document.getElementById('bsReset').addEventListener('click',function(){ shift=0; bsRender(); });
+  bsInput.addEventListener('input',function(){ bsRender(); });
+  bsRender();
+
+  /* ---------- live hash lab ---------- */
+  var hInput=document.getElementById('hInput'),
+      hBase=document.getElementById('hBase'),
+      hNow=document.getElementById('hNow'),
+      hLen=document.getElementById('hLen'),
+      hVerdict=document.getElementById('hVerdict'),
+      baseline=null;
+
+  function hRender(){
+    hLen.textContent=hInput.value.length;
+    sha256(hInput.value).then(function(h){
+      hNow.textContent=h;
+      if(baseline===null){ baseline=h; hBase.textContent=h; }
+      var same=(h===baseline);
+      hNow.classList.toggle('changed',!same);
+      hVerdict.classList.toggle('bad',!same);
+      hVerdict.textContent = same
+        ? 'Hashes match — evidence integrity verified.'
+        : 'Hashes differ — the data has changed since the baseline was taken.';
+    });
+  }
+  document.getElementById('hSnap').addEventListener('click',function(){
+    sha256(hInput.value).then(function(h){ baseline=h; hBase.textContent=h; hRender(); });
+  });
+  hInput.addEventListener('input',hRender);
+  hRender();
+})();
+</script>
+</body>
+</html>
