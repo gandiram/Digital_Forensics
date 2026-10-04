@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit V — Working with Windows and DOS Systems</title>
+<meta name="description" content="A plain-language guide to Unit V of Digital Forensics (20CS41020), aligned to Nelson, Phillips and Steuart 6th edition chapter 5: file systems and disk geometry, Microsoft FAT structures and partitions, NTFS and the Master File Table, whole disk encryption and BitLocker, the Windows registry, Microsoft and MS-DOS startup tasks, and virtual machines.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================= TOKENS ================= */
+:root{
+  --paper:#EDF0F3; --panel:#FFFFFF; --panel2:#F6F8FA; --panel3:#E3E9EF;
+  --ink:#0F1620; --ink2:#374350; --ink3:#5A6673;
+  --rule:#D4DBE2; --rule2:#BEC8D3;
+  --custody:#23456E; --custody2:#35618F; --custodybg:#E9EEF5; --custodyline:#C3D2E3;
+  --seal:#AE202A; --sealbg:#FBEDEE; --sealline:#E9C5C8;
+  --verify:#0B6E5A; --verifybg:#E7F3F0; --verifyline:#B7DBD2;
+  --tag:#8F6206; --tagbg:#FCF3DE; --tagline:#E8D5A4;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --rail:274px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.2rem;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;font-optical-sizing:auto}
+img,svg{max-width:100%;display:block}
+a{color:var(--custody);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--custody2);outline-offset:2px;border-radius:2px}
+p{margin:0 0 .9rem}
+strong{font-weight:600}
+
+/* ================= LAYOUT ================= */
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:.7rem 1rem;z-index:300;font-family:var(--sans);font-weight:600}
+.skip:focus{left:.5rem;top:.5rem}
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);max-width:1520px;margin:0 auto}
+.main{min-width:0;padding:0 clamp(1rem,3.2vw,3rem) 6rem}
+.wrap{max-width:900px;margin:0 auto}
+
+/* ================= CUSTODY RAIL (signature) ================= */
+.rail{position:sticky;top:0;height:100vh;background:var(--ink);color:#C7D2DE;display:flex;flex-direction:column;z-index:60}
+.railhead{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid #222B36;flex:0 0 auto}
+.railkick{font-family:var(--mono);font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#96A5B6}
+.railtitle{font-family:var(--sans);font-weight:800;font-size:1rem;letter-spacing:-.01em;color:#fff;margin:.35rem 0 .2rem;line-height:1.22}
+.railsub{font-family:var(--mono);font-size:.64rem;color:#8595A6;letter-spacing:.03em}
+.railseal{margin-top:.75rem;display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase}
+.railseal .dot{width:.5rem;height:.5rem;border-radius:50%;background:#2FA98A;box-shadow:0 0 0 3px rgba(47,169,138,.18)}
+.railseal .txt{color:#57C0A4}
+body.broken .railseal .dot{background:#E0525C;box-shadow:0 0 0 3px rgba(224,82,92,.2)}
+body.broken .railseal .txt{color:#F08A92}
+.railscroll{overflow-y:auto;padding:.85rem .5rem 3rem 1.2rem;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:#2B3644 transparent}
+.railscroll::-webkit-scrollbar{width:6px}
+.railscroll::-webkit-scrollbar-thumb{background:#2B3644;border-radius:3px}
+.railpart{font-family:var(--mono);font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:#8595A6;margin:1.15rem 0 .45rem;padding-left:1.5rem}
+.railpart:first-of-type{margin-top:.15rem}
+.chain{list-style:none;margin:0;padding:0;position:relative}
+.chain::before{content:"";position:absolute;left:.43rem;top:.6rem;bottom:.6rem;width:2px;background:#222C38}
+.chain li{position:relative}
+.chain a{display:flex;gap:.5rem;align-items:baseline;padding:.3rem .5rem .3rem 1.5rem;text-decoration:none;color:#AAB8C7;font-family:var(--sans);font-size:.79rem;line-height:1.32;font-weight:500;border-radius:4px;transition:color .18s,background .18s}
+.chain a:hover{color:#fff;background:#1A222C}
+.chain a::before{content:"";position:absolute;left:.18rem;top:.6rem;width:.52rem;height:.52rem;border:2px solid #35414E;background:var(--ink);border-radius:1px;transition:background .22s,border-color .22s}
+.chain a .n{font-family:var(--mono);font-size:.62rem;color:#8595A6;flex:0 0 auto}
+.chain li.seen > a::before{background:#3C6E93;border-color:#4E86AE}
+.chain li.here > a{color:#fff;background:#1B242F}
+.chain li.here > a::before{background:#E9B949;border-color:#E9B949}
+.chain li.here > a .n{color:#E9B949}
+body.broken .chain li.seen > a::before{background:#8A3038;border-color:#A83E47}
+
+/* mobile nav */
+.mobar{display:none;position:sticky;top:0;z-index:70;background:var(--ink);color:#fff;align-items:center;gap:.7rem;padding:.6rem .9rem;border-bottom:1px solid #222B36}
+.mobar b{font-family:var(--sans);font-size:.86rem;font-weight:700;letter-spacing:-.01em}
+.mobar small{font-family:var(--mono);font-size:.62rem;color:#96A5B6;letter-spacing:.08em;text-transform:uppercase}
+.menubtn{margin-left:auto;background:#1D2733;color:#fff;border:1px solid #2E3A48;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .7rem;border-radius:3px;cursor:pointer}
+.progress{position:fixed;top:0;left:0;height:3px;background:#E9B949;width:0;z-index:90;transition:width .1s linear}
+
+/* ================= HERO / CASE FILE ================= */
+.hero{background:var(--ink);color:#E7EDF3;margin:0 calc(-1*clamp(1rem,3.2vw,3rem));padding:clamp(2rem,5vw,3.6rem) clamp(1rem,3.2vw,3rem) clamp(2rem,4vw,3rem);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px);pointer-events:none}
+.hero-in{max-width:900px;margin:0 auto;position:relative;z-index:1}
+.filebar{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#A2B0C0;border-bottom:1px solid #26303C;padding-bottom:.8rem;margin-bottom:1.6rem}
+.filebar .stamp{color:#0F1620;background:#E9B949;padding:.2rem .5rem;border-radius:2px;font-weight:600;letter-spacing:.1em}
+.hero h1{font-family:var(--sans);font-weight:800;font-size:clamp(2rem,5.4vw,3.5rem);line-height:1.03;letter-spacing:-.028em;margin:0 0 1rem;color:#fff;text-wrap:balance}
+.hero h1 em{font-style:normal;color:#E9B949}
+.hero .lede{font-size:clamp(1.02rem,1.7vw,1.18rem);color:#B7C4D2;max-width:60ch;margin:0 0 1.8rem}
+.herometa{display:flex;flex-wrap:wrap;gap:.5rem}
+.pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;padding:.35rem .65rem;border:1px solid #2E3A48;border-radius:2px;color:#AEBCCB;background:#161E28}
+
+/* case timeline */
+.tl{margin:2.2rem 0 0;border-top:1px solid #26303C;padding-top:1.5rem}
+.tl h2{font-family:var(--mono);font-size:.66rem;letter-spacing:.17em;text-transform:uppercase;color:#A2B0C0;font-weight:500;margin:0 0 1rem}
+.tlgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:tl}
+.tlstep{position:relative;padding:.9rem .8rem .9rem 0;border-top:2px solid #2E3A48}
+.tlstep:nth-child(1){border-top-color:#E9B949}
+.tlstep::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;background:#2E3A48;border-radius:1px}
+.tlstep:nth-child(1)::before{background:#E9B949}
+.tltime{font-family:var(--mono);font-size:.78rem;color:#E9B949;font-weight:500;display:block;margin-bottom:.25rem}
+.tltxt{font-size:.86rem;line-height:1.4;color:#AEBCCB;font-family:var(--sans)}
+@media (max-width:820px){.tlgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.tlgrid{grid-template-columns:1fr}}
+
+/* ================= SECTION / TOPIC ================= */
+.partbreak{margin:4.5rem 0 2.5rem;padding-top:2rem;border-top:3px solid var(--ink)}
+.partbreak .pk{font-family:var(--mono);font-size:.66rem;letter-spacing:.19em;text-transform:uppercase;color:var(--seal);font-weight:600}
+.partbreak h2{font-family:var(--sans);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.15rem);letter-spacing:-.022em;margin:.5rem 0 .5rem;line-height:1.12}
+.partbreak p{color:var(--ink2);max-width:62ch;margin:0}
+
+.topic{scroll-margin-top:1.2rem;padding:2.6rem 0 0;border-top:1px solid var(--rule);margin-top:2.6rem}
+.topic:first-of-type{border-top:0;margin-top:0}
+.exhibit{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin-bottom:.85rem}
+.exno{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.1em;background:var(--tagbg);color:var(--tag);border:1px solid var(--tagline);padding:.24rem .55rem;border-radius:2px}
+.exsrc{font-family:var(--mono);font-size:.66rem;color:var(--ink3);letter-spacing:.03em}
+.topic h3{font-family:var(--sans);font-weight:700;font-size:clamp(1.42rem,3vw,2rem);letter-spacing:-.022em;line-height:1.14;margin:0 0 .7rem;text-wrap:balance}
+.lede{font-size:1.06rem;color:var(--ink2);max-width:66ch;margin:0 0 1.4rem}
+h4{font-family:var(--sans);font-weight:700;font-size:1.02rem;letter-spacing:-.008em;margin:1.8rem 0 .7rem}
+h5{font-family:var(--sans);font-weight:700;font-size:.85rem;letter-spacing:.02em;margin:0 0 .5rem;text-transform:none}
+
+/* ================= PANELS & CARDS ================= */
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.25rem;margin:1.1rem 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media (max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.05rem 1.1rem}
+.card h5{font-size:.95rem;margin-bottom:.4rem}
+.card p{font-size:.94rem;margin:0;color:var(--ink2)}
+.card .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:.4rem}
+.card--risk{background:var(--sealbg);border-color:var(--sealline)}
+.card--risk h5{color:var(--seal)}
+.card--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.card--safe h5{color:var(--verify)}
+.card--cust{background:var(--custodybg);border-color:var(--custodyline)}
+.card--cust h5{color:var(--custody)}
+.card--dark{background:var(--ink);border-color:var(--ink)}
+.card--dark h5{color:#E9B949}
+.card--dark p,.card--dark li{color:#C2CEDA}
+.card--dark .k{color:#A2B0C0}
+
+/* notes */
+.note{border-radius:6px;padding:1rem 1.1rem 1rem 1.15rem;margin:1.2rem 0;border:1px solid;font-size:.95rem}
+.note .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:.35rem}
+.note p:last-child{margin-bottom:0}
+.note--case{background:var(--custodybg);border-color:var(--custodyline)}
+.note--case .nk{color:var(--custody)}
+.note--real{background:var(--tagbg);border-color:var(--tagline)}
+.note--real .nk{color:var(--tag)}
+.note--risk{background:var(--sealbg);border-color:var(--sealline)}
+.note--risk .nk{color:var(--seal)}
+.note--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.note--safe .nk{color:var(--verify)}
+
+/* exam pointer */
+.exam{display:flex;gap:.8rem;align-items:flex-start;margin:1.3rem 0 .3rem;padding:.75rem .95rem;background:var(--panel2);border-left:3px solid var(--ink);border-radius:0 4px 4px 0;font-size:.92rem}
+.exam b{font-family:var(--mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);flex:0 0 auto;padding-top:.16rem}
+.exam span{color:var(--ink2)}
+
+/* lists */
+ul.clean,ol.clean{margin:.4rem 0 1rem;padding-left:1.15rem}
+ul.clean li,ol.clean li{margin-bottom:.42rem;font-size:.97rem}
+ul.clean li::marker{color:var(--custody2)}
+ol.clean li::marker{font-family:var(--mono);font-size:.82rem;color:var(--custody2)}
+ul.ticks{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.ticks li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.ticks li::before{content:"";position:absolute;left:0;top:.52em;width:.62rem;height:.62rem;border:2px solid var(--verify);border-radius:1px}
+ul.crosses{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.crosses li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.crosses li::before{content:"\00d7";position:absolute;left:.06rem;top:-.05em;color:var(--seal);font-weight:700;font-size:1.1rem}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:1.1rem 0;font-size:.93rem;background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.tbl th{font-family:var(--sans);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;text-align:left;background:var(--ink);color:#DCE4EC;padding:.6rem .8rem;font-weight:600}
+.tbl td{padding:.65rem .8rem;border-top:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+.tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--ink);font-size:.9rem}
+.tbl tr:nth-child(even) td{background:var(--panel2)}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* mono chip */
+.mono{font-family:var(--mono);font-size:.86em;background:var(--panel3);padding:.1em .38em;border-radius:3px;color:var(--ink)}
+.hash{font-family:var(--mono);font-size:.8rem;letter-spacing:.02em}
+
+/* pull quote */
+.pull{border-left:3px solid var(--tag);padding:.3rem 0 .3rem 1.1rem;margin:1.4rem 0;font-size:1.1rem;line-height:1.5;color:var(--ink);font-style:italic}
+.pull cite{display:block;font-style:normal;font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:.5rem}
+</style>
+<style>
+/* ================= GUI WINDOW CHROME (signature) ================= */
+.app{border:1px solid #9AA6B4;border-radius:6px;overflow:hidden;margin:1.2rem 0;
+  box-shadow:0 4px 18px rgba(15,22,32,.13);background:#F3F5F8;font-family:var(--sans)}
+.app-bar{background:linear-gradient(#3E4A5A,#2C3644);color:#EAF0F6;padding:.42rem .7rem;
+  display:flex;align-items:center;gap:.55rem;font-size:.78rem;font-weight:600}
+.app-bar .dots{display:flex;gap:.28rem;margin-right:.3rem}
+.app-bar .dots i{width:.62rem;height:.62rem;border-radius:50%;background:#6B7787;display:block}
+.app-bar .dots i:nth-child(1){background:#E0655F}
+.app-bar .dots i:nth-child(2){background:#E0B35F}
+.app-bar .dots i:nth-child(3){background:#5FBF7A}
+.app-menu{background:#E7EBF0;border-bottom:1px solid #C6CFDA;padding:.3rem .7rem;
+  display:flex;gap:1rem;font-size:.73rem;color:#3C4854}
+.app-menu span.on{color:var(--custody);font-weight:600;border-bottom:2px solid var(--custody)}
+.app-body{padding:.85rem .9rem;background:#F8FAFC;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.app-split{display:grid;grid-template-columns:11rem 1fr;gap:0}
+@media (max-width:640px){.app-split{grid-template-columns:1fr}}
+.app-pane{background:#EEF2F6;border-right:1px solid #C6CFDA;padding:.7rem .6rem;font-size:.76rem}
+.app-pane .tw{padding:.18rem 0 .18rem .8rem;position:relative;color:#3C4854}
+.app-pane .tw::before{content:"\25B8";position:absolute;left:0;color:#7A899A;font-size:.7rem}
+.app-pane .tw.open::before{content:"\25BE"}
+.app-pane .tw.sub{padding-left:1.7rem}
+.app-pane .tw.sel{background:var(--custody);color:#fff;border-radius:3px}
+.app-pane .tw.sel::before{color:#fff}
+.app-status{background:#E7EBF0;border-top:1px solid #C6CFDA;padding:.28rem .7rem;
+  font-family:var(--mono);font-size:.66rem;color:#5A6673;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+
+.chk{display:flex;align-items:center;gap:.45rem;padding:.2rem 0;font-size:.78rem;color:#25303C}
+.chk i{width:.82rem;height:.82rem;border:1.5px solid #7A899A;border-radius:2px;background:#fff;
+  display:inline-block;position:relative;flex:0 0 auto}
+.chk.on i{background:var(--custody);border-color:var(--custody)}
+.chk.on i::after{content:"";position:absolute;left:.22rem;top:.02rem;width:.19rem;height:.4rem;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chk.off{color:#8A96A4}
+.btnrow{display:flex;gap:.4rem;justify-content:flex-end;margin-top:.7rem;flex-wrap:wrap}
+.wbtn{font-family:var(--sans);font-size:.75rem;padding:.32rem .85rem;border-radius:3px;
+  border:1px solid #9AA6B4;background:linear-gradient(#FDFEFF,#E9EEF3);color:#25303C}
+.wbtn.pri{background:var(--custody);border-color:var(--custody);color:#fff;font-weight:600}
+.field{display:flex;align-items:center;gap:.5rem;margin:.35rem 0;font-size:.77rem;flex-wrap:wrap}
+.field label{color:#3C4854;min-width:6.5rem}
+.field .inp{flex:1;min-width:8rem;background:#fff;border:1px solid #A9B4C0;border-radius:3px;
+  padding:.28rem .45rem;font-family:var(--mono);font-size:.72rem;color:#25303C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field .inp.mono-out{background:#F2F5F8;color:var(--custody);font-weight:600}
+.tblmini{width:100%;border-collapse:collapse;font-size:.74rem;background:#fff;border:1px solid #C6CFDA}
+.tblmini th{background:#E7EBF0;text-align:left;padding:.32rem .5rem;font-weight:600;color:#3C4854;border-bottom:1px solid #C6CFDA}
+.tblmini td{padding:.3rem .5rem;border-bottom:1px solid #EAEFF4;font-family:var(--mono);font-size:.71rem;color:#3C4854}
+.tblmini tr.hi td{background:var(--custodybg);color:var(--custody);font-weight:600}
+.caption{font-family:var(--mono);font-size:.66rem;color:var(--ink3);text-align:center;margin:-.6rem 0 1.3rem}
+
+/* disk management strip */
+.dmstrip{display:flex;gap:2px;margin:.6rem 0 .3rem;height:3.4rem;border:1px solid #C6CFDA;background:#C6CFDA}
+.dmpart{background:#fff;display:flex;flex-direction:column;justify-content:center;padding:.3rem .5rem;font-size:.7rem}
+.dmpart b{font-family:var(--sans);font-size:.74rem;color:#25303C}
+.dmpart span{font-family:var(--mono);font-size:.66rem;color:#5A6673}
+.dmpart .bar{height:.3rem;background:var(--custody);border-radius:2px;margin-top:.25rem}
+.dmpart.hidden{background-color:#FBEDEE;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0) 0 7px,rgba(174,32,42,.10) 7px 14px)}
+.dmpart.hidden b{color:var(--seal)}
+.dmpart.hidden span{color:#8E1A22}
+.dmpart.hidden .bar{background:var(--seal)}
+
+/* bit shift lab */
+.lab{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.2rem;margin:1.2rem 0}
+.lab h5{font-size:.96rem;margin-bottom:.25rem}
+.lab .hint{font-size:.86rem;color:var(--ink3);margin:0 0 .8rem}
+.labrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:.7rem 0}
+.labrow input[type=text]{flex:1;min-width:12rem;font-family:var(--mono);font-size:.85rem;
+  padding:.45rem .6rem;border:1px solid var(--rule2);border-radius:4px;background:#fff;color:var(--ink)}
+.byteview{font-family:var(--mono);font-size:.78rem;background:#0F1620;color:#9FD4C4;
+  padding:.7rem .8rem;border-radius:5px;overflow-x:auto;white-space:pre;line-height:1.6;margin:.5rem 0}
+.byteview .lbl{color:#7A899A}
+.byteview .chg{color:#E9B949}
+.hashout{display:grid;grid-template-columns:6.5rem 1fr;gap:.5rem .7rem;align-items:baseline;
+  font-size:.8rem;margin-top:.7rem}
+@media (max-width:560px){.hashout{grid-template-columns:1fr}}
+.hashout .k{font-family:var(--sans);font-weight:600;color:var(--ink2)}
+.hashout .v{font-family:var(--mono);font-size:.74rem;word-break:break-all;color:var(--custody)}
+.hashout .v.changed{color:var(--seal)}
+.verdict{margin-top:.8rem;padding:.6rem .85rem;border-radius:5px;font-size:.88rem;
+  background:var(--verifybg);border:1px solid var(--verifyline);color:var(--verify)}
+.verdict.bad{background:var(--sealbg);border-color:var(--sealline);color:var(--seal)}
+
+/* decision tree */
+.tree{margin:1.2rem 0}
+.tnode{background:var(--panel);border:1.5px solid var(--rule2);border-radius:6px;padding:.75rem .9rem;margin:0 auto;max-width:34rem;text-align:center}
+.tnode b{font-family:var(--sans);font-size:.92rem;display:block}
+.tsplit{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.7rem}
+@media (max-width:620px){.tsplit{grid-template-columns:1fr}}
+.tbranch{border-radius:6px;padding:.75rem .85rem;font-size:.86rem}
+.tbranch .lb{font-family:var(--mono);font-size:.65rem;letter-spacing:.11em;text-transform:uppercase;display:block;margin-bottom:.3rem}
+.tbranch.a{background:var(--verifybg);border:1.5px solid var(--verifyline)}
+.tbranch.a .lb{color:var(--verify)}
+.tbranch.b{background:var(--tagbg);border:1.5px solid var(--tagline)}
+.tbranch.b .lb{color:var(--tag)}
+.tarrow{text-align:center;font-family:var(--mono);color:var(--ink3);margin:.35rem 0;font-size:1.1rem}
+
+/* modern-practice callout */
+.now{background:#0F1620;border-radius:6px;padding:1rem 1.15rem;margin:1.2rem 0;color:#C2CEDA;font-size:.92rem}
+.now .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:#5FBF9A;display:block;margin-bottom:.4rem;font-weight:600}
+.now p:last-child{margin-bottom:0}
+.now strong{color:#fff}
+.now a{color:#7FC7E8}
+
+/* annotated log line */
+.annot{background:#0F1620;border-radius:6px;padding:1rem 1.1rem;margin:1.1rem 0;overflow-x:auto}
+.annot code{font-family:var(--mono);font-size:.82rem;color:#DCE4EC;display:block;white-space:pre;line-height:1.9}
+.annot .p1{color:#E9B949}.annot .p2{color:#7FC7E8}.annot .p3{color:#9FD4C4}
+.annot .p4{color:#E58F8F}.annot .p5{color:#C9A6E0}
+.annotkey{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin-top:.7rem;font-family:var(--mono);font-size:.68rem}
+.annotkey span{color:#8A98A9}
+.annotkey b{font-weight:500}
+
+/* TCP header */
+.tcph{border:1.5px solid var(--ink);border-radius:5px;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.72rem}
+.tcprow{display:flex;border-top:1px solid var(--rule2);min-width:23rem}
+.tcprow:first-child{border-top:0}
+.tcprow div{flex:1;padding:.42rem .5rem;text-align:center;border-left:1px solid var(--rule2);background:var(--panel)}
+.tcprow div:first-child{border-left:0}
+.tcprow div.flag{flex:0 0 2rem;background:var(--panel2);font-weight:600}
+.tcprow div.flag.syn{background:var(--seal);color:#fff}
+.tcprow div.hd{background:var(--ink);color:#DCE4EC;font-weight:600}
+
+/* steps with GUI */
+.gsteps{counter-reset:g;list-style:none;margin:1rem 0;padding:0}
+.gsteps li{counter-increment:g;position:relative;padding:.55rem 0 .55rem 2.4rem;font-size:.94rem;border-top:1px solid var(--rule)}
+.gsteps li:first-child{border-top:0}
+.gsteps li::before{content:counter(g);position:absolute;left:0;top:.6rem;width:1.55rem;height:1.55rem;
+  border-radius:4px;background:var(--custody);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-family:var(--mono);font-size:.75rem;font-weight:600}
+.gsteps li .path{font-family:var(--mono);font-size:.8rem;background:var(--panel3);padding:.08em .4em;border-radius:3px}
+
+
+/* ================= SUB-HEADING SYSTEM ================= */
+.sub{border-left:2px solid var(--rule);padding:0 0 0 1.1rem;margin:1.5rem 0}
+.sub:hover{border-left-color:var(--custody2)}
+.subhead{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.45rem}
+.subno{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--custody);
+  background:var(--custodybg);border:1px solid var(--custodyline);border-radius:3px;
+  padding:.12rem .42rem;flex:0 0 auto}
+.subhead h4{font-family:var(--sans);font-weight:700;font-size:1.04rem;letter-spacing:-.01em;
+  margin:0;line-height:1.25;color:var(--ink)}
+.sub > p{font-size:.97rem;margin:0 0 .7rem}
+.eg{background:var(--tagbg);border:1px solid var(--tagline);border-radius:5px;
+  padding:.6rem .8rem;font-size:.92rem;margin:.6rem 0 0}
+.eg > span{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tag);font-weight:600;display:block;margin-bottom:.25rem}
+.eg p{margin:0}
+.eg p + p{margin-top:.4rem}
+
+/* topic map */
+.tmap{background:var(--panel);border:1px solid var(--rule);border-radius:8px;
+  padding:1.15rem 1.3rem;margin:1.4rem 0}
+.tmap h4{font-family:var(--mono);font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink3);font-weight:500;margin:0 0 .8rem}
+.tmap ol{list-style:none;margin:0;padding:0;counter-reset:tm}
+.tmap > ol > li{margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--rule)}
+.tmap > ol > li:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.tmap a.tl{font-family:var(--sans);font-weight:700;font-size:.95rem;color:var(--ink);
+  text-decoration:none;display:inline-block}
+.tmap a.tl:hover{color:var(--custody);text-decoration:underline}
+.tmap a.tl .tn{font-family:var(--mono);font-size:.72rem;color:var(--custody2);margin-right:.45rem}
+.tmap ul{list-style:none;margin:.35rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem .5rem}
+.tmap ul li{font-size:.82rem;color:var(--ink2);background:var(--panel2);
+  border:1px solid var(--rule);border-radius:3px;padding:.16rem .48rem}
+.tmap ul li b{font-family:var(--mono);font-size:.7rem;color:var(--custody2);font-weight:500;margin-right:.25rem}
+
+/* part intro list */
+.partlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.6rem;margin:1.1rem 0}
+.partlist a{display:block;background:var(--panel);border:1px solid var(--rule);border-radius:5px;
+  padding:.6rem .75rem;text-decoration:none;color:var(--ink);font-family:var(--sans);font-size:.88rem;font-weight:600}
+.partlist a:hover{border-color:var(--custody2);color:var(--custody)}
+.partlist a span{font-family:var(--mono);font-size:.7rem;color:var(--custody2);display:block;font-weight:500}
+.partlist a small{display:block;font-family:var(--sans);font-size:.75rem;font-weight:400;color:var(--ink3);margin-top:.2rem}
+
+/* ===== shared components ===== */
+/* flow diagram */
+.flow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:stretch;margin:1.1rem 0}
+.fstep{flex:1 1 8rem;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:.65rem .7rem;position:relative}
+.fstep .fn{font-family:var(--mono);font-size:.6rem;color:var(--custody2);letter-spacing:.1em}
+.fstep b{display:block;font-family:var(--sans);font-size:.86rem;font-weight:700;margin:.2rem 0 .18rem;line-height:1.2}
+.fstep span{font-size:.8rem;color:var(--ink3);line-height:1.35;display:block}
+.fstep--dark{background:var(--ink);border-color:var(--ink)}
+.fstep--dark b{color:#fff}.fstep--dark span{color:#AEBCCB}.fstep--dark .fn{color:#E9B949}
+/* summary table */
+.sumcard{background:var(--ink);border-radius:8px;padding:1.4rem 1.5rem;margin:1.3rem 0;color:#DCE4EC}
+.sumcard h4{color:#fff;margin-top:0}
+.sumrow{display:grid;grid-template-columns:1.5rem 11rem 1fr;gap:.7rem;padding:.6rem 0;border-top:1px solid #232C38;align-items:baseline}
+.sumrow:first-of-type{border-top:0}
+.sumrow .sn{font-family:var(--mono);font-size:.7rem;color:#E9B949}
+.sumrow .st{font-family:var(--sans);font-weight:600;font-size:.86rem;color:#E9B949}
+.sumrow .sd{font-size:.88rem;color:#BCC9D6;line-height:1.45}
+@media (max-width:700px){.sumrow{grid-template-columns:1.5rem 1fr}.sumrow .sd{grid-column:2}}
+/* footer */
+.foot{margin:5rem calc(-1*clamp(1rem,3.2vw,3rem)) 0;background:var(--ink);color:#A2B0C0;padding:2.4rem clamp(1rem,3.2vw,3rem)}
+.foot-in{max-width:900px;margin:0 auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;line-height:1.8}
+.foot b{color:#DCE4EC;font-weight:500}
+/* print */
+@media print{
+  .rail,.mobar,.progress,.cocbtn,.btn,.quiz{display:none!important}
+  .shell{grid-template-columns:1fr}
+  body{background:#fff;font-size:11pt}
+  .hero,.foot{background:#fff;color:#000;margin:0;padding:0 0 1rem}
+  .hero h1{color:#000}.hero .lede{color:#333}
+  .topic{break-inside:avoid;page-break-inside:avoid}
+  .volitem .why{display:block!important}
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);transform:translateX(-102%);transition:transform .28s ease;box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .rail.open{transform:none}
+  .mobar{display:flex}
+  .scrim{position:fixed;inset:0;background:rgba(6,10,15,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.on{opacity:1;pointer-events:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="prog"></div>
+
+<div class="mobar">
+  <div><small>Digital Forensics</small><br><b>Unit V — Windows &amp; DOS Systems</b></div>
+  <button class="menubtn" id="menubtn" aria-expanded="false" aria-controls="rail">Contents</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Unit V contents">
+  <div class="railhead">
+    <div class="railkick">20CS41020 · Unit V</div>
+    <div class="railtitle">Working with Windows and DOS Systems</div>
+    <div class="railsub">B.Tech CSE (AIML) · AR22</div>
+    <div class="railseal"><span class="dot"></span><span class="txt" id="sealtxt">0 / 8 sections</span></div>
+  </div>
+  <div class="railscroll">
+    <div class="railpart">A · File Systems &amp; Disk Structures</div>
+    <ul class="chain" id="chain">
+      <li><a href="#t01"><span class="n">01</span><span>Understanding File Systems</span></a></li>
+      <li><a href="#t02"><span class="n">02</span><span>Exploring Microsoft File Structures</span></a></li>
+      <li><a href="#t03"><span class="n">03</span><span>Examining NTFS Disks</span></a></li>
+      <li><a href="#t04"><span class="n">04</span><span>Understanding Whole Disk Encryption</span></a></li>
+    </ul>
+    <div class="railpart">B · Registry &amp; Startup</div>
+    <ul class="chain">
+      <li><a href="#t05"><span class="n">05</span><span>The Windows Registry</span></a></li>
+      <li><a href="#t06"><span class="n">06</span><span>Microsoft Startup Tasks</span></a></li>
+      <li><a href="#t07"><span class="n">07</span><span>MS-DOS Startup Tasks</span></a></li>
+    </ul>
+    <div class="railpart">C · Virtualisation</div>
+    <ul class="chain">
+      <li><a href="#t08"><span class="n">08</span><span>Virtual Machines</span></a></li>
+    </ul>
+    <div class="railpart">Revision</div>
+    <ul class="chain">
+      <li><a href="#summary"><span class="n">S</span><span>Full Sub-heading Outline</span></a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main" id="main">
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="filebar">
+      <span class="stamp">Case File</span>
+      <span>Ref: DF/U-V/AR22</span>
+      <span>Subject: 20CS41020 Digital Forensics</span>
+      <span>Source: Nelson et al. 6e, Ch. 5 · pp. 195–257</span>
+    </div>
+    <h1>Deleting a file<br>does not <em>delete the file.</em></h1>
+    <p class="lede">Unit V is about how Windows actually stores things, because that is what decides what you can recover. Eight topics covering clusters and slack space, the FAT and NTFS structures, whole-disk encryption, the registry that records almost everything a user did, what runs at startup, and the virtual machines that are now both evidence and laboratory.</p>
+    <div class="herometa">
+      <span class="pill">8 topics</span>
+      <span class="pill">Recreated tool screens</span>
+      <span class="pill">Cluster &amp; slack diagrams</span>
+      <span class="pill">Registry hive map</span>
+      <span class="pill">Aligned to Nelson 6e</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="v">E5h</span><span class="l">the single byte FAT writes to mark a file deleted</span></div>
+      <div class="stat"><span class="v">$MFT</span><span class="l">the NTFS file that describes every other file, including itself</span></div>
+      <div class="stat"><span class="v">≤ 512 B</span><span class="l">file small enough to be resident — stored inside its own MFT record</span></div>
+      <div class="stat"><span class="v">15</span><span class="l">MFT records reserved for NTFS system files, called metadata</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="tmap">
+  <h4>Unit V at a glance — 3 main topics, 8 topics</h4>
+  <ol>
+    <li>
+      <a class="tl" href="#partA"><span class="tn">MAIN TOPIC 1</span>File Systems and Disk Structures</a>
+      <ul>
+        <li><b>01</b>Understanding File Systems</li>
+        <li><b>02</b>Exploring Microsoft File Structures</li>
+        <li><b>03</b>Examining NTFS Disks</li>
+        <li><b>04</b>Understanding Whole Disk Encryption</li>
+      </ul>
+    </li>
+    <li>
+      <a class="tl" href="#partB"><span class="tn">MAIN TOPIC 2</span>The Registry and Startup Processes</a>
+      <ul>
+        <li><b>05</b>The Windows Registry</li>
+        <li><b>06</b>Microsoft Startup Tasks</li>
+        <li><b>07</b>MS-DOS Startup Tasks</li>
+      </ul>
+    </li>
+    <li>
+      <a class="tl" href="#partC"><span class="tn">MAIN TOPIC 3</span>Virtual Machines</a>
+      <ul>
+        <li><b>08</b>Virtual Machines in Forensics</li>
+      </ul>
+    </li>
+  </ol>
+</div>
+
+<div class="partbreak" id="partA">
+  <div class="pk">Main Topic 1 · Chapter 5</div>
+  <h2>File Systems and Disk Structures</h2>
+  <p>Everything recoverable on a Windows machine is recoverable because of how the file system works. Main Topic 1 explains clusters and slack space, the difference between FAT and NTFS, what actually happens when a file is deleted, and what whole-disk encryption does to all of it.</p>
+  <div class="partlist">
+    <a href="#t01"><span>Topic 01</span>Understanding File Systems<small>Sectors, clusters, slack space, what deletion really does</small></a>
+    <a href="#t02"><span>Topic 02</span>Exploring Microsoft File Structures<small>Boot sector, FAT12/16/32, exFAT, the E5h marker</small></a>
+    <a href="#t03"><span>Topic 03</span>Examining NTFS Disks<small>$MFT, resident data, ADS, journal, MACE times</small></a>
+    <a href="#t04"><span>Topic 04</span>Understanding Whole Disk Encryption<small>BitLocker, TPM, recovery keys, live acquisition</small></a>
+  </div>
+</div>
+
+<!-- ============================== TOPIC 01 ============================== -->
+<section class="topic" id="t01">
+  <div class="exhibit"><span class="exno">TOPIC 01</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 196–201</span></div>
+  <h3>Understanding File Systems</h3>
+  <p class="lede">A file system is the map that turns "a file called report.docx" into "these particular blocks on this particular disk". Understanding the map is what lets you find things the map no longer mentions.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.1</span><h4>Sectors, clusters and why the difference matters</h4></div>
+    <p>Before clusters, know the physical vocabulary. Disk drives are made of one or more <b>platters</b> coated with magnetic material:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Component</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><b>Geometry</b></td><td>A disk's logical structure of platters, tracks and sectors.</td></tr>
+        <tr><td><b>Head</b></td><td>The device that reads and writes data. There are <b>two heads per platter</b>, for the top and bottom sides.</td></tr>
+        <tr><td><b>Tracks</b></td><td>Concentric circles on a platter where data is located.</td></tr>
+        <tr><td><b>Cylinders</b></td><td>A column of tracks on two or more platters.</td></tr>
+        <tr><td><b>Sectors</b></td><td>A section on a track, usually <b>512 bytes</b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>To find the total number of addressable bytes, multiply <b>cylinders × heads × sectors</b>. Vendors call this the <b>cylinder, head and sector (CHS) calculation</b>.</p>
+    <p>The operating system does not allocate single sectors — that would make the allocation table enormous. Instead it groups sectors into <b>clusters</b>, also called allocation units, and allocates whole clusters at a time.</p>
+    <p>The consequence is immediate and is the reason half of forensic recovery is possible: <b>a file almost never fills its last cluster exactly</b>, and whatever occupied that space before is still sitting there.</p>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 186" role="img" aria-label="Diagram showing a 10 KB file occupying three 4 KB clusters, with the unused remainder of the third cluster labelled as file slack containing data from a previous file">
+        <text x="14" y="18" style="font:9px var(--sans);fill:#5A6673">a 10 KB file stored on a disk with 4 KB clusters</text>
+        <g>
+          <rect x="14" y="30" width="200" height="46" fill="#23456E"/>
+          <text x="114" y="50" text-anchor="middle" fill="#fff" style="font:600 10px var(--sans)">CLUSTER 1</text>
+          <text x="114" y="66" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">4 KB — file data</text>
+          <rect x="216" y="30" width="200" height="46" fill="#23456E"/>
+          <text x="316" y="50" text-anchor="middle" fill="#fff" style="font:600 10px var(--sans)">CLUSTER 2</text>
+          <text x="316" y="66" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">4 KB — file data</text>
+          <rect x="418" y="30" width="100" height="46" fill="#23456E"/>
+          <text x="468" y="50" text-anchor="middle" fill="#fff" style="font:600 10px var(--sans)">CLUSTER 3</text>
+          <text x="468" y="66" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">2 KB used</text>
+          <rect x="518" y="30" width="148" height="46" fill="#AE202A"/>
+          <text x="592" y="48" text-anchor="middle" fill="#fff" style="font:600 10px var(--sans)">FILE SLACK</text>
+          <text x="592" y="64" text-anchor="middle" fill="#F5CDD0" style="font:9px var(--sans)">2 KB — NOT overwritten</text>
+        </g>
+        <text x="340" y="94" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">the operating system allocated 12 KB to hold a 10 KB file — the last 2 KB belongs to nobody</text>
+
+        <rect x="14" y="108" width="652" height="30" rx="4" fill="#FBEDEE" stroke="#E9C5C8"/>
+        <text x="340" y="121" text-anchor="middle" style="font:600 9px var(--sans);fill:#AE202A">whatever occupied those 2 KB before — a deleted file, an old password, a chat fragment — is still there</text>
+        <text x="340" y="134" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">this is file slack, and it is examined in every serious investigation</text>
+
+        <rect x="14" y="148" width="320" height="30" rx="4" fill="#E9EEF5" stroke="#C3D2E3"/>
+        <text x="174" y="161" text-anchor="middle" style="font:600 9px var(--sans);fill:#23456E">RAM slack</text>
+        <text x="174" y="173" text-anchor="middle" style="font:8.5px var(--sans);fill:#5A6673">last sector used — zeroed on modern Windows</text>
+        <rect x="346" y="148" width="320" height="30" rx="4" fill="#E9EEF5" stroke="#C3D2E3"/>
+        <text x="506" y="161" text-anchor="middle" style="font:600 9px var(--sans);fill:#23456E">Drive slack</text>
+        <text x="506" y="173" text-anchor="middle" style="font:8.5px var(--sans);fill:#5A6673">the remaining unused sectors of the cluster</text>
+      </svg>
+    </div>
+    <div class="note note--key">
+      <span class="nk">Drive slack, RAM slack and file slack — the exact terms</span>
+      <p>Microsoft operating systems allocate disk space by clusters, and this produces <b>drive slack</b>: the unused space in a cluster between the end of an active file's content and the end of the cluster. <b>Drive slack is made up of RAM slack and file slack.</b></p>
+      <p style="margin-top:.4rem"><b>The textbook's worked example.</b> A text document of 5000 characters is saved on a FAT16 1.6 GB disk. The OS reserves one cluster automatically — about <b>32,768 bytes, or 64 sectors</b>. The 5000 bytes occupy 10 sectors (5120 bytes), so <b>120 bytes of that tenth sector are unused</b>: that is the <b>RAM slack</b> — the portion of the last sector used in the last assigned cluster. The <b>remaining 54 sectors, about 27,648 bytes, are the file slack</b>.</p>
+      <p style="margin-top:.4rem">On older Microsoft systems, DOS had to write in full 512-byte sectors, and the data used to fill that 120-byte void was <b>pulled from RAM</b> — so anything in memory at that moment, such as logon IDs or passwords, was written into RAM slack. <b>On newer Windows systems the RAM slack is zeroed out and contains no RAM data.</b> File fragments, deleted e-mails and passwords are still often found in file slack.</p>
+    </div>
+
+    <div class="eg"><span>Example — the resignation letter nobody saved</span>
+      <p>An employee types a resignation letter, prints it and deletes the file. Months later the cluster that held it is partly reused by a 2 KB configuration file. The configuration file occupies the first 2 KB of the cluster; the remaining 2 KB — the <b>file slack</b> — still contains the middle of the resignation letter. A keyword search across slack space finds it. <b>The user deleted the file, the operating system reused the space, and the text survived anyway.</b></p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.2</span><h4>Understanding disk drives — the five terms</h4></div>
+    <p>Disk drives are made up of one or more <b>platters</b> coated with magnetic material. You are expected to know these five components:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><b>Geometry</b></td><td>A disk's logical structure of platters, tracks and sectors.</td></tr>
+        <tr><td><b>Head</b></td><td>The device that reads and writes data. There are <b>two heads per platter</b>, for the top and bottom surfaces.</td></tr>
+        <tr><td><b>Tracks</b></td><td>Concentric circles on a platter where data is located.</td></tr>
+        <tr><td><b>Cylinders</b></td><td>A column of tracks on two or more platters.</td></tr>
+        <tr><td><b>Sectors</b></td><td>A section on a track, usually <b>512 bytes</b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>To find the total number of addressable bytes on a disk, <b>multiply cylinders × heads × sectors per track × bytes per sector</b>. Newer <b>Advanced Format (4K)</b> disks use 4096-byte sectors instead.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.3</span><h4>Solid-state storage — wear-levelling and the garbage collector</h4></div>
+    <p>Flash storage in USB drives, laptops, tablets and phones is a challenge for examiners, because <b>if deleted data is not recovered immediately it might be lost forever</b>. The reason is a feature every flash device has: <b>wear-levelling</b>.</p>
+    <p>On a magnetic drive, deletion removes only the references and leaves the original data in unallocated space, so recovery is a matter of copying that space. Solid-state systems behave differently: <b>memory cells continuously shift data at the physical level to other cells that have had fewer reads and writes</b>, so that all cells wear evenly. Cells are designed to perform only <b>10,000 to 100,000 reads and writes</b> depending on the manufacturer; once they reach that limit they can no longer retain data, and you get an access failure message when you try to connect. All of this is controlled by the <b>firmware on the flash device</b>.</p>
+    <div class="note note--err">
+      <span class="nk">The garbage collector — why the evidence disappears on its own</span>
+      <p>When data is rotated to another memory cell, <b>the old cell addresses are listed in a firmware file called the "garbage collector"</b>. At some point the drive's firmware <b>erases the data in those unallocated cells by overwriting the value 1 in every cell on that list</b>.</p>
+      <p style="margin-top:.4rem">This happens <i>inside the drive</i>, on the firmware's own schedule, with no involvement from the operating system — which is why a write-blocker cannot prevent it. The practical rule follows directly: <b>when dealing with solid-state devices, make a full forensic copy as soon as possible</b>, in case you later need to recover data from unallocated space. Delay is the one thing that guarantees loss.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.4</span><h4>What deletion actually does</h4></div>
+    <p>This is the single most important idea in the unit. When a user deletes a file, the operating system does <b>not</b> erase the data. It performs two cheap bookkeeping operations:</p>
+    <ol class="gsteps">
+      <li><b>It marks the directory entry as unused</b> — in FAT by overwriting the first character of the file name with the byte <span class="mono">E5h</span>; in NTFS by clearing the "in use" flag in the MFT record.</li>
+      <li><b>It marks the clusters as free</b> in the allocation table, so they become available for reuse.</li>
+    </ol>
+    <p>The file's actual bytes are untouched and remain on the disk until something else happens to be written over them. That is why recovery works, and why the honest answer to "is it recoverable?" is always <b>"it depends how much the disk has been used since"</b>.</p>
+    <div class="note note--err">
+      <span class="nk">Why this answer differs on solid-state media</span>
+      <p>On a magnetic hard disk the data survives until something overwrites it. On flash media, <b>wear-levelling</b> moves data between cells and the firmware's <b>garbage collector</b> erases the vacated cells on its own schedule — so deleted data can vanish without the operating system doing anything, and a write-blocker cannot prevent it. <b>State this limitation in an examination answer rather than claiming deleted data is always recoverable.</b> The modern <b>TRIM</b> command is the operating system's way of telling the controller which blocks are free, which accelerates the same process.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.5</span><h4>Where evidence hides on a disk</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Area</th><th>What it is</th><th>What is found there</th></tr></thead>
+      <tbody>
+        <tr><td><b>Allocated space</b></td><td>Clusters currently in use by live files</td><td>The obvious material — documents, images, databases</td></tr>
+        <tr><td><b>Unallocated space</b></td><td>Clusters marked free but not yet reused</td><td>Whole deleted files, often intact and carvable</td></tr>
+        <tr><td><b>File slack</b></td><td>The unused tail of a partly used cluster</td><td>Fragments of earlier files</td></tr>
+        <tr><td><b>Partition gap</b></td><td>Space between or after partitions</td><td>Hidden partitions, deliberately concealed data</td></tr>
+        <tr><td><b>Host Protected Area (HPA) / DCO</b></td><td>Regions the drive hides from the operating system</td><td>Data hidden from an ordinary copy; a proper imager reads them</td></tr>
+        <tr><td><b>Swap / page file</b></td><td><span class="mono">pagefile.sys</span>, <span class="mono">hiberfil.sys</span></td><td>Memory written to disk — passwords, keys, documents never saved</td></tr>
+        <tr><td><b>Volume shadow copies</b></td><td>Point-in-time snapshots</td><td><b>Earlier versions of files the suspect later altered or deleted</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--key">
+      <span class="nk">Volume Shadow Copies — the examiner's favourite</span>
+      <p>Windows creates shadow copies automatically before updates and restore points. They frequently contain the <b>original version of a document the suspect edited to cover their tracks</b>, and users almost never think to delete them. Check for them on every Windows examination.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 02 ============================== -->
+<section class="topic" id="t02">
+  <div class="exhibit"><span class="exno">TOPIC 02</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 201–212</span></div>
+  <h3>Exploring Microsoft File Structures</h3>
+  <p class="lede">FAT is old, simple and still everywhere — on USB sticks, camera cards and the EFI partition of every modern PC. Its simplicity is what makes it the best place to learn how deletion and recovery actually work.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">2.1</span><h4>Disk partitions and the partition gap</h4></div>
+    <p>Many hard disks are <b>partitioned</b> — divided into two or more sections. <b>A partition is a logical drive.</b> Windows can have <b>three primary partitions followed by an extended partition</b> that can contain one or more logical drives.</p>
+    <p>Someone wanting to hide data can create <b>hidden partitions</b>, or <b>voids</b> — large unused gaps between partitions. This unused space between partitions is called the <b>partition gap</b>. It is possible to create a partition, add data to it, and then remove the references so that Windows no longer shows it; <b>if data is hidden in the partition gap, a disk editor can still reach it</b>.</p>
+    <p>Another technique is to hide incriminating evidence <b>at the end of a disk by declaring a smaller number of bytes than the actual drive size</b>. Disk-editing tools such as WinHex or Hex Workshop let you access these hidden or empty areas, and they show file headers and the key hexadecimal codes the operating system uses to identify and maintain the file system. The partition table itself records a hexadecimal code identifying each file system — for example <span class="mono">01</span> for DOS 12-bit FAT.</p>
+    <div class="note--key note">
+      <span class="nk">The examiner's rule for partitions</span>
+      <p><b>Account for every sector on the disk.</b> Add the sizes of the partitions you can see and compare the total against the drive's actual capacity. A gap means either a partition gap or a deliberately shortened declaration — and both are places data hides. This is a mechanical check that takes a minute and is frequently skipped.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">2.2</span><h4>The layout of a FAT volume</h4></div>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 150" role="img" aria-label="The four regions of a FAT volume: boot sector, two copies of the FAT, root directory and data area">
+        <rect x="14" y="36" width="96" height="52" fill="#23456E"/>
+        <text x="62" y="58" text-anchor="middle" fill="#fff" style="font:600 9.5px var(--sans)">BOOT SECTOR</text>
+        <text x="62" y="74" text-anchor="middle" fill="#C7D2E4" style="font:8.5px var(--sans)">geometry, cluster size</text>
+        <rect x="112" y="36" width="88" height="52" fill="#8F6206"/>
+        <text x="156" y="58" text-anchor="middle" fill="#fff" style="font:600 9.5px var(--sans)">FAT #1</text>
+        <text x="156" y="74" text-anchor="middle" fill="#FBEEC9" style="font:8.5px var(--sans)">the cluster chain</text>
+        <rect x="202" y="36" width="88" height="52" fill="#B08A2E"/>
+        <text x="246" y="58" text-anchor="middle" fill="#fff" style="font:600 9.5px var(--sans)">FAT #2</text>
+        <text x="246" y="74" text-anchor="middle" fill="#FBEEC9" style="font:8.5px var(--sans)">backup copy</text>
+        <rect x="292" y="36" width="104" height="52" fill="#5B3E7A"/>
+        <text x="344" y="58" text-anchor="middle" fill="#fff" style="font:600 9.5px var(--sans)">ROOT DIRECTORY</text>
+        <text x="344" y="74" text-anchor="middle" fill="#DFD3EA" style="font:8.5px var(--sans)">names, sizes, times</text>
+        <rect x="398" y="36" width="268" height="52" fill="#0B6E5A"/>
+        <text x="532" y="58" text-anchor="middle" fill="#fff" style="font:600 9.5px var(--sans)">DATA AREA</text>
+        <text x="532" y="74" text-anchor="middle" fill="#CDE9E1" style="font:8.5px var(--sans)">the clusters holding actual file content — and all the slack</text>
+        <text x="340" y="24" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">a FAT volume has four regions, in this order</text>
+        <rect x="14" y="100" width="652" height="42" rx="4" fill="#FCF3DE" stroke="#E8D5A4"/>
+        <text x="340" y="116" text-anchor="middle" style="font:600 9.5px var(--sans);fill:#8F6206">the FAT is a chain: each entry says which cluster comes next, or marks end-of-file</text>
+        <text x="340" y="132" text-anchor="middle" style="font:9px var(--sans);fill:#8F6206">delete a file and the chain is broken — but the data stays, which is why carving by file signature still finds it</text>
+      </svg>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Version</th><th>Cluster address size</th><th>Practical limit</th><th>Where you still meet it</th></tr></thead>
+      <tbody>
+        <tr><td><b>FAT12</b></td><td>12-bit</td><td>Used specifically for floppy disks; originally designed for MS-DOS 1.0 and drives up to 16 MB</td><td>Legacy media, old evidence</td></tr>
+        <tr><td><b>FAT16</b></td><td>16-bit</td><td>Developed to handle larger disks; <b>supports partitions up to a maximum of 4 GB</b></td><td>MS-DOS 3.0–6.22, Windows 95 first release, Windows NT 3.5 and 4.0; older cameras</td></tr>
+        <tr><td><b>FAT32</b></td><td>28-bit</td><td>Released when disks larger than 2 GB appeared; accesses much larger drives, <b>maximum file size 4 GB</b></td><td>USB sticks, SD cards, the EFI System Partition on every UEFI PC</td></tr>
+        <tr><td><b>exFAT</b></td><td>64-bit</td><td>Developed for <b>mobile personal storage devices</b> — flash memory, SDXC and memory sticks</td><td>Large SD cards, modern removable media</td></tr>
+        <tr><td><b>FATX, VFAT</b></td><td>—</td><td>The other two older formats. <b>VFAT</b> added long filenames; MS-DOS 6.22 was limited to <b>eight characters for the name and three for the extension</b>.</td><td>Legacy systems</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">2.3</span><h4>The E5h marker — deletion in one byte</h4></div>
+    <p><b>FAT — the File Allocation Table</b> — is the file structure database Microsoft originally designed for floppy disks. It organises files so the OS can find them, and <b>is typically written to a disk's outermost track</b>. It contains filenames, directory names, date and time stamps, the starting cluster number, and file attributes (archive, hidden, system and read-only). Linux and macOS can also format, read and write FAT devices such as USB drives and SD cards.</p>
+    <p>In FAT, a directory entry stores the file name, attributes, timestamps, starting cluster and size. When the file is deleted, the system replaces <b>only the first character of the name</b> with the hexadecimal byte <span class="mono">E5</span> and frees the cluster chain. Everything else in the entry survives.</p>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> WinHex — directory entry before and after deletion</div>
+      <div class="app-body">
+        <pre class="code"><span class="ln"><span class="no">1</span><span class="src"><span class="cm">BEFORE deletion — the entry for REPORT.DOC</span></span></span><span class="ln"><span class="no">2</span><span class="src">Offset    0  1  2  3  4  5  6  7   8  9  A  B   C  D  E  F</span></span><span class="ln"><span class="no">3</span><span class="src">00002000  <b>52 45 50 4F 52 54 20 20</b>  44 4F 43 20  00 64 A2 7B    <b>REPORT  </b>DOC .d.{</span></span><span class="ln"><span class="no">4</span><span class="src"></span></span><span class="ln"><span class="no">5</span><span class="src"><span class="cm">AFTER deletion — one byte changed</span></span></span><span class="ln"><span class="no">6</span><span class="src">00002000  <b>E5</b> 45 50 4F 52 54 20 20  44 4F 43 20  00 64 A2 7B    <b>σ</b>EPORT  DOC .d.{</span></span><span class="ln"><span class="no">7</span><span class="src">          <b>^^</b></span></span><span class="ln"><span class="no">8</span><span class="src">          only the first character is replaced — "R" becomes E5h</span></span><span class="ln"><span class="no">9</span><span class="src">          extension, timestamps, starting cluster and size all remain</span></span></pre>
+      </div>
+      <div class="app-status"><span>Offset: 2000</span><span>FAT32</span><span>Read-only</span></div>
+    </div>
+    <p class="caption">Recreated: a FAT directory entry before and after the file is deleted</p>
+    <div class="eg"><span>Example — recovering the file by hand</span>
+      <p>Because the entry still records the <b>starting cluster</b> and the <b>size</b>, recovery is often trivial: read that many bytes beginning at that cluster. Tools do it automatically, and this is exactly what "undelete" meant in the DOS era. <b>The catch:</b> the FAT chain is gone, so if the file was <i>fragmented</i> across non-adjacent clusters, you get the first fragment cleanly and must carve the rest. That is why you always report recovered files as "recovered" and check them for truncation before relying on their content.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 03 ============================== -->
+<section class="topic" id="t03">
+  <div class="exhibit"><span class="exno">TOPIC 03</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 212–235</span></div>
+  <h3>Examining NTFS Disks</h3>
+  <p class="lede">NTFS has been the Windows file system since Windows NT and is what you will meet on virtually every seized PC. It is far richer than FAT — and every extra feature is an extra place for evidence to survive.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.1</span><h4>The Master File Table</h4></div>
+    <p>NTFS was introduced when Microsoft created Windows NT and remains the main Windows file system. Its design was partially based on <b>HPFS — the High Performance File System</b> Microsoft built for IBM's OS/2, and early NT could read OS/2 HPFS drives; that backward compatibility ended with Windows 2000.</p>
+    <p>NTFS was Microsoft's move toward a <b>journaling file system</b>: it keeps track of transactions such as deleting or saving a file, and <b>records the transaction before the system carries it out</b>, so that after a power failure the system can either complete the transaction or return to the last good setting.</p>
+    <p>NTFS takes an idea to its logical conclusion: <b>everything written to the disk is considered a file</b>. On an NTFS disk the first data set is the <b>Partition Boot Sector</b>, which starts at sector 0 and can expand to 16 sectors; immediately after it comes the <b>Master File Table (MFT)</b>. <b>In the MFT, the first 15 records are reserved for system files, and records in the MFT are called metadata.</b></p>
+    <div class="note note--key">
+      <span class="nk">Two advantages over FAT worth stating in an answer</span>
+      <p><b>Much less file slack.</b> NTFS uses a 4 KB cluster for every drive size from 7 MB right up to 2 TB, and only at 16 TB and beyond does it grow to 8 KB and larger. Smaller clusters on small drives means less wasted slack — which saves space on every NTFS disk.</p>
+      <p style="margin-top:.4rem"><b>Unicode.</b> NTFS (and VFAT, for long filenames) uses Unicode rather than the 8-bit ASCII configuration — <b>UTF-8, UTF-16 or UTF-32</b>. For Western alphabetic characters UTF-8 is identical to ASCII. This matters directly when you run <b>keyword searches</b> on a drive: a term stored as UTF-16 will not match an ASCII search pattern, which is a common reason a search "finds nothing".</p>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Metadata file</th><th>Purpose</th><th>Forensic value</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">$MFT</span></td><td>One record per file and directory</td><td>Names, sizes, timestamps, cluster runs — <b>and records of deleted files</b></td></tr>
+        <tr><td><span class="mono">$LogFile</span></td><td>Transaction journal for crash recovery</td><td>Recent file operations, including ones later undone</td></tr>
+        <tr><td><span class="mono">$UsnJrnl</span></td><td>Update Sequence Number change journal</td><td><b>A log of file creations, renames and deletions</b> — often proves a file existed after it is gone</td></tr>
+        <tr><td><span class="mono">$Bitmap</span></td><td>Which clusters are in use</td><td>Distinguishes allocated from unallocated space</td></tr>
+        <tr><td><span class="mono">$BadClus</span></td><td>Clusters marked bad</td><td>A classic hiding place — compare against the drive's own SMART data</td></tr>
+        <tr><td><span class="mono">$Secure</span></td><td>Security descriptors</td><td>Ownership and permissions — who could have accessed what</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.2</span><h4>Resident data — the file inside its own record</h4></div>
+    <p>In the NTFS MFT, all files and folders are stored in separate records of <b>1024 bytes</b> each. Each record contains file or folder information divided into record fields holding metadata and the file's data — or links to it. <b>A record field is referred to as an attribute ID.</b></p>
+    <p>Information is stored in one of two ways. <b>For very small files — about 512 bytes or less — all file metadata and data are stored in the MFT record itself.</b> These are called <b>resident files</b>. Files larger than 512 bytes are stored outside the MFT; the record then provides the cluster addresses where the file lives on the partition, and <b>those cluster addresses are called data runs</b>. Such a record is <b>non-resident</b>.</p>
+    <div class="note note--key">
+      <span class="nk">Reading an MFT record in a hex editor</span>
+      <p>Each MFT record <b>starts with a header identifying it as a resident or non-resident attribute</b>, and <b>the first four characters of every MFT record are <span class="mono">FILE</span></b>. The data is displayed in <b>little endian</b> format — read from right to left — so the hexadecimal value 0x400 appears on screen as <span class="mono">00 04 00 00</span>, and 0x40000 as <span class="mono">00 00 04 00</span>.</p>
+      <div class="tblwrap" style="margin-top:.5rem">
+      <table class="tbl">
+        <thead><tr><th>Offset</th><th>Field</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">0x00</span></td><td>The MFT record identifier <span class="mono">FILE</span> — the letter F sits at offset 0.</td></tr>
+          <tr><td><span class="mono">0x14</span></td><td>Length of the header, which indicates <b>where the next attribute starts</b>; typically <span class="mono">0x38</span> bytes.</td></tr>
+          <tr><td><span class="mono">0x1C–0x1F</span></td><td>Size of the MFT record; the default is <span class="mono">0x400</span> (1024) bytes, or <b>two sectors</b>.</td></tr>
+          <tr><td><span class="mono">0x32–0x33</span></td><td>The <b>update sequence array</b>, storing the last 2 bytes of the first sector of the record.</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p style="margin-top:.5rem">Following the header come attributes specific to the file type. <b>MFT records for directories and system files carry additional attributes that do not appear in a file's record</b> — so do not expect the two to look alike.</p>
+    </div>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 160" role="img" aria-label="Comparison of a resident file of 512 bytes or less stored inside its MFT record and a non-resident larger file whose record points to data runs">
+        <text x="14" y="18" style="font:9px var(--sans);fill:#5A6673">SMALL FILE — resident</text>
+        <rect x="14" y="26" width="290" height="54" rx="4" fill="#0B6E5A"/>
+        <text x="159" y="46" text-anchor="middle" fill="#fff" style="font:600 10px var(--sans)">MFT RECORD (1024 bytes)</text>
+        <text x="159" y="62" text-anchor="middle" fill="#CDE9E1" style="font:8.5px var(--sans)">header + attributes + <b>THE FILE CONTENT ITSELF</b></text>
+        <text x="159" y="74" text-anchor="middle" fill="#CDE9E1" style="font:8.5px var(--sans)">about 512 bytes or less — no clusters allocated</text>
+
+        <text x="376" y="18" style="font:9px var(--sans);fill:#5A6673">LARGER FILE — non-resident</text>
+        <rect x="376" y="26" width="140" height="54" rx="4" fill="#23456E"/>
+        <text x="446" y="46" text-anchor="middle" fill="#fff" style="font:600 10px var(--sans)">MFT RECORD</text>
+        <text x="446" y="62" text-anchor="middle" fill="#C7D2E4" style="font:8.5px var(--sans)">header + attributes</text>
+        <text x="446" y="74" text-anchor="middle" fill="#C7D2E4" style="font:8.5px var(--sans)">+ data runs (cluster addresses)</text>
+        <defs><marker id="nr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#23456E"/></marker></defs>
+        <line x1="516" y1="53" x2="548" y2="53" stroke="#23456E" stroke-width="1.5" marker-end="url(#nr)"/>
+        <rect x="552" y="30" width="36" height="46" fill="#23456E" opacity=".85"/>
+        <rect x="592" y="30" width="36" height="46" fill="#23456E" opacity=".85"/>
+        <rect x="632" y="30" width="36" height="46" fill="#23456E" opacity=".85"/>
+        <text x="610" y="90" text-anchor="middle" style="font:8.5px var(--sans);fill:#5A6673">data clusters</text>
+
+        <rect x="14" y="104" width="654" height="48" rx="4" fill="#E7F3F0" stroke="#B7DBD2"/>
+        <text x="341" y="120" text-anchor="middle" style="font:600 9.5px var(--sans);fill:#0B6E5A">why this matters to an examiner</text>
+        <text x="341" y="134" text-anchor="middle" style="font:9px var(--sans);fill:#0B6E5A">a small deleted text file leaves NO trace in unallocated space — it never had any clusters</text>
+        <text x="341" y="147" text-anchor="middle" style="font:9px var(--sans);fill:#0B6E5A">its content survives in the deleted MFT record, so you must parse the $MFT, not just carve free space</text>
+      </svg>
+    </div>
+    <div class="eg"><span>Example — the note that carving would never find</span>
+      <p>A suspect writes a 300-byte text file containing a bank account number and deletes it. Because it was resident, the content lived entirely inside its MFT record and never touched a data cluster. A tool that only carves unallocated space finds <b>nothing</b>. A tool that parses the $MFT and reads unallocated MFT records recovers the text in full. <b>This is a concrete case where using two different techniques produces two different answers</b> — and why "we found nothing" must always be qualified by "using this method".</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.3</span><h4>Alternate Data Streams</h4></div>
+    <p>Alternate data streams are <b>ways data can be appended to existing files</b>. In NTFS an alternate data stream becomes an <b>additional file attribute</b> and allows the file to be associated with different applications — so it remains <b>one data unit</b>. Microsoft's own documented example: a graphics program can store a thumbnail image of a bitmap in a named data stream within the NTFS file containing the image.</p>
+    <p>The stream is <b>defined in the MFT by the colon</b> between the file extension and the stream label. Streams are <b>invisible to Explorer and to a plain <span class="mono">dir</span></b>, and the file's reported size does not change. The two commands the book gives for creating one:</p>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Command Prompt — creating an alternate data stream</div>
+      <div class="app-body">
+        <pre class="code"><span class="ln"><span class="no">1</span><span class="src">C:\&gt; echo text_string &gt; myfile.txt<b>:stream_name</b>     <span class="cm">&larr; write a string into a stream</span></span></span><span class="ln"><span class="no">2</span><span class="src">C:\&gt; type textfile.txt &gt; myfile.txt<b>:stream1</b>       <span class="cm">&larr; redirect a whole small file</span></span></span><span class="ln"><span class="no">3</span><span class="src"></span></span><span class="ln"><span class="no">4</span><span class="src">the colon between the extension and the label is what</span></span><span class="ln"><span class="no">5</span><span class="src">defines the alternate data stream in the MFT</span></span></pre>
+      </div>
+      <div class="app-status"><span>Windows NT and later</span><span>NTFS only</span></div>
+    </div>
+    <p class="caption">Recreated: the two documented ways of creating an alternate data stream</p>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Command Prompt — hiding and finding an Alternate Data Stream</div>
+      <div class="app-body">
+        <pre class="code"><span class="ln"><span class="no">1</span><span class="src">C:\&gt; echo Harmless notes &gt; notes.txt</span></span><span class="ln"><span class="no">2</span><span class="src">C:\&gt; type secret.zip &gt; notes.txt<b>:hidden.zip</b>        <span class="cm">&larr; attach a second stream</span></span></span><span class="ln"><span class="no">3</span><span class="src"></span></span><span class="ln"><span class="no">4</span><span class="src">C:\&gt; dir notes.txt</span></span><span class="ln"><span class="no">5</span><span class="src">   15-02-2026  10:14                <b>17</b> notes.txt      <span class="cm">&larr; still only 17 bytes!</span></span></span><span class="ln"><span class="no">6</span><span class="src"></span></span><span class="ln"><span class="no">7</span><span class="src">C:\&gt; dir /r notes.txt                             <span class="cm">&larr; /r REVEALS streams</span></span></span><span class="ln"><span class="no">8</span><span class="src">   15-02-2026  10:14                17 notes.txt</span></span><span class="ln"><span class="no">9</span><span class="src">                              <b>2205184 notes.txt:hidden.zip:$DATA</b></span></span><span class="ln"><span class="no">10</span><span class="src"></span></span><span class="ln"><span class="no">11</span><span class="src">PS C:\&gt; Get-Item notes.txt -Stream *            <span class="cm">&larr; PowerShell equivalent</span></span></span><span class="ln"><span class="no">12</span><span class="src">   Stream      Length</span></span><span class="ln"><span class="no">13</span><span class="src">   :$DATA          17</span></span><span class="ln"><span class="no">14</span><span class="src">   hidden.zip 2205184</span></span></pre>
+      </div>
+      <div class="app-status"><span>NTFS volume</span><span>ADS detected</span></div>
+    </div>
+    <p class="caption">Recreated: a 2 MB archive hidden behind a 17-byte text file, and the two commands that expose it</p>
+    <div class="note note--key">
+      <span class="nk">A useful property for the examiner</span>
+      <p>Alternate data streams are an <b>NTFS feature</b>. Copy the file to a FAT32 USB stick or e-mail it, and <b>the hidden stream is silently lost</b> — which is why the technique is used for local concealment rather than for moving data out. Windows itself uses ADS legitimately: the <span class="mono">Zone.Identifier</span> stream is what records that a file came from the internet, and it is itself useful evidence of a download.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.4</span><h4>NTFS compressed files</h4></div>
+    <p>NTFS provides compression to improve data storage. <b>With NTFS you can compress files, folders or entire volumes; with FAT16 you can compress only a volume.</b> Compressed data is displayed normally in Explorer and in applications such as Word, so a user may not know it is compressed.</p>
+    <p>In an investigation you typically work from an image of the compressed disk, folder or file. <b>Most forensics tools can uncompress and analyse compressed Windows data</b>, including the <b>Lempel-Ziv-Huffman (LZH)</b> algorithm and formats such as PKZip, WinZip and GNU gzip.</p>
+    <div class="note note--err">
+      <span class="nk">Where the tools stop</span>
+      <p>Forensics tools <b>might have difficulty with third-party compression utilities such as the <span class="mono">.rar</span> format</b>. If you identify third-party compressed data, <b>you must uncompress it with the utility that created it</b> — and record that you did so, because you have used a non-forensic tool on evidence.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.5</span><h4>The Encrypting File System and the Recovery Key Agent</h4></div>
+    <p>With Windows 2000 Microsoft added optional built-in encryption to NTFS called <b>EFS — Encrypting File System</b>. EFS uses <b>public key and private key</b> methods to encrypt files, folders or disk volumes, and <b>only the owner or user who encrypted the data can access it</b>. The owner holds the private key; the public key is held by a certification authority such as a network server or a company like VeriSign. Windows decrypts the data automatically when the user or an application accesses it.</p>
+    <p>A <b>recovery certificate</b> is generated and sent to the Windows administrator account, so that files can still be recovered if there is a problem with the user's original private key. <b>Where the recovery key goes depends on the setting:</b> for a network user it is sent to the local domain server's administrator account; on a stand-alone workstation it goes to the local administrator account.</p>
+    <p>The <b>Recovery Key Agent</b> implements that certificate. Administrators can recover a key through Windows or from a command prompt, using two commands: <span class="mono">cipher</span> and <span class="mono">copy</span>.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Point</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">cipher</span></td><td>Works <b>only on NTFS</b> running Windows 2000 Professional or later — encrypted files are not part of FAT12, FAT16 or FAT32.</td></tr>
+        <tr><td><span class="mono">copy</span></td><td>Works in <b>both FAT and NTFS</b>.</td></tr>
+        <tr><td><span class="mono">cipher /w</span></td><td><b>Overwrites all deleted files</b>, making them impossible to recover with data recovery or forensic carving tools. An anti-forensic capability built into Windows itself.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--key">
+      <span class="nk">The behaviour that gives the examiner a way in</span>
+      <p><b>If an encrypted file is copied from an EFS-enabled NTFS disk or folder to non-EFS storage media or a folder, it is decrypted automatically.</b> A suspect who copies an encrypted file to a FAT USB stick has handed you the plaintext. The same fact explains innocent-looking decryptions: users frequently defeat their own encryption without realising it.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.6</span><h4>Deleting NTFS files — and the Info2 file</h4></div>
+    <p>There are two routes, and they behave differently:</p>
+    <ol class="gsteps">
+      <li><b>Deleting in File Explorer</b> — Windows <b>renames the file and moves it to a subdirectory with a unique identity in the Recycle Bin</b>. It then stores the <b>original path and filename in the <span class="mono">Info2</span> file</b>, the control file for the Recycle Bin, which contains ASCII data, Unicode data, and <b>the date and time of deletion</b> for each item.</li>
+      <li><b>Deleting with the <span class="mono">del</span> command</b> — this does <b>not</b> rename the file or move it to the Recycle Bin. It eliminates the file from the MFT listing in the same way FAT does.</li>
+    </ol>
+    <p>When a file is deleted at a command prompt — or when the user empties the Recycle Bin — the associated <b>clusters are designated as free</b>, and the <b><span class="mono">$Bitmap</span> file</b> is updated to mark them available for new data.</p>
+    <div class="note note--key">
+      <span class="nk">Why Info2 is worth finding</span>
+      <p>The file in the Recycle Bin has been <i>renamed</i>, so its name no longer tells you anything. <b><span class="mono">Info2</span> is what restores the original path, the original filename and the exact deletion time</b> — which is often the single most useful timestamp in a case, because it dates the suspect's decision to get rid of something.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.7</span><h4>The Resilient File System (ReFS)</h4></div>
+    <p>With Windows Server 2012 Microsoft created a new file system, <b>ReFS</b>, designed to address very large data storage needs such as the cloud. Three features were incorporated into its design: <b>maximised data availability</b>, <b>improved data integrity</b>, and <b>scalability</b>.</p>
+    <p>ReFS is an outgrowth of NTFS. It is <b>intended only for data storage and cannot be used as a boot drive</b>, and only Windows 8/8.1 and later and Windows Server 2012 and later can access ReFS drives. It uses disk structures similar to the MFT, and its storage engine uses a <b>B+-tree sort method</b> for fast access to large data sets.</p>
+    <div class="note note--key">
+      <span class="nk">Allocate-on-write — why ReFS is friendly to an examiner</span>
+      <p>ReFS uses <b>allocate-on-write</b>, which <b>copies updates of data files to new locations rather than overwriting the original</b> — similar to shadow paging. The purpose is recoverability: if a failure occurs during the write, the original can be recovered easily.</p>
+      <p style="margin-top:.4rem">The forensic consequence follows immediately: <b>an update does not destroy the previous version</b>, so earlier states of a file may still be present on the volume. The file system's integrity feature is, incidentally, an evidence-preservation feature.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.8</span><h4>Timestamps — MACE and the $STANDARD_INFORMATION trap</h4></div>
+    <p>NTFS keeps four timestamps per file, remembered as <b>MACE</b>: <b>M</b>odified, <b>A</b>ccessed, <b>C</b>reated, <b>E</b>ntry modified. Crucially it keeps them <b>twice</b> — once in the <span class="mono">$STANDARD_INFORMATION</span> attribute and once in <span class="mono">$FILE_NAME</span>.</p>
+    <div class="note note--err">
+      <span class="nk">Timestomping, and how it is detected</span>
+      <p>Anti-forensic tools alter timestamps to disguise when a file appeared. They typically change only <span class="mono">$STANDARD_INFORMATION</span>, because that is the set Explorer displays and the set the Windows API exposes. The <span class="mono">$FILE_NAME</span> copy is updated by the file system itself and is much harder to forge. <b>A file whose two timestamp sets disagree has almost certainly been tampered with</b> — and a creation date earlier than the volume's own creation date is an obvious impossibility. Comparing the two sets is a standard check.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 04 ============================== -->
+<section class="topic" id="t04">
+  <div class="exhibit"><span class="exno">TOPIC 04</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 235–237</span></div>
+  <h3>Understanding Whole Disk Encryption</h3>
+  <p class="lede">Whole disk encryption exists because of theft. Loss of <b>personally identifiable information (PII)</b> and <b>trade secrets</b> through computer theft has become a serious concern, and it changes the fundamental assumption of disk forensics: that a powered-off drive can be imaged and read later.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.1</span><h4>What it does, and why it defeats the classic procedure</h4></div>
+    <p><b>Why it was adopted.</b> Company PII might be employees' full names, home addresses and identity numbers — enough for a criminal to open credit accounts in their names. <b>Trade secrets</b> are any information a business keeps confidential because it gives a competitive edge, and an inadvertent release can devastate that edge. Theft of laptops and handheld devices is the particular concern: if the data is not secured, <b>the owner may be liable for damages</b> such as stolen identities or credit card fraud. Many jurisdictions now require anyone losing such data to <b>notify potential victims as soon as possible</b>.</p>
+    <p><b>Why it exists.</b> Loss of <b>personally identifiable information (PII)</b> and <b>trade secrets</b> through computer theft is a growing concern. PII might be employees' full names, home addresses and identity numbers — enough for a criminal to open credit accounts in their names. A trade secret is any information a business keeps confidential because it gives a competitive edge, and its inadvertent release can devastate that edge. Theft of laptops and handheld devices is the particular worry, and if the data is not secured the owner may be <b>liable for the resulting damages</b>. Many jurisdictions now require notifying potential victims as soon as possible, which is why vendors added whole disk encryption — and why it <b>creates new challenges in examining and recovering data</b>.</p>
+    <p>Full-disk encryption encrypts every sector of the volume. Only when the correct key is supplied at boot does the content become readable. The classic static procedure — seize, power down, image the drive, examine at leisure — produces a perfectly valid image of <b>ciphertext</b>.</p>
+    <div class="note note--key">
+      <span class="nk">Features of WDE tools an examiner should recognise</span>
+      <ul class="clean" style="margin-bottom:0">
+        <li><b>Preboot authentication</b> — a single sign-on password, a fingerprint scan, or a token such as a USB device</li>
+        <li><b>Full or partial disk encryption with secure hibernation</b>, such as activating a password-protected screen saver</li>
+        <li><b>Advanced encryption algorithms</b> — Advanced Encryption Standard (AES) and the International Data Encryption Algorithm (IDEA)</li>
+      </ul>
+    </div>
+    <div class="note note--key">
+      <span class="nk">WDE features a forensics examiner should be aware of</span>
+      <ul class="clean" style="margin-bottom:0">
+        <li><b>Preboot authentication</b> — a single sign-on password, fingerprint scan, or a token such as a USB device</li>
+        <li><b>Full or partial disk encryption with secure hibernation</b>, such as activating a password-protected screen saver</li>
+        <li><b>Advanced encryption algorithms</b> applied to the whole volume</li>
+      </ul>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Product</th><th>Platform</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><b>BitLocker</b></td><td>Windows</td><td>Microsoft's utility for protecting drive data, available in the Professional and Enterprise editions and in Windows Server 2008 and later. <b>BitLocker can encrypt only NTFS drives.</b> EnCase can decrypt BitLocker drives, although the process can take a lot of time.</td></tr>
+        <tr><td><b>Device Encryption</b></td><td>Windows Home</td><td>A reduced BitLocker, on by default on many consumer laptops — users often do not know it is running.</td></tr>
+        <tr><td><b>Symantec Endpoint Encryption</b></td><td>Windows</td><td>Used on PCs, laptops and removable media to secure an entire disk volume.</td></tr>
+        <tr><td><b>Voltage SecureFile</b></td><td>Enterprise</td><td>Designed for an enterprise computing environment.</td></tr>
+        <tr><td><b>Jetico BestCrypt Volume Encryption</b></td><td>Windows / MS-DOS</td><td>Provides whole disk encryption for older MS-DOS as well as current Windows systems.</td></tr>
+        <tr><td><b>VeraCrypt</b></td><td>Cross-platform</td><td>Successor to TrueCrypt. Supports <b>hidden volumes</b>, giving plausible deniability.</td></tr>
+        <tr><td><b>FileVault 2</b></td><td>macOS</td><td>Whole-volume encryption tied to the user account.</td></tr>
+        <tr><td><b>LUKS / dm-crypt</b></td><td>Linux</td><td>The standard Linux implementation.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.2</span><h4>BitLocker's requirements — and why they matter to you</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Requirement</th><th>Why the examiner cares</th></tr></thead>
+      <tbody>
+        <tr><td>A computer capable of running Windows Vista or later, non-home editions</td><td>Tells you which machines can possibly be encrypted.</td></tr>
+        <tr><td><b>The Trusted Platform Module (TPM) microchip, version 1.2 or newer</b></td><td>The key may be sealed to <b>that specific motherboard</b> — moving the drive to another machine will not unlock it.</td></tr>
+        <tr><td>A BIOS compliant with the <b>Trusted Computing Group (TCG)</b></td><td>Part of the chain that measures boot integrity.</td></tr>
+        <tr><td><b>Two NTFS partitions</b> — one for the OS and an active system volume with available space</td><td>A two-partition layout on a seized disk is itself a hint that BitLocker may be present.</td></tr>
+        <tr><td>BIOS configured so the hard drive boots before the CD/DVD or other peripherals</td><td>Affects whether your own boot media will run at all.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>A note on the trend:</b> with improved encryption methods, extracting digital evidence becomes steadily more difficult. That is precisely why the ability to make <b>remote and live acquisitions</b> has moved from a specialism to a core skill.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.3</span><h4>Where the key can legitimately come from</h4></div>
+    <div class="grid2">
+      <div class="card card--ok"><h5>The recovery key</h5><p>BitLocker recovery keys are frequently escrowed — in a Microsoft account, in Active Directory, or in Azure AD. In a corporate case <b>the organisation may simply hold the key</b>, and a request to the IT department is the fastest route.</p></div>
+      <div class="card card--ok"><h5>A live acquisition</h5><p>If the machine is <b>found running and unlocked</b>, the volume is mounted and readable. Imaging it live captures plaintext. Powering it off destroys that opportunity permanently.</p></div>
+      <div class="card card--ok"><h5>Memory capture</h5><p>The encryption key resides in <b>RAM</b> while the volume is mounted. A RAM capture taken before shutdown may allow key recovery with tools such as Volatility.</p></div>
+      <div class="card card--ok"><h5>The passphrase</h5><p>Lawfully obtained from the user, or found written down, stored in a browser, or present in another device's backup.</p></div>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The rule that reverses classic training</span>
+      <p>Traditional teaching says: pull the plug to avoid altering the disk. With whole-disk encryption, <b>pulling the plug can destroy your only access to the evidence</b>. Current practice at a scene is to check first whether encryption is active and the volume is mounted; if it is, perform a <b>live acquisition and a RAM capture before shutting anything down</b>. Document the decision and the reason — you are deliberately accepting some alteration of the running system in exchange for obtaining readable evidence at all.</p>
+    </div>
+    <div class="eg"><span>Example — two officers, one laptop</span>
+      <p>A laptop is found switched on and logged in, with BitLocker enabled. <b>Officer A</b> follows the old rule, pulls the power and images the drive: the image is valid, verifiable and entirely unreadable. <b>Officer B</b> captures RAM, then images the mounted volume live, documenting each step: the evidence is readable and admissible, with the alterations recorded and explained. <b>The same laptop yields everything or nothing depending on a decision made in the first two minutes.</b></p>
+    </div>
+    <div class="note note--key">
+      <span class="nk">Tool support has caught up</span>
+      <p>Modern suites handle encrypted volumes directly when a key is available — <b>Autopsy added BitLocker support in version 4.22 (2025)</b>, so an examiner with the recovery key can mount and analyse the volume inside the tool rather than decrypting separately. Always record <i>which key was used and where it came from</i>; that provenance is part of the evidence.</p>
+    </div>
+  </div>
+</section>
+
+<div class="partbreak" id="partB">
+  <div class="pk">Main Topic 2 · Chapter 5</div>
+  <h2>The Registry and Startup Processes</h2>
+  <p>The registry is the single richest source of user-activity evidence on a Windows machine, and what runs at startup is how malware and remote-access tools survive a reboot. Main Topic 2 covers both, and the MS-DOS startup sequence that still underlies how a PC boots.</p>
+  <div class="partlist">
+    <a href="#t05"><span>Topic 05</span>The Windows Registry<small>Five hives, where they live on disk, what each proves</small></a>
+    <a href="#t06"><span>Topic 06</span>Microsoft Startup Tasks<small>Run keys, services, scheduled tasks, persistence</small></a>
+    <a href="#t07"><span>Topic 07</span>MS-DOS Startup Tasks<small>The boot sequence, config.sys, autoexec.bat</small></a>
+  </div>
+</div>
+
+<!-- ============================== TOPIC 05 ============================== -->
+<section class="topic" id="t05">
+  <div class="exhibit"><span class="exno">TOPIC 05</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 237–244</span></div>
+  <h3>The Windows Registry</h3>
+  <p class="lede">The registry is a hierarchical database holding configuration for the operating system, the hardware, the installed software and every user account. For an examiner it is something more useful: a detailed record of what was connected, what was installed, what was opened and what was searched for.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">5.1</span><h4>Registry terminology — the words you are marked on</h4></div>
+    <p>When Microsoft created Windows 95 it <b>consolidated the initialization (<span class="mono">.ini</span>) files into the Registry</b>, a database storing hardware and software configuration, network connections, user preferences — <b>including usernames and passwords</b> — and setup information. The major sections have been consistent since Windows 2000.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+      <tbody>
+        <tr><td><b>Registry</b></td><td>A hierarchical database containing system and user information.</td></tr>
+        <tr><td><b>Registry Editor</b></td><td>The Windows utility for viewing and modifying Registry data. There are <b>two</b>: <span class="mono">Regedit</span> and <span class="mono">Regedt32</span>, the latter introduced with Windows 2000.</td></tr>
+        <tr><td><b>HKEY</b></td><td>Windows splits the Registry into categories prefixed <span class="mono">HKEY_</span>. Windows 9x had <b>six</b> HKEY categories; <b>Windows 2000 and later have five</b>. Programmers refer to the "H" as the <b>handle</b> for the key.</td></tr>
+        <tr><td><b>Key</b></td><td>Each HKEY contains folders referred to as keys, which can contain other keys or values.</td></tr>
+        <tr><td><b>Subkey</b></td><td>A key displayed under another key — like a subfolder.</td></tr>
+        <tr><td><b>Branch</b></td><td>A key and its contents, including its subkeys.</td></tr>
+        <tr><td><b>Value</b></td><td>A name and value within a key — similar to a file and its data content.</td></tr>
+        <tr><td><b>Default value</b></td><td>Every key has one, which may or may not contain data.</td></tr>
+        <tr><td><b>Hives</b></td><td>Specific branches in <span class="mono">HKEY_USER</span> and <span class="mono">HKEY_LOCAL_MACHINE</span>. The hive branches under <span class="mono">HKEY_LOCAL_MACHINE\Software</span> are <b>SAM, Security, Components and System</b>; for <span class="mono">HKEY_USER</span>, <b>each user account has its own hive linked to <span class="mono">Ntuser.dat</span></b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--err">
+      <span class="nk">A distinction worth getting right</span>
+      <p><b>A hive is not the same as an HKEY.</b> HKEYs are the five categories you see in the Registry Editor; hives are the specific branches that are actually <b>backed by files on disk</b>. That is why an offline examination works with hive files, not with HKEYs — the HKEYs only exist once Windows has assembled them.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">5.2</span><h4>The five root keys</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Root key</th><th>Short</th><th>Holds</th><th>What it proves</th></tr></thead>
+      <tbody>
+        <tr><td><b>HKEY_CLASSES_ROOT</b></td><td>HKCR</td><td>File associations, COM registrations</td><td>Which program opened which file type</td></tr>
+        <tr><td><b>HKEY_CURRENT_USER</b></td><td>HKCU</td><td>Settings for the logged-on user</td><td><b>User activity — recent files, typed paths, searches</b></td></tr>
+        <tr><td><b>HKEY_LOCAL_MACHINE</b></td><td>HKLM</td><td>System-wide hardware and software settings</td><td>Installed software, devices, services, time zone</td></tr>
+        <tr><td><b>HKEY_USERS</b></td><td>HKU</td><td>The loaded profile of every user on the machine</td><td><b>Activity for users other than the one logged in</b></td></tr>
+        <tr><td><b>HKEY_CURRENT_CONFIG</b></td><td>HKCC</td><td>The current hardware profile</td><td>Display and device configuration at the time</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Only two of these are real: <b>HKLM</b> and <b>HKU</b> are stored on disk, and the other three are views constructed from them at run time. That matters because, in a forensic examination of a dead machine, you do not have a running registry at all — you have the hive files, and you parse them offline.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">5.3</span><h4>Where the hives live on disk</h4></div>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 182" role="img" aria-label="Map of registry hive files on disk showing system hives in the config folder and user hives in the user profile">
+        <text x="14" y="18" style="font:9px var(--sans);fill:#5A6673">the registry is not one file — it is a set of hive files you collect individually</text>
+        <rect x="14" y="28" width="322" height="140" rx="5" fill="#E9EEF5" stroke="#23456E" stroke-width="1.3"/>
+        <text x="175" y="46" text-anchor="middle" fill="#23456E" style="font:600 10px var(--sans)">SYSTEM HIVES</text>
+        <text x="175" y="60" text-anchor="middle" fill="#5A6673" style="font:8.5px var(--mono)">C:\Windows\System32\config\</text>
+        <text x="28" y="80" fill="#23456E" style="font:600 9px var(--mono)">SYSTEM</text><text x="110" y="80" fill="#5A6673" style="font:8.5px var(--sans)">devices, services, USB history, time zone</text>
+        <text x="28" y="96" fill="#23456E" style="font:600 9px var(--mono)">SOFTWARE</text><text x="110" y="96" fill="#5A6673" style="font:8.5px var(--sans)">installed programs, OS version, Run keys</text>
+        <text x="28" y="112" fill="#23456E" style="font:600 9px var(--mono)">SAM</text><text x="110" y="112" fill="#5A6673" style="font:8.5px var(--sans)">local accounts, last logon, password hashes</text>
+        <text x="28" y="128" fill="#23456E" style="font:600 9px var(--mono)">SECURITY</text><text x="110" y="128" fill="#5A6673" style="font:8.5px var(--sans)">security policy, audit settings</text>
+        <text x="28" y="144" fill="#23456E" style="font:600 9px var(--mono)">DEFAULT</text><text x="110" y="144" fill="#5A6673" style="font:8.5px var(--sans)">the default user profile</text>
+        <text x="28" y="160" fill="#AE202A" style="font:600 8.5px var(--sans)">plus .LOG files — collect those too</text>
+
+        <rect x="348" y="28" width="320" height="140" rx="5" fill="#FCF3DE" stroke="#8F6206" stroke-width="1.3"/>
+        <text x="508" y="46" text-anchor="middle" fill="#8F6206" style="font:600 10px var(--sans)">USER HIVES</text>
+        <text x="508" y="60" text-anchor="middle" fill="#8F6206" style="font:8.5px var(--mono)">C:\Users\&lt;name&gt;\</text>
+        <text x="362" y="80" fill="#8F6206" style="font:600 9px var(--mono)">NTUSER.DAT</text><text x="462" y="80" fill="#8F6206" style="font:8.5px var(--sans)">becomes HKCU for that user</text>
+        <text x="362" y="96" fill="#8F6206" style="font:8.5px var(--sans)">• RecentDocs — files recently opened</text>
+        <text x="362" y="110" fill="#8F6206" style="font:8.5px var(--sans)">• TypedPaths — paths typed in Explorer</text>
+        <text x="362" y="124" fill="#8F6206" style="font:8.5px var(--sans)">• RunMRU — commands typed in Run</text>
+        <text x="362" y="138" fill="#8F6206" style="font:8.5px var(--sans)">• WordWheelQuery — search terms</text>
+        <text x="362" y="156" fill="#8F6206" style="font:600 8.5px var(--mono)">UsrClass.dat</text>
+        <text x="452" y="156" fill="#8F6206" style="font:8.5px var(--sans)">— shellbags: folders browsed</text>
+        <text x="340" y="178" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">one NTUSER.DAT per user account — collect every profile, not just the suspect's</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">5.4</span><h4>The keys that answer investigative questions</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Question</th><th>Where to look</th></tr></thead>
+      <tbody>
+        <tr><td><b>Was a particular USB device connected?</b></td><td><span class="mono">SYSTEM\CurrentControlSet\Enum\USBSTOR</span> — vendor, product and <b>serial number</b> of every USB storage device ever attached</td></tr>
+        <tr><td><b>When was it first and last connected?</b></td><td><span class="mono">SYSTEM\...\Enum\USBSTOR</span> subkey timestamps, cross-checked with <span class="mono">setupapi.dev.log</span></td></tr>
+        <tr><td><b>Which files did the user open?</b></td><td><span class="mono">NTUSER.DAT\...\Explorer\RecentDocs</span>, plus the LNK files in Recent</td></tr>
+        <tr><td><b>What did the user type into Run?</b></td><td><span class="mono">NTUSER.DAT\...\Explorer\RunMRU</span></td></tr>
+        <tr><td><b>What did the user search for?</b></td><td><span class="mono">NTUSER.DAT\...\Explorer\WordWheelQuery</span></td></tr>
+        <tr><td><b>Which folders were browsed, including on removable media?</b></td><td><b>Shellbags</b> in <span class="mono">UsrClass.dat</span> — they persist even after the folder and the drive are gone</td></tr>
+        <tr><td><b>What software was installed?</b></td><td><span class="mono">SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall</span></td></tr>
+        <tr><td><b>Which programs were actually executed?</b></td><td><b>UserAssist</b> in NTUSER.DAT — run counts and last run times (values are ROT-13 encoded)</td></tr>
+        <tr><td><b>Which networks did it join?</b></td><td><span class="mono">SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList</span> — SSIDs with first and last connection</td></tr>
+        <tr><td><b>What is the machine's time zone?</b></td><td><span class="mono">SYSTEM\CurrentControlSet\Control\TimeZoneInformation</span> — <b>read this before interpreting any timestamp</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Registry Editor — USBSTOR</div>
+      <div class="app-menu"><span>File</span><span>Edit</span><span class="on">View</span><span>Favorites</span><span>Help</span></div>
+      <div class="app-split">
+        <div class="app-pane">
+          <div class="tw open">HKEY_LOCAL_MACHINE</div>
+          <div class="tw sub open">SYSTEM</div>
+          <div class="tw sub open">CurrentControlSet</div>
+          <div class="tw sub open">Enum</div>
+          <div class="tw sub sel">USBSTOR</div>
+          <div class="tw sub">USB</div>
+          <div class="tw sub">SCSI</div>
+        </div>
+        <div class="app-body">
+          <table class="tblmini">
+            <tr><th>Name</th><th>Type</th><th>Data</th></tr>
+            <tr class="hi"><td>Disk&amp;Ven_SanDisk&amp;Prod_Cruzer&amp;Rev_1.00</td><td>Key</td><td>4C530001201127118451&amp;0</td></tr>
+            <tr><td>FriendlyName</td><td>REG_SZ</td><td>SanDisk Cruzer USB Device</td></tr>
+            <tr><td>ContainerID</td><td>REG_SZ</td><td>{a7f3b1c2-9d4e-4f88-b0a1-…}</td></tr>
+            <tr><td>(first connected)</td><td>—</td><td>2026-02-08 21:14:06</td></tr>
+            <tr><td>(last connected)</td><td>—</td><td>2026-02-11 14:52:39</td></tr>
+          </table>
+          <div class="btnrow"><span class="wbtn">Export key</span><span class="wbtn pri">Copy serial</span></div>
+        </div>
+      </div>
+      <div class="app-status"><span>Offline hive: SYSTEM</span><span>Mounted read-only from image</span></div>
+    </div>
+    <p class="caption">Recreated: the USBSTOR key showing the serial number of a device attached to this machine</p>
+    <div class="eg"><span>Real example — proving a specific USB stick was used on a specific PC</span>
+      <p>A design engineer is suspected of copying drawings to a personal USB stick. The stick is seized separately. Its serial number is read from the device itself, and the <b>same serial number</b> appears in <span class="mono">USBSTOR</span> on the office workstation, with first and last connection times. <b>Shellbags</b> in <span class="mono">UsrClass.dat</span> then show that the folder <span class="mono">E:\drawings\2026</span> was browsed on 11 February at 14:53, one minute after the device was attached. <b>Neither artefact is on the USB stick; both are on the PC, and together they place that device, in that machine, at that moment.</b></p>
+    </div>
+    <div class="note note--key">
+      <span class="nk">How the registry is examined in practice</span>
+      <p>You do not open a suspect's registry in <span class="mono">regedit</span> on a running machine. You <b>extract the hive files from the disk image</b> and parse them offline. Several forensics tools have <b>built-in or add-on Registry viewers</b> — the textbook names <b>X-Ways Forensics, OSForensics, Forensic Explorer and FTK</b> — and <b>RegRipper</b>, <b>Registry Explorer</b> and the registry modules in Autopsy and AXIOM do the same job. Collect the <span class="mono">.LOG</span> transaction files alongside each hive; they can contain the most recent changes not yet written into the hive itself.</p>
+      <p style="margin-top:.4rem"><b>A typical request looks like this:</b> the Legal Department asks you to search a raw <span class="mono">dd</span> image for any reference to e-mail addresses containing a particular name at a particular domain. You load the image, open that user's <span class="mono">NTUSER.DAT</span>, search the Registry, and add anything of interest to the case report you hand back. That is the whole workflow — and note that the deliverable is <b>a report</b>, not a screenshot.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 06 ============================== -->
+<section class="topic" id="t06">
+  <div class="exhibit"><span class="exno">TOPIC 06</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 244–248</span></div>
+  <h3>Microsoft Startup Tasks</h3>
+  <p class="lede">Anything that wants to survive a reboot must arrange to be started again. That requirement is what makes startup locations the first place an examiner looks for malware, keyloggers and remote-access tools.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.1</span><h4>Why startup matters to the evidence</h4></div>
+    <p>The textbook's reason for studying startup is evidential, not technical. <b>In some investigations you must preserve data on the disk exactly as the suspect last used it, and any access to the system after it was used for illicit purposes alters your disk evidence.</b> Altering disk data lessens its evidentiary quality considerably, and accessing a suspect computer incorrectly could make the evidence corrupt and less credible for litigation.</p>
+    <p>There is a second, positive reason: knowing which files are accessed when Windows starts <b>helps you determine when a suspect's computer was last accessed</b> — which is particularly important with machines that may have been used after an incident was reported.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.2</span><h4>The six steps, and the BCD store</h4></div>
+    <p>Any computer using NTFS performs the following steps when it is turned on:</p>
+    <ol class="gsteps">
+      <li><b>Power-on self test (POST)</b></li>
+      <li><b>Initial startup</b></li>
+      <li><b>Boot loader</b></li>
+      <li><b>Hardware detection and configuration</b></li>
+      <li><b>Kernel loading</b></li>
+      <li><b>User logon</b></li>
+    </ol>
+    <p>From Windows Vista onwards the boot process uses a <b>boot configuration data (BCD) store</b>. On BIOS-designed desktops and laptops a <b>BCD registry file in the <span class="mono">\Boot\Bcd</span> folder</b> controls the boot process. <b>The BCD store replaced the Windows XP <span class="mono">Boot.ini</span> file.</b></p>
+    <div class="note note--err">
+      <span class="nk">The editor you must use — and the two you cannot</span>
+      <p>To access the BCD file you use the <b>BCD Editor</b>. <b><span class="mono">Regedit</span> and <span class="mono">Regedt32</span> are not associated with this file</b>, even though it is a registry file by format. Trying to reach boot configuration through the ordinary registry editors is a common and fruitless mistake.</p>
+    </div>
+    <p>Vista also moved to the <b>Extensible Firmware Interface (EFI)</b> alongside the older BIOS system — EFI boot firmware is <b>designed to provide better protection against malware than BIOS does</b>. The single <span class="mono">Ntldr</span> program that loaded the OS in Windows XP was replaced by three utilities:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Utility</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">Bootmgr.exe</span></td><td>The <b>Windows Boot Manager</b> — controls boot flow and allows booting multiple operating systems.</td></tr>
+        <tr><td><span class="mono">Winload.exe</span></td><td>The <b>OS loader</b> — installs the kernel and the Hardware Abstraction Layer (HAL) and loads memory with the necessary boot drivers.</td></tr>
+        <tr><td><span class="mono">Winresume.exe</span></td><td>Restarts the system <b>after it goes into hibernation mode</b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.3</span><h4>The Windows boot sequence in detail</h4></div>
+    <ol class="gsteps">
+      <li><b>Firmware (UEFI or BIOS)</b> performs the power-on self test and selects a boot device.</li>
+      <li><b>The boot manager</b> — <span class="mono">bootmgfw.efi</span> on UEFI systems, <span class="mono">bootmgr</span> on legacy BIOS — reads the <b>BCD</b> store to decide what to boot.</li>
+      <li><b>The Windows loader</b> <span class="mono">winload.efi</span> loads the kernel <span class="mono">ntoskrnl.exe</span> and the hardware abstraction layer, and reads the <span class="mono">SYSTEM</span> registry hive to find the drivers marked boot-start.</li>
+      <li><b>Session Manager</b> <span class="mono">smss.exe</span> initialises the environment and creates the page file.</li>
+      <li><b>Winlogon</b> presents the logon screen; <span class="mono">lsass.exe</span> handles authentication.</li>
+      <li><b>Userinit and Explorer</b> start, and at this point the <b>per-user autostart locations run</b>.</li>
+    </ol>
+    <div class="note note--key">
+      <span class="nk">Why the examiner cares about step 3</span>
+      <p>Drivers marked boot-start load <b>before</b> most security software. A rootkit that installs itself as a boot-start driver is running before anything that might detect it. That is why persistence entries are examined from a <b>mounted image offline</b>, not by running a tool on the live suspect machine, where the rootkit controls what the tool is allowed to see.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.2</span><h4>Startup in Windows NT and later — the six steps</h4></div>
+    <p>Although Windows NT differs greatly from Windows 95 and 98, the startup method for NT, 2000 and XP is essentially the same. <b>Any computer using NTFS performs these six steps when it is turned on:</b></p>
+    <ol class="gsteps">
+      <li><b>Power-on self test (POST)</b></li>
+      <li><b>Initial startup</b></li>
+      <li><b>Boot loader</b></li>
+      <li><b>Hardware detection and configuration</b></li>
+      <li><b>Kernel loading</b></li>
+      <li><b>User logon</b></li>
+    </ol>
+    <p>The files used to start Windows can be located on the <b>system partition</b> or the <b>boot partition</b>.</p>
+    <p><b>The Vista change.</b> When Microsoft developed Vista it updated the boot process to use the <b>Extensible Firmware Interface (EFI)</b> as well as the older BIOS system — <b>EFI boot firmware is designed to provide better protection against malware than BIOS does</b>. The single <span class="mono">Ntldr</span> program used by Windows XP was replaced by <b>three</b> boot utilities:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Utility</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">Bootmgr.exe</span></td><td>The <b>Windows Boot Manager</b> — controls boot flow and allows booting multiple operating systems.</td></tr>
+        <tr><td><span class="mono">Winload.exe</span></td><td>The <b>OS loader</b> — installs the kernel and the Hardware Abstraction Layer (HAL), and loads memory with the necessary boot drivers.</td></tr>
+        <tr><td><span class="mono">Winresume.exe</span></td><td>Restarts the system after it goes into <b>hibernation</b> mode.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.3</span><h4>Startup in Windows 7, 8 and 10 — the BCD store</h4></div>
+    <p>Since Vista, the boot process uses a <b>boot configuration data (BCD) store</b>. For BIOS-designed desktops and laptops, a <b>BCD Registry file in the <span class="mono">\Boot\Bcd</span> folder</b> is maintained to control the boot process. In Windows 8 and 10 the BCD contains the <b>boot loader that initiates the system's bootstrap process</b>.</p>
+    <div class="note note--err">
+      <span class="nk">The BCD is a Registry file you cannot open with Regedit</span>
+      <p><b>To access the BCD you use the BCD Editor — <span class="mono">Regedit</span> and <span class="mono">Regedt32</span> are not associated with this file.</b> This catches people out: the BCD is a Registry hive in format, but it is deliberately outside the normal Registry tooling. For an examiner this is useful, because a change to the boot configuration will not show up in an ordinary Registry review.</p>
+    </div>
+    <p><b>Keys at boot time:</b> press <b>F8 or F12</b> during the bootstrap process to reach the Advanced Boot Options menu, which offers Safe Mode, Enable boot logging and Disable Driver Signature Enforcement. Press <b>F2 or Delete</b> to reach the firmware and modify the boot priority order — which is what you change to boot your own forensic media.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.4</span><h4>The autostart locations to check</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Location</th><th>Path or key</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><b>Run / RunOnce (user)</b></td><td><span class="mono">NTUSER.DAT\...\CurrentVersion\Run</span></td><td>Runs at that user's logon. The classic malware location.</td></tr>
+        <tr><td><b>Run / RunOnce (machine)</b></td><td><span class="mono">SOFTWARE\...\CurrentVersion\Run</span></td><td>Runs for every user. Needs administrator rights to write.</td></tr>
+        <tr><td><b>Startup folders</b></td><td><span class="mono">\Start Menu\Programs\Startup</span></td><td>Per-user and all-users; shortcuts placed here run at logon.</td></tr>
+        <tr><td><b>Services</b></td><td><span class="mono">SYSTEM\CurrentControlSet\Services</span></td><td>Start automatically without a logon. Check the <span class="mono">ImagePath</span> of anything unfamiliar.</td></tr>
+        <tr><td><b>Scheduled tasks</b></td><td><span class="mono">C:\Windows\System32\Tasks</span> (XML files)</td><td><b>Increasingly the preferred persistence method</b> — can trigger on logon, on idle, or on an event.</td></tr>
+        <tr><td><b>WMI event subscriptions</b></td><td>WMI repository</td><td>Fileless persistence; invisible to anyone checking only Run keys.</td></tr>
+        <tr><td><b>Winlogon keys</b></td><td><span class="mono">SOFTWARE\...\Winlogon\Userinit</span>, <span class="mono">Shell</span></td><td>Appending a second program here is a well-known trick.</td></tr>
+        <tr><td><b>BootExecute</b></td><td><span class="mono">SYSTEM\...\Session Manager\BootExecute</span></td><td>Runs before the user session exists at all.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Autoruns — offline system (mounted image)</div>
+      <div class="app-menu"><span>File</span><span class="on">Entry</span><span>Options</span><span>Help</span></div>
+      <div class="app-body">
+        <table class="tblmini">
+          <tr><th>Autostart entry</th><th>Description</th><th>Publisher</th><th>Image path</th></tr>
+          <tr><td>OneDrive</td><td>Microsoft OneDrive</td><td>Microsoft (verified)</td><td>C:\Program Files\Microsoft OneDrive\…</td></tr>
+          <tr><td>SecurityHealth</td><td>Windows Security</td><td>Microsoft (verified)</td><td>C:\Windows\system32\SecurityHealth…</td></tr>
+          <tr class="hi"><td>AdobeUpd</td><td>(no description)</td><td><b>(unverified)</b></td><td><b>C:\Users\ravi\AppData\Local\Temp\adbupd.exe</b></td></tr>
+          <tr><td>RtkAudUService</td><td>Realtek Audio</td><td>Realtek (verified)</td><td>C:\Windows\System32\DriverStore\…</td></tr>
+        </table>
+        <div class="btnrow"><span class="wbtn">Jump to entry</span><span class="wbtn">Check hash online</span><span class="wbtn pri">Export CSV</span></div>
+      </div>
+      <div class="app-status"><span>Offline hives loaded</span><span>4 autostart entries in Run</span><span>1 unsigned</span></div>
+    </div>
+    <p class="caption">Recreated: three legitimate entries and one that should stop the examination — note the path</p>
+    <div class="eg"><span>Example — reading the suspicious row</span>
+      <p>Three signals mark <span class="mono">AdobeUpd</span> as hostile. <b>(1)</b> It has <b>no description and no verified publisher</b>, while every genuine entry is signed. <b>(2)</b> It runs from <span class="mono">AppData\Local\Temp</span> — legitimate software installs into <span class="mono">Program Files</span>, never Temp. <b>(3)</b> The name imitates Adobe but the executable is <span class="mono">adbupd.exe</span>, which is not an Adobe filename. The next steps are to hash the executable and check it against known-bad sets, and to read its file-creation time — which typically matches the moment of compromise and gives you the start of your timeline.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 07 ============================== -->
+<section class="topic" id="t07">
+  <div class="exhibit"><span class="exno">TOPIC 07</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · CLI systems</span></div>
+  <h3>MS-DOS Startup Tasks</h3>
+  <p class="lede">MS-DOS is not running on seized machines any more, but the sequence is examinable and genuinely useful: forensic boot media still uses it, and the structure of the modern boot process is a direct descendant.</p>
+  <div class="note note--key">
+    <span class="nk">A note on where this comes from</span>
+    <p>Your syllabus lists <b>MS-DOS startup tasks</b> as a separate topic. The sixth edition of the textbook — retitled <i>Working with Windows and CLI Systems</i> — has dropped the dedicated MS-DOS startup section that earlier editions carried, folding command-line work into the broader CLI discussion. The material below is therefore retained from the earlier edition because <b>the syllabus requires it</b>, and it is still worth knowing: it explains the shape of every boot process that followed.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.1</span><h4>The DOS boot sequence</h4></div>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 128" role="img" aria-label="The MS-DOS boot sequence from ROM BIOS through the three system files to the command prompt">
+        <defs><marker id="ds" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#5A6673"/></marker></defs>
+        <rect x="8" y="34" width="96" height="44" rx="4" fill="#23456E"/>
+        <text x="56" y="52" text-anchor="middle" fill="#fff" style="font:600 9px var(--sans)">ROM BIOS</text>
+        <text x="56" y="66" text-anchor="middle" fill="#C7D2E4" style="font:8px var(--sans)">POST</text>
+        <rect x="118" y="34" width="104" height="44" rx="4" fill="#23456E"/>
+        <text x="170" y="52" text-anchor="middle" fill="#fff" style="font:600 9px var(--sans)">BOOT SECTOR</text>
+        <text x="170" y="66" text-anchor="middle" fill="#C7D2E4" style="font:8px var(--sans)">loads IO.SYS</text>
+        <rect x="236" y="34" width="100" height="44" rx="4" fill="#8F6206"/>
+        <text x="286" y="52" text-anchor="middle" fill="#fff" style="font:600 9px var(--mono)">IO.SYS</text>
+        <text x="286" y="66" text-anchor="middle" fill="#FBEEC9" style="font:8px var(--sans)">device drivers</text>
+        <rect x="350" y="34" width="106" height="44" rx="4" fill="#8F6206"/>
+        <text x="403" y="52" text-anchor="middle" fill="#fff" style="font:600 9px var(--mono)">MSDOS.SYS</text>
+        <text x="403" y="66" text-anchor="middle" fill="#FBEEC9" style="font:8px var(--sans)">the kernel</text>
+        <rect x="470" y="34" width="110" height="44" rx="4" fill="#0B6E5A"/>
+        <text x="525" y="46" text-anchor="middle" fill="#fff" style="font:600 8.5px var(--mono)">CONFIG.SYS</text>
+        <text x="525" y="58" text-anchor="middle" fill="#fff" style="font:600 8.5px var(--mono)">AUTOEXEC.BAT</text>
+        <text x="525" y="70" text-anchor="middle" fill="#CDE9E1" style="font:8px var(--sans)">user configuration</text>
+        <rect x="594" y="34" width="78" height="44" rx="4" fill="#5B3E7A"/>
+        <text x="633" y="52" text-anchor="middle" fill="#fff" style="font:600 8.5px var(--mono)">COMMAND</text>
+        <text x="633" y="64" text-anchor="middle" fill="#fff" style="font:600 8.5px var(--mono)">.COM</text>
+        <line x1="104" y1="56" x2="114" y2="56" stroke="#5A6673" stroke-width="1.3" marker-end="url(#ds)"/>
+        <line x1="222" y1="56" x2="232" y2="56" stroke="#5A6673" stroke-width="1.3" marker-end="url(#ds)"/>
+        <line x1="336" y1="56" x2="346" y2="56" stroke="#5A6673" stroke-width="1.3" marker-end="url(#ds)"/>
+        <line x1="456" y1="56" x2="466" y2="56" stroke="#5A6673" stroke-width="1.3" marker-end="url(#ds)"/>
+        <line x1="580" y1="56" x2="590" y2="56" stroke="#5A6673" stroke-width="1.3" marker-end="url(#ds)"/>
+        <text x="340" y="20" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">three system files must be present and in order: IO.SYS, MSDOS.SYS, COMMAND.COM</text>
+        <text x="340" y="104" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">CONFIG.SYS is processed BEFORE AUTOEXEC.BAT — a standard examination question</text>
+        <text x="340" y="118" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">the same shape survives today: firmware → boot manager → kernel → configuration → shell</text>
+      </svg>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>File</th><th>Role</th><th>DOS / Windows equivalent today</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">IO.SYS</span></td><td>Low-level device drivers and hardware interface</td><td>HAL and boot-start drivers</td></tr>
+        <tr><td><span class="mono">MSDOS.SYS</span></td><td>The kernel — file and memory management</td><td><span class="mono">ntoskrnl.exe</span></td></tr>
+        <tr><td><span class="mono">CONFIG.SYS</span></td><td>Loads device drivers and sets system parameters</td><td>The <span class="mono">SYSTEM</span> registry hive</td></tr>
+        <tr><td><span class="mono">AUTOEXEC.BAT</span></td><td>Commands run automatically after startup</td><td>Run keys, Startup folder, scheduled tasks</td></tr>
+        <tr><td><span class="mono">COMMAND.COM</span></td><td>The command interpreter — the user's shell</td><td><span class="mono">cmd.exe</span>, PowerShell, Explorer</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="eg"><span>Why this still appears in practice</span>
+      <p>Forensic boot media and drive-wiping utilities are frequently built on DOS or a minimal Linux, precisely because such an environment is small, predictable and <b>will not mount and modify the suspect's volumes</b> the way a full Windows installation does. When you build a bootable imaging disk, you are working with this sequence. The examinable point is the order: <b>CONFIG.SYS before AUTOEXEC.BAT</b>, and the three system files in the order IO.SYS, MSDOS.SYS, COMMAND.COM.</p>
+    </div>
+  </div>
+</section>
+
+<div class="partbreak" id="partC">
+  <div class="pk">Main Topic 3 · Chapter 5</div>
+  <h2>Virtual Machines</h2>
+  <p>Virtual machines appear twice in forensics: as the examiner's safe laboratory, and as the suspect's hiding place. Both matter.</p>
+  <div class="partlist">
+    <a href="#t08"><span>Topic 08</span>Virtual Machines in Forensics<small>As evidence, as laboratory, file formats, snapshots</small></a>
+  </div>
+</div>
+
+<!-- ============================== TOPIC 08 ============================== -->
+<section class="topic" id="t08">
+  <div class="exhibit"><span class="exno">TOPIC 08</span><span class="exsrc">Nelson et al. 6e, Ch. 5 · pp. 248–257</span></div>
+  <h3>Virtual Machines</h3>
+  <p class="lede">Virtual machines <b>enable you to run another operating system on an existing physical computer — known as the host computer — by emulating a computer's hardware environment</b>. More companies turn to virtualization to reduce hardware cost, so the number of investigations involving virtual machines keeps increasing.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.1</span><h4>The two roles, and why both are examinable</h4></div>
+    <p>Virtual machines <b>let you run another OS on an existing physical computer — the host — by emulating a computer's hardware environment</b>. The textbook gives three reasons an investigator meets them. First, new versions of operating systems and applications are released constantly while older versions remain in use, and <b>you will face the challenge of having enough resources to support the variety of software you encounter</b> — a virtual server lets you view legacy systems. Second, <b>more companies are turning to virtualisation to reduce hardware costs, so the number of investigations involving virtual machines will keep increasing.</b> Third, a VM lets you <b>emulate actions taken by a suspect, or by malware</b>.</p>
+    <div class="grid2">
+      <div class="card card--info"><h5>The VM as evidence</h5><p>A suspect runs their activity inside a virtual machine so the host looks clean. The entire VM is a handful of files on the host disk — and those files are a complete computer waiting to be examined.</p></div>
+      <div class="card card--ok"><h5>The VM as laboratory</h5><p>You mount a suspect image, or run a suspicious executable, inside an isolated VM. If it is malicious it destroys a virtual machine you can discard, not the laboratory workstation.</p></div>
+    </div>
+    <div class="note note--key">
+      <span class="nk">The two main files, whatever the product</span>
+      <p>A virtual machine typically consists of several files, but <b>two matter most</b>. The <b>configuration file</b> holds the hardware settings — RAM, network configuration, port settings. The <b>virtual hard disk file</b> contains <b>the boot loader program, the OS files and the user's data files</b>. Depending on the virtualisation software these files may be organised differently, which is why you read the configuration before assuming anything.</p>
+      <p style="margin-top:.4rem">Working the other way, <b>several forensics analysis tools can convert a forensic image to an ISO image or a virtual hard disk (VHD) file</b>, which lets you run a suspect's system as a virtual machine and see what they saw.</p>
+    </div>
+    <p>Two practical reasons the book gives for an investigator to use one: you may need a <b>virtual server to view legacy systems</b>, because new versions of operating systems and applications are released frequently while older versions remain widely used; and you may need to <b>emulate actions taken by a suspect, or by malware</b>. Several forensic analysis tools can convert a forensic image into a bootable virtual machine for exactly this purpose.</p>
+    <div class="note note--key">
+      <span class="nk">The two main files of a virtual machine</span>
+      <p>A virtual machine typically consists of several files, but <b>two are the main ones</b>:</p>
+      <ul class="clean" style="margin-bottom:0">
+        <li><b>The configuration file</b> — holds the hardware settings: RAM, network configuration, port settings and so on.</li>
+        <li><b>The virtual hard disk file</b> — contains the <b>boot loader program, the operating system files and the users' data files</b>.</li>
+      </ul>
+      <p style="margin-top:.4rem">Depending on the virtualization software these files may be organised differently, but the division is always the same: <b>settings in one, the entire computer in the other</b>.</p>
+    </div>
+    <div class="note note--key">
+      <span class="nk">This is how the Unit II golden rule is honoured today</span>
+      <p>Unit II insists: <b>never analyse an artifact on the compromised system</b>, and use a clean isolated host. A virtual machine with networking disabled and a snapshot taken beforehand <i>is</i> that clean isolated host, and it can be restored to its pristine state in seconds afterwards. The rule has not changed; the way it is implemented has.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.2</span><h4>The files a virtual machine leaves on the host</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Extension</th><th>Platform</th><th>What it holds</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">.vmdk</span></td><td>VMware</td><td>The virtual disk — <b>a complete file system, examinable exactly like a disk image</b></td></tr>
+        <tr><td><span class="mono">.vhd</span> / <span class="mono">.vhdx</span></td><td>Hyper-V, Virtual PC</td><td>The virtual disk; <span class="mono">.vhdx</span> is the modern form and Windows can mount it natively</td></tr>
+        <tr><td><span class="mono">.vdi</span></td><td>VirtualBox</td><td>The virtual disk</td></tr>
+        <tr><td><span class="mono">.vmem</span></td><td>VMware</td><td><b>The virtual machine's RAM, written to a file</b> — a memory image you did not have to capture</td></tr>
+        <tr><td><span class="mono">.vmsn</span> / <span class="mono">.vmsd</span></td><td>VMware</td><td>Snapshot state and metadata — <b>earlier states of the machine</b></td></tr>
+        <tr><td><span class="mono">.vmx</span></td><td>VMware</td><td>Configuration — hardware, network mode, <b>shared folders pointing at the host</b></td></tr>
+        <tr><td><span class="mono">.log</span></td><td>All</td><td>When the VM was started and stopped, and which devices were attached</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--key">
+      <span class="nk">The two gifts a VM gives the examiner</span>
+      <p><b>1. Free memory forensics.</b> A running or suspended VM writes its RAM to a <span class="mono">.vmem</span> file on the host. That is a memory image obtained without any live capture at all — encryption keys, running processes and network connections included, ready for Volatility.</p>
+      <p><b>2. Free time travel.</b> Every <b>snapshot</b> is a preserved earlier state of the machine. A suspect who "cleaned up" after an incident may have left a snapshot taken before the cleanup, and restoring it shows the machine as it was.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.3</span><h4>Creating a virtual machine</h4></div>
+    <p>The common applications for creating virtual machines are <b>VMware Server, VMware Player and VMware Workstation, Oracle VM VirtualBox, Microsoft Virtual PC</b> and <b>Microsoft Hyper-V</b>, available in current versions of Windows Server. <b>VirtualBox is open source</b>, which makes it the realistic choice for a college laboratory.</p>
+    <p>The wizard sequence, as the textbook walks it:</p>
+    <ol class="gsteps">
+      <li><b>Start the Create Virtual Machine wizard</b> — click <b>New</b> in the VirtualBox Manager.</li>
+      <li><b>Name and operating system</b> — give the machine a name, then set Type (for example Microsoft Windows) and Version (for example Windows 7 32-bit).</li>
+      <li><b>Memory size</b> — adjust the allocated memory to <b>about 50% of your workstation's total RAM</b>.</li>
+      <li><b>Hard drive</b> — choose <b>Create a virtual drive now</b>.</li>
+      <li><b>Hard drive file type</b> — select the format, such as <b>VHD (Virtual Hard Disk)</b>.</li>
+      <li><b>Storage and size</b> — choose dynamically allocated or fixed size, then create.</li>
+      <li><b>Install the guest operating system</b> from an ISO or installation disc, exactly as on physical hardware.</li>
+    </ol>
+    <div class="note note--key">
+      <span class="nk">Set these before you use it as a laboratory</span>
+      <p>Before running anything hostile inside it: <b>take a snapshot</b> of the clean state, <b>disable networking</b>, and <b>disable shared folders</b>. The snapshot is what lets you return the machine to a pristine condition in seconds; the other two are what keep whatever you run from reaching your host or the network.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.4</span><h4>Procedure — examining a VM found on a suspect machine</h4></div>
+    <ol class="gsteps">
+      <li><b>Image the host first</b>, in the normal way with a write-blocker, and hash it. The VM files are simply files within that image.</li>
+      <li><b>Identify the virtualisation software</b> from the installed-programs registry key and from the file extensions present.</li>
+      <li><b>Extract the VM files</b> from the image — disk, memory, snapshots, configuration and logs — and <b>hash each one separately</b>.</li>
+      <li><b>Read the <span class="mono">.vmx</span> configuration</b> before anything else. It tells you the network mode and, importantly, whether <b>shared folders</b> linked the VM to the host — a path by which data moved between the two.</li>
+      <li><b>Examine the virtual disk as a disk image.</b> Autopsy and FTK read <span class="mono">.vmdk</span>, <span class="mono">.vhdx</span> and <span class="mono">.vdi</span> directly; there is no need to boot anything.</li>
+      <li><b>Analyse the <span class="mono">.vmem</span> file</b> with Volatility if one is present — it is a memory capture handed to you.</li>
+      <li><b>Examine every snapshot</b>, not merely the current state.</li>
+      <li><b>If you must run the VM</b>, work on a <b>copy</b>, disable networking first, and record that you did so and why. Running it changes it, and you will be asked about that.</li>
+    </ol>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> VMware Workstation — Virtual Machine Settings</div>
+      <div class="app-menu"><span>File</span><span>Edit</span><span class="on">VM</span><span>Tabs</span><span>Help</span></div>
+      <div class="app-split">
+        <div class="app-pane">
+          <div class="tw">Memory &nbsp;8 GB</div>
+          <div class="tw">Processors &nbsp;4</div>
+          <div class="tw sel">Network Adapter</div>
+          <div class="tw">Hard Disk (SCSI)</div>
+          <div class="tw">USB Controller</div>
+          <div class="tw">Shared Folders</div>
+        </div>
+        <div class="app-body">
+          <p style="font-size:.8rem;color:#3C4854;margin:0 0 .5rem"><strong>Network connection</strong> — isolation settings for analysis:</p>
+          <div class="chk off"><i></i>Bridged &nbsp;<span style="color:#5A6673">(VM appears on the real network — never for malware)</span></div>
+          <div class="chk off"><i></i>NAT &nbsp;<span style="color:#5A6673">(shares the host's address — still reaches the internet)</span></div>
+          <div class="chk on"><i></i>Host-only &nbsp;<span style="color:#5A6673">(isolated from the outside world)</span></div>
+          <div style="margin-top:.8rem;border-top:1px solid #C6CFDA;padding-top:.55rem">
+            <div class="chk off"><i></i>Connect at power on &nbsp;<span style="color:#5A6673">(unchecked = no network at all)</span></div>
+            <div class="chk off"><i></i>Shared folders enabled &nbsp;<span style="color:#5A6673">(disable — prevents escape to the host)</span></div>
+          </div>
+          <div class="btnrow"><span class="wbtn">Cancel</span><span class="wbtn pri">OK</span></div>
+        </div>
+      </div>
+      <div class="app-status"><span>Snapshot: clean-baseline</span><span>Network: isolated</span></div>
+    </div>
+    <p class="caption">Recreated: the settings that make a VM safe for examining a suspicious executable</p>
+    <div class="eg"><span>Real example — the clean laptop with a dirty virtual machine</span>
+      <p>A seized laptop looks innocuous: standard applications, no unusual browser history, nothing in the Run keys. But it has VMware installed and a 60 GB <span class="mono">.vmdk</span> in the user's Documents folder. The examiner adds that <span class="mono">.vmdk</span> to Autopsy as a data source and finds an entire second Windows installation — with the browser history, the downloaded material and the chat logs that were absent from the host. The accompanying <span class="mono">.vmem</span> file yields the running process list at the moment the VM was suspended, and a snapshot from three weeks earlier shows files the suspect later deleted. <b>The host was clean because the activity never happened on the host.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== SUMMARY ============================== -->
+<section class="topic" id="summary">
+  <div class="exhibit"><span class="exno">REVISION</span><span class="exsrc">Unit V in one page</span></div>
+  <h3>Full Sub-heading Outline</h3>
+  <p class="lede">The complete structure of Unit V, with the one idea to carry away from each topic.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">S.1</span><h4>One line per topic</h4></div>
+    <div class="sumcard">
+      <div class="sumrow"><span class="sn">01</span><span class="st">Understanding file systems</span><span class="sd">Geometry, head, tracks, cylinders, sectors of 512 bytes. Disks allocate whole clusters, so the unused tail is file slack. Deletion marks the entry unused and frees the clusters. On flash media, wear-levelling plus the firmware garbage collector can erase the data on their own — so copy solid-state devices immediately.</span></div>
+      <div class="sumrow"><span class="sn">02</span><span class="st">Microsoft file structures</span><span class="sd">A partition is a logical drive; three primary plus an extended. Hidden partitions and the partition gap are where data hides. Three current FAT versions (FAT16, FAT32, exFAT) and three older (FATX, VFAT, FAT12). Deletion replaces the first character with E5h, leaving starting cluster and size intact.</span></div>
+      <div class="sumrow"><span class="sn">03</span><span class="st">Examining NTFS disks</span><span class="sd">NTFS came from HPFS and is a journaling file system; everything written is a file. MFT records are 1024 bytes and the first 15 are metadata for system files. Files of about 512 bytes or less are resident; larger ones use data runs. ADS, compression, EFS with its recovery certificate, Info2 for Recycle Bin deletions, and ReFS with allocate-on-write.</span></div>
+      <div class="sumrow"><span class="sn">04</span><span class="st">Whole disk encryption</span><span class="sd">Driven by loss of PII and trade secrets through theft. Features: preboot authentication, secure hibernation, advanced algorithms. BitLocker needs a TPM 1.2+, a TCG-compliant BIOS and two NTFS partitions, and encrypts NTFS only. Keys come from escrow, a live acquisition, RAM or the passphrase.</span></div>
+      <div class="sumrow"><span class="sn">05</span><span class="st">The Windows registry</span><span class="sd">Created in Windows 95 by consolidating .ini files. Know the terms: HKEY, key, subkey, branch, value, default value, hive. Five HKEYs since Windows 2000 (six in 9x). Hives live in System32\config and in each user's Ntuser.dat. USBSTOR, shellbags, UserAssist and NetworkList answer most questions.</span></div>
+      <div class="sumrow"><span class="sn">06</span><span class="st">Microsoft startup tasks</span><span class="sd">Six steps on any NTFS machine: POST, initial startup, boot loader, hardware detection, kernel loading, user logon. Vista replaced Ntldr with Bootmgr.exe, Winload.exe and Winresume.exe, and added EFI. Windows 7–10 use the BCD store in \Boot\Bcd, edited with the BCD Editor, not Regedit.</span></div>
+      <div class="sumrow"><span class="sn">07</span><span class="st">MS-DOS startup tasks</span><span class="sd">ROM BIOS → boot sector → IO.SYS → MSDOS.SYS → CONFIG.SYS → AUTOEXEC.BAT → COMMAND.COM. CONFIG.SYS is processed before AUTOEXEC.BAT, and the same shape survives in the modern boot sequence.</span></div>
+      <div class="sumrow"><span class="sn">08</span><span class="st">Virtual machines</span><span class="sd">A VM emulates a hardware environment on a host computer. Two main files: the configuration file with hardware settings, and the virtual hard disk file holding the boot loader, OS and user data. The .vmem is a free memory capture and snapshots are preserved earlier states. Isolate networking and shared folders before running anything.</span></div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">S.2</span><h4>The errors that cost most marks</h4></div>
+    <div class="grid2">
+      <div class="card card--warn"><h5>Conceptual errors</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Saying deletion erases the data</li>
+          <li>Claiming deleted data is always recoverable — wear-levelling and the garbage collector may have erased it</li>
+          <li>Confusing sectors with clusters</li>
+          <li>Expecting a small deleted NTFS file to appear in unallocated space</li>
+          <li>Saying resident files are ~700 bytes — the threshold is about <b>512</b></li>
+          <li>Confusing a hive with an HKEY</li>
+          <li>Treating displayed timestamps as reliable without checking $FILE_NAME</li>
+          <li>Forgetting that ADS is lost the moment the file is copied to FAT32</li>
+        </ul></div>
+      <div class="card card--warn"><h5>Procedural errors</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Powering off a machine with an unlocked encrypted volume</li>
+          <li>Examining the registry on the live suspect machine</li>
+          <li>Collecting hive files but not their .LOG files</li>
+          <li>Interpreting timestamps before reading the time-zone key</li>
+          <li>Examining only the current VM state and ignoring the snapshots</li>
+          <li>Running a suspect VM with networking still connected</li>
+          <li>Trying to open the BCD store in Regedit instead of the BCD Editor</li>
+          <li>Keyword-searching in ASCII only on a Unicode file system</li>
+          <li>Trying to open the BCD store in Regedit instead of the BCD Editor</li>
+          <li>Leaving a solid-state device uncopied while the garbage collector runs</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer class="foot">
+  <div class="foot-in">
+    <b>Digital Forensics · 20CS41020 · Unit V</b><br>
+    File Systems and Disk Structures · The Registry and Startup Processes · Virtual Machines<br>
+    B.Tech CSE (AIML), IV Year I Sem · AR22 · Geethanjali College of Engineering and Technology<br><br>
+    <b>Primary text:</b> Nelson, Phillips &amp; Steuart, <i>Guide to Computer Forensics and Investigations</i>, Chapter 5, "Working with Windows and CLI Systems" (Sixth Edition). Sub-heading hierarchy follows the textbook's own table of contents.<br>
+    <b>Syllabus references drawn on:</b> Jones, Bejtlich &amp; Rose, <i>Real Digital Forensics</i> · Sammes &amp; Jenkinson, <i>Forensic Computing: A Practitioner's Guide</i> · Brown, <i>Computer Evidence Collection &amp; Presentation</i> · Mena, <i>Homeland Security Techniques &amp; Technologies</i> · Slade, <i>Software Forensics</i> · Steel, <i>Windows Forensics</i>.<br>
+    <b>Current-practice notes</b> draw on NIST SP 800-86, ISO/IEC 27037, the Honeynet Project, Zeek, Arkime, Velociraptor and Volatility documentation, and the Bharatiya Sakshya Adhiniyam 2023.<br>
+    Tool screens are recreations for teaching, not screenshots. Named cases are real; scenarios are teaching illustrations.
+  </div>
+</footer>
+
+</main>
+</div><!-- /shell -->
+
+<script>
+(function(){
+  "use strict";
+
+  var rail=document.getElementById('rail'),
+      scrim=document.getElementById('scrim'),
+      menubtn=document.getElementById('menubtn');
+  function setNav(open){
+    rail.classList.toggle('open',open);
+    scrim.classList.toggle('on',open);
+    menubtn.setAttribute('aria-expanded',open?'true':'false');
+  }
+  menubtn.addEventListener('click',function(){setNav(!rail.classList.contains('open'));});
+  scrim.addEventListener('click',function(){setNav(false);});
+  rail.addEventListener('click',function(e){ if(e.target.closest('a')) setNav(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') setNav(false); });
+
+  var links=Array.prototype.slice.call(document.querySelectorAll('.chain a')),
+      sections=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}),
+      /* count only the numbered topics, not the Summary entry */
+      TOTAL=links.filter(function(a){return /^#t\d+$/.test(a.getAttribute('href'));}).length,
+      prog=document.getElementById('prog'),
+      sealtxt=document.getElementById('sealtxt'),
+      ticking=false;
+  function update(){
+    ticking=false;
+    var doc=document.documentElement, max=doc.scrollHeight-doc.clientHeight,
+        y=window.scrollY||doc.scrollTop;
+    prog.style.width=(max>0?(y/max*100):0)+'%';
+    var current=-1;
+    for(var i=0;i<sections.length;i++){
+      if(!sections[i]) continue;
+      if(sections[i].getBoundingClientRect().top<=140) current=i;
+    }
+    for(var j=0;j<links.length;j++){
+      var li=links[j].parentNode;
+      li.classList.toggle('seen', j<=current);
+      li.classList.toggle('here', j===current);
+    }
+    sealtxt.textContent=Math.max(0,Math.min(current+1,TOTAL))+' / '+TOTAL+' topics';
+  }
+  function onScroll(){ if(!ticking){ ticking=true; window.requestAnimationFrame(update); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  update();
+
+  function fallbackHash(str){
+    var h1=0x811c9dc5, h2=0x01000193, out='';
+    for(var i=0;i<str.length;i++){
+      h1=(h1^str.charCodeAt(i))>>>0; h1=Math.imul(h1,16777619)>>>0;
+      h2=(h2+Math.imul(h1^str.charCodeAt(i),2654435761))>>>0;
+    }
+    for(var k=0;k<8;k++){
+      h1=Math.imul(h1^(h1>>>15),2246822507)>>>0;
+      h2=Math.imul(h2^(h2>>>13),3266489909)>>>0;
+      out+=((h1^h2)>>>0).toString(16).padStart(8,'0');
+    }
+    return out;
+  }
+  function sha256(str){
+    if(window.crypto && window.crypto.subtle && window.isSecureContext){
+      var data=new TextEncoder().encode(str);
+      return window.crypto.subtle.digest('SHA-256',data).then(function(buf){
+        return Array.prototype.map.call(new Uint8Array(buf),function(b){
+          return b.toString(16).padStart(2,'0');}).join('');
+      });
+    }
+    return Promise.resolve(fallbackHash(str));
+  }
+
+  /* ---------------------------------------------------------------
+     The two interactive labs below belong to Unit III only. Other
+     units reuse this script, so run them only when their markup
+     is actually present on the page.
+     --------------------------------------------------------------- */
+  if(document.getElementById('bsInput') && document.getElementById('hInput')){
+  /* bit-shift lab */
+  var bsInput=document.getElementById('bsInput'),
+      bsView=document.getElementById('bsView'),
+      bsCount=document.getElementById('bsCount'),
+      bsHashOrig=document.getElementById('bsHashOrig'),
+      bsHashNow=document.getElementById('bsHashNow'),
+      bsVerdict=document.getElementById('bsVerdict'),
+      shift=0;
+  function bytesOf(str){ var a=[]; for(var i=0;i<str.length;i++) a.push(str.charCodeAt(i)&0xFF); return a; }
+  function applyShift(bytes,n){
+    if(n===0) return bytes.slice();
+    return bytes.map(function(b){
+      var v=b;
+      for(var i=0;i<Math.abs(n);i++){ v = n>0 ? ((v<<1)&0xFF) : (v>>1); }
+      return v;
+    });
+  }
+  function hex(b){ return b.toString(16).padStart(2,'0').toUpperCase(); }
+  function printable(b){ return (b>=32&&b<=126)?String.fromCharCode(b):'.'; }
+  function bsRender(){
+    var base=bytesOf(bsInput.value||''), cur=applyShift(base,shift);
+    var l1='<span class="lbl">original  </span>', l2='<span class="lbl">current   </span>', l3='<span class="lbl">as text   </span>';
+    for(var i=0;i<base.length;i++){
+      l1+=hex(base[i])+' ';
+      l2+=(base[i]===cur[i]?hex(cur[i]):'<span class="chg">'+hex(cur[i])+'</span>')+' ';
+      l3+=' '+(base[i]===cur[i]?printable(cur[i]):'<span class="chg">'+printable(cur[i])+'</span>')+' ';
+    }
+    bsView.innerHTML=l1+'\n'+l2+'\n'+l3;
+    bsCount.textContent=shift;
+    var origStr=base.map(function(b){return String.fromCharCode(b);}).join('');
+    var curStr=cur.map(function(b){return String.fromCharCode(b);}).join('');
+    Promise.all([sha256(origStr),sha256(curStr)]).then(function(r){
+      bsHashOrig.textContent=r[0];
+      bsHashNow.textContent=r[1];
+      var same=(r[0]===r[1]);
+      bsHashNow.classList.toggle('changed',!same);
+      bsVerdict.classList.toggle('bad',!same);
+      bsVerdict.textContent = same
+        ? 'Hashes match — the bytes are back to their original values.'
+        : 'Hashes differ — the file now looks like meaningless binary, and no hash-based tool will recognise it.';
+    });
+  }
+  document.getElementById('bsLeft').addEventListener('click',function(){ if(shift<4){shift++; bsRender();} });
+  document.getElementById('bsRight').addEventListener('click',function(){ if(shift>-4){shift--; bsRender();} });
+  document.getElementById('bsReset').addEventListener('click',function(){ shift=0; bsRender(); });
+  bsInput.addEventListener('input',function(){ bsRender(); });
+  bsRender();
+
+  /* live hash lab */
+  var hInput=document.getElementById('hInput'),
+      hBase=document.getElementById('hBase'),
+      hNow=document.getElementById('hNow'),
+      hLen=document.getElementById('hLen'),
+      hVerdict=document.getElementById('hVerdict'),
+      baseline=null;
+  function hRender(){
+    hLen.textContent=hInput.value.length;
+    sha256(hInput.value).then(function(h){
+      hNow.textContent=h;
+      if(baseline===null){ baseline=h; hBase.textContent=h; }
+      var same=(h===baseline);
+      hNow.classList.toggle('changed',!same);
+      hVerdict.classList.toggle('bad',!same);
+      hVerdict.textContent = same
+        ? 'Hashes match — evidence integrity verified.'
+        : 'Hashes differ — the data has changed since the baseline was taken.';
+    });
+  }
+  document.getElementById('hSnap').addEventListener('click',function(){
+    sha256(hInput.value).then(function(h){ baseline=h; hBase.textContent=h; hRender(); });
+  });
+  hInput.addEventListener('input',hRender);
+  hRender();
+  }
+
+})();
+</script>
+</body>
+</html>
