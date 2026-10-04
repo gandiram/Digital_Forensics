@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Digital Forensics 20CS41020 &mdash; Syllabus, Units and Question Banks</title>
+<meta name="description" content="Digital Forensics (20CS41020) for B.Tech CSE (AIML), IV Year I Semester, AR22: the full five-unit syllabus with a link to each unit's study notes, two question banks, and previous end-semester questions with answers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#16233A; --navy2:#1E2F4D; --amber:#8F6206; --seal:#AE202A;
+  --verify:#0B6E5A; --custody:#23456E;
+  --ink:#1F2937; --ink2:#41505F; --ink3:#5A6775;
+  --page:#F7F8FA; --panel:#FFFFFF; --panel2:#F0F3F7;
+  --line:#D8DFE8;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1rem}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.65 var(--sans);-webkit-text-size-adjust:100%}
+.skip{position:absolute;left:-9999px;top:0;background:var(--navy);color:#fff;padding:.6rem 1rem;z-index:99}
+.skip:focus{left:0}
+a{color:var(--custody)}
+
+.hero{background:var(--navy);color:#fff;padding:2.6rem 1.25rem 2.3rem;
+      background-image:linear-gradient(180deg,var(--navy2),var(--navy))}
+.hero-in{max-width:62rem;margin:0 auto}
+.filebar{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;
+   font:600 .68rem/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;
+   color:#B9C6DA;margin-bottom:1rem}
+.filebar span{border:1px solid #3A4D6E;border-radius:3px;padding:.32rem .5rem}
+.filebar .stamp{background:#F0A202;color:#28200A;border-color:#F0A202}
+.hero h1{font:700 clamp(1.7rem,4.6vw,2.6rem)/1.14 var(--serif);margin:0 0 .7rem;letter-spacing:-.01em}
+.hero p{margin:0;color:#C8D4E6;max-width:48rem;font-size:1.03rem}
+
+.wrap{max-width:62rem;margin:0 auto;padding:2rem 1.25rem 4rem}
+.sectitle{display:flex;align-items:center;gap:.7rem;margin:0 0 1.2rem}
+.sectitle h2{font:700 .78rem/1 var(--sans);letter-spacing:.11em;text-transform:uppercase;
+   color:var(--custody);margin:0;white-space:nowrap}
+.sectitle .rule{flex:1;height:1px;background:var(--line)}
+
+.unit{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+   padding:1.4rem 1.5rem 1.2rem;margin-bottom:1rem}
+.unit .no{display:inline-block;font:700 .66rem/1 var(--sans);letter-spacing:.11em;
+   text-transform:uppercase;color:#fff;background:var(--custody);
+   padding:.38rem .6rem;border-radius:4px;margin-bottom:.7rem}
+.unit h3{font:700 1.16rem/1.3 var(--serif);margin:0 0 .75rem;color:var(--navy)}
+.unit .syl{font-size:.93rem;line-height:1.72;color:var(--ink2);margin:0 0 1.1rem}
+.unit .syl b{color:var(--ink)}
+.hl{background:#FCF3DE;border-bottom:1px solid #E8D5A4;padding:0 .15rem}
+.go{display:inline-flex;align-items:center;gap:.4rem;font:600 .82rem/1 var(--sans);
+   color:#fff;background:var(--navy);border-radius:7px;padding:.62rem .9rem;text-decoration:none}
+.go:hover{background:var(--custody)}
+.go .u{font-weight:400;opacity:.78;font-size:.76rem}
+
+.res{display:block;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--verify);
+   border-radius:10px;padding:1.2rem 1.4rem;margin-bottom:.9rem;text-decoration:none;color:inherit}
+.res:hover{border-color:var(--verify);box-shadow:0 2px 10px rgba(22,35,58,.07)}
+.res .kick{display:block;font:600 .64rem/1 var(--sans);letter-spacing:.11em;
+   text-transform:uppercase;color:var(--verify);margin-bottom:.45rem}
+.res h3{font:700 1.08rem/1.3 var(--serif);margin:0 0 .4rem;color:var(--navy)}
+.res p{margin:0 0 .6rem;font-size:.9rem;color:var(--ink2)}
+.res .arrow{font:600 .82rem/1 var(--sans);color:var(--custody)}
+
+.foot{background:var(--navy);color:#B9C6DA;padding:1.8rem 1.25rem;font-size:.82rem}
+.foot-in{max-width:62rem;margin:0 auto}
+.foot b{color:#fff}
+@media (max-width:640px){
+  .unit{padding:1.1rem 1.1rem 1rem}
+  .res{padding:1rem 1.1rem}
+}
+@media print{.go,.res .arrow{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<a class="skip" href="#syllabus">Skip to the syllabus</a>
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="filebar">
+      <span class="stamp">Course Site</span>
+      <span>20CS41020</span>
+      <span>B.Tech CSE (AIML)</span>
+      <span>IV Year &middot; I Semester</span>
+      <span>AR22</span>
+    </div>
+    <h1>Digital Forensics</h1>
+    <p>The complete five-unit syllabus, with study notes for each unit, two question banks and the
+    previous end-semester papers with their answer keys. Geethanjali College of Engineering and
+    Technology, Hyderabad (Autonomous).</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="sectitle" id="syllabus"><h2>Syllabus</h2><div class="rule"></div></div>
+
+    <section class="unit">
+      <span class="no">Unit I</span>
+      <h3>Digital Forensics Fundamentals, Types of Technology and Data Recovery</h3>
+      <p class="syl"><b>Computer Forensics Fundamentals:</b> What is Computer Forensics?, Use of Computer Forensics
+in Law Enforcement, Computer Forensics Assistance to Human Resources/Employment Proceedings,
+Computer Forensics Services, Benefits of Professional Forensics Methodology, Steps taken by
+Computer Forensics Specialists.
+<br><br>
+<b>Types of Computer Forensics Technology:</b> Types of Military Computer Forensic Technology,
+Types of Law Enforcement &mdash; Computer Forensic Technology, Types of Business Computer
+Forensics Technology.
+<br><br>
+<b>Data Recovery:</b> Data Recovery Defined, Data Back-up and Recovery, The Role of Back-up in
+Data Recovery, The Data-Recovery Solution.</p>
+      <a class="go" href="unit-1/">Open Unit I <span class="u">&nbsp;&rarr;&nbsp;unit-1/</span></a>
+    </section>
+
+    <section class="unit">
+      <span class="no">Unit II</span>
+      <h3>Evidence Collection, Data Seizure, Duplication and Preservation</h3>
+      <p class="syl"><b>Evidence Collection and Data Seizure:</b> Why Collect Evidence?, Collection Options,
+Obstacles, Types of Evidence, The Rules of Evidence, Volatile Evidence, General Procedure,
+Collection and Archiving, Methods of Collection, Artifacts, Collection Steps, Controlling
+Contamination: The Chain of Custody.
+<br><br>
+<b>Duplication and Preservation of Digital Evidence:</b> Preserving the Digital Crime Scene,
+Computer Evidence Processing Steps, Legal Aspects of Collecting and Preserving Computer
+Forensic Evidence.
+<br><br>
+<b>Computer Image Verification and Authentication:</b> Special Needs of Evidential
+Authentication, Practical Considerations, Practical Implementation.</p>
+      <a class="go" href="unit-2/">Open Unit II <span class="u">&nbsp;&rarr;&nbsp;unit-2/</span></a>
+    </section>
+
+    <section class="unit">
+      <span class="no">Unit III</span>
+      <h3>Analysis and Validation, Network Forensics and Processing Crime Scenes</h3>
+      <p class="syl"><b>Digital Forensics Analysis and Validation:</b> Determining what data to collect and analyse,
+validating forensic data, addressing data-hiding techniques, performing remote acquisitions.
+<br><br>
+<b>Network Forensics:</b> Network forensics overview, performing live acquisitions,
+<span class="hl">developing standard procedures for network forensics</span>, using network tools,
+examining the honeynet project.
+<br><br>
+<b>Processing Crime and Incident Scenes:</b> Identifying digital evidence, collecting evidence
+in private-sector incident scenes, processing law enforcement crime scenes, preparing for a
+search, securing a computer incident or crime scene, seizing digital evidence at the scene,
+storing digital evidence, obtaining a digital hash, reviewing a case.</p>
+      <a class="go" href="unit-3/">Open Unit III <span class="u">&nbsp;&rarr;&nbsp;unit-3/</span></a>
+    </section>
+
+    <section class="unit">
+      <span class="no">Unit IV</span>
+      <h3>Current Digital Forensic Tools, E-Mail Investigations and Mobile Device Forensics</h3>
+      <p class="syl"><b>Current Digital Forensic Tools:</b> Evaluating digital forensic tool needs, digital forensics
+software tools, digital forensics hardware tools, validating and testing forensics software.
+<br><br>
+<b>E-Mail Investigations:</b> Exploring the role of e-mail in investigations, exploring the roles
+of the client and server in e-mail, investigating e-mail crimes and violations, understanding
+e-mail servers, using specialized e-mail forensic tools.
+<br><br>
+<b>Cell Phone and Mobile Device Forensics:</b> Understanding mobile device forensics,
+understanding acquisition procedures for cell phones and mobile devices.</p>
+      <a class="go" href="unit-4/">Open Unit IV <span class="u">&nbsp;&rarr;&nbsp;unit-4/</span></a>
+    </section>
+
+    <section class="unit">
+      <span class="no">Unit V</span>
+      <h3>Working with Windows and DOS Systems</h3>
+      <p class="syl"><b>Working with Windows and DOS Systems:</b> Understanding file systems, exploring Microsoft
+file structures, examining NTFS disks, understanding whole disk encryption, Windows registry,
+Microsoft startup tasks, MS-DOS startup tasks, virtual machines.</p>
+      <a class="go" href="unit-5/">Open Unit V <span class="u">&nbsp;&rarr;&nbsp;unit-5/</span></a>
+    </section>
+
+  <div class="sectitle" style="margin-top:2.4rem"><h2>Revision Resources</h2><div class="rule"></div></div>
+
+    <a class="res" href="question-bank/">
+      <span class="kick">Resource 1</span>
+      <h3>Question Bank &mdash; 1</h3>
+      <p>Units I to V in the long-answer, short-answer, MCQ and fill-in-the-blank format. 75 long answers, 50 short answers, 250 self-marking MCQs and 136 blanks, filterable by unit.</p>
+      <span class="arrow">Open &rarr;</span>
+    </a>
+
+    <a class="res" href="question-bank-2/">
+      <span class="kick">Resource 2</span>
+      <h3>Question Bank &mdash; 2</h3>
+      <p>Unit III from after <i>Performing Live Acquisitions</i>, the whole of Unit IV, and Unit V to <i>Virtual Machines</i>. 45 long answers, 30 short answers, 150 MCQs and 84 blanks.</p>
+      <span class="arrow">Open &rarr;</span>
+    </a>
+
+    <a class="res" href="previous-questions/">
+      <span class="kick">Resource 3</span>
+      <h3>Previous Questions with Answers</h3>
+      <p>Five end-semester papers with the official answer keys &mdash; Regular and Supplementary sittings from December 2024 to December 2025. 138 questions, searchable and filterable.</p>
+      <span class="arrow">Open &rarr;</span>
+    </a>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <b>Digital Forensics &middot; 20CS41020</b><br>
+    B.Tech CSE (AI &amp; ML), IV Year I Semester &middot; AR22 &middot;
+    Geethanjali College of Engineering and Technology, Hyderabad (Autonomous)<br><br>
+    <b>Prescribed texts:</b> John R. Vacca, <i>Computer Forensics: Computer Crime Scene Investigation</i> &middot;
+    Nelson, Phillips &amp; Steuart, <i>Guide to Computer Forensics and Investigations</i>, Sixth Edition.<br>
+    <b>References:</b> Jones, Bejtlich &amp; Rose, <i>Real Digital Forensics</i> &middot;
+    Sammes &amp; Jenkinson, <i>Forensic Computing: A Practitioner's Guide</i> &middot;
+    Brown, <i>Computer Evidence Collection &amp; Presentation</i> &middot;
+    Mena, <i>Homeland Security: Techniques &amp; Technologies</i> &middot;
+    Slade, <i>Software Forensics</i> &middot; Steel, <i>Windows Forensics</i>.
+  </div>
+</footer>
+</body>
+</html>
