@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit IV — Forensic Tools, E-Mail Investigations &amp; Mobile Device Forensics</title>
+<meta name="description" content="A plain-language guide to Unit IV of Digital Forensics (20CS41020), aligned to Nelson, Phillips and Steuart 6th edition chapters 6, 11 and 12: evaluating and validating forensic tools, software and hardware tools, e-mail and social media investigations, e-mail servers, and mobile device forensics and the Internet of Anything.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================= TOKENS ================= */
+:root{
+  --paper:#EDF0F3; --panel:#FFFFFF; --panel2:#F6F8FA; --panel3:#E3E9EF;
+  --ink:#0F1620; --ink2:#374350; --ink3:#5A6673;
+  --rule:#D4DBE2; --rule2:#BEC8D3;
+  --custody:#23456E; --custody2:#35618F; --custodybg:#E9EEF5; --custodyline:#C3D2E3;
+  --seal:#AE202A; --sealbg:#FBEDEE; --sealline:#E9C5C8;
+  --verify:#0B6E5A; --verifybg:#E7F3F0; --verifyline:#B7DBD2;
+  --tag:#8F6206; --tagbg:#FCF3DE; --tagline:#E8D5A4;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --rail:274px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.2rem;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.62;font-optical-sizing:auto}
+img,svg{max-width:100%;display:block}
+a{color:var(--custody);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--custody2);outline-offset:2px;border-radius:2px}
+p{margin:0 0 .9rem}
+strong{font-weight:600}
+
+/* ================= LAYOUT ================= */
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:.7rem 1rem;z-index:300;font-family:var(--sans);font-weight:600}
+.skip:focus{left:.5rem;top:.5rem}
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);max-width:1520px;margin:0 auto}
+.main{min-width:0;padding:0 clamp(1rem,3.2vw,3rem) 6rem}
+.wrap{max-width:900px;margin:0 auto}
+
+/* ================= CUSTODY RAIL (signature) ================= */
+.rail{position:sticky;top:0;height:100vh;background:var(--ink);color:#C7D2DE;display:flex;flex-direction:column;z-index:60}
+.railhead{padding:1.25rem 1.2rem 1rem;border-bottom:1px solid #222B36;flex:0 0 auto}
+.railkick{font-family:var(--mono);font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#96A5B6}
+.railtitle{font-family:var(--sans);font-weight:800;font-size:1rem;letter-spacing:-.01em;color:#fff;margin:.35rem 0 .2rem;line-height:1.22}
+.railsub{font-family:var(--mono);font-size:.64rem;color:#8595A6;letter-spacing:.03em}
+.railseal{margin-top:.75rem;display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase}
+.railseal .dot{width:.5rem;height:.5rem;border-radius:50%;background:#2FA98A;box-shadow:0 0 0 3px rgba(47,169,138,.18)}
+.railseal .txt{color:#57C0A4}
+body.broken .railseal .dot{background:#E0525C;box-shadow:0 0 0 3px rgba(224,82,92,.2)}
+body.broken .railseal .txt{color:#F08A92}
+.railscroll{overflow-y:auto;padding:.85rem .5rem 3rem 1.2rem;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:#2B3644 transparent}
+.railscroll::-webkit-scrollbar{width:6px}
+.railscroll::-webkit-scrollbar-thumb{background:#2B3644;border-radius:3px}
+.railpart{font-family:var(--mono);font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:#8595A6;margin:1.15rem 0 .45rem;padding-left:1.5rem}
+.railpart:first-of-type{margin-top:.15rem}
+.chain{list-style:none;margin:0;padding:0;position:relative}
+.chain::before{content:"";position:absolute;left:.43rem;top:.6rem;bottom:.6rem;width:2px;background:#222C38}
+.chain li{position:relative}
+.chain a{display:flex;gap:.5rem;align-items:baseline;padding:.3rem .5rem .3rem 1.5rem;text-decoration:none;color:#AAB8C7;font-family:var(--sans);font-size:.79rem;line-height:1.32;font-weight:500;border-radius:4px;transition:color .18s,background .18s}
+.chain a:hover{color:#fff;background:#1A222C}
+.chain a::before{content:"";position:absolute;left:.18rem;top:.6rem;width:.52rem;height:.52rem;border:2px solid #35414E;background:var(--ink);border-radius:1px;transition:background .22s,border-color .22s}
+.chain a .n{font-family:var(--mono);font-size:.62rem;color:#8595A6;flex:0 0 auto}
+.chain li.seen > a::before{background:#3C6E93;border-color:#4E86AE}
+.chain li.here > a{color:#fff;background:#1B242F}
+.chain li.here > a::before{background:#E9B949;border-color:#E9B949}
+.chain li.here > a .n{color:#E9B949}
+body.broken .chain li.seen > a::before{background:#8A3038;border-color:#A83E47}
+
+/* mobile nav */
+.mobar{display:none;position:sticky;top:0;z-index:70;background:var(--ink);color:#fff;align-items:center;gap:.7rem;padding:.6rem .9rem;border-bottom:1px solid #222B36}
+.mobar b{font-family:var(--sans);font-size:.86rem;font-weight:700;letter-spacing:-.01em}
+.mobar small{font-family:var(--mono);font-size:.62rem;color:#96A5B6;letter-spacing:.08em;text-transform:uppercase}
+.menubtn{margin-left:auto;background:#1D2733;color:#fff;border:1px solid #2E3A48;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem .7rem;border-radius:3px;cursor:pointer}
+.progress{position:fixed;top:0;left:0;height:3px;background:#E9B949;width:0;z-index:90;transition:width .1s linear}
+
+/* ================= HERO / CASE FILE ================= */
+.hero{background:var(--ink);color:#E7EDF3;margin:0 calc(-1*clamp(1rem,3.2vw,3rem));padding:clamp(2rem,5vw,3.6rem) clamp(1rem,3.2vw,3rem) clamp(2rem,4vw,3rem);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px);pointer-events:none}
+.hero-in{max-width:900px;margin:0 auto;position:relative;z-index:1}
+.filebar{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#A2B0C0;border-bottom:1px solid #26303C;padding-bottom:.8rem;margin-bottom:1.6rem}
+.filebar .stamp{color:#0F1620;background:#E9B949;padding:.2rem .5rem;border-radius:2px;font-weight:600;letter-spacing:.1em}
+.hero h1{font-family:var(--sans);font-weight:800;font-size:clamp(2rem,5.4vw,3.5rem);line-height:1.03;letter-spacing:-.028em;margin:0 0 1rem;color:#fff;text-wrap:balance}
+.hero h1 em{font-style:normal;color:#E9B949}
+.hero .lede{font-size:clamp(1.02rem,1.7vw,1.18rem);color:#B7C4D2;max-width:60ch;margin:0 0 1.8rem}
+.herometa{display:flex;flex-wrap:wrap;gap:.5rem}
+.pill{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;padding:.35rem .65rem;border:1px solid #2E3A48;border-radius:2px;color:#AEBCCB;background:#161E28}
+
+/* case timeline */
+.tl{margin:2.2rem 0 0;border-top:1px solid #26303C;padding-top:1.5rem}
+.tl h2{font-family:var(--mono);font-size:.66rem;letter-spacing:.17em;text-transform:uppercase;color:#A2B0C0;font-weight:500;margin:0 0 1rem}
+.tlgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:tl}
+.tlstep{position:relative;padding:.9rem .8rem .9rem 0;border-top:2px solid #2E3A48}
+.tlstep:nth-child(1){border-top-color:#E9B949}
+.tlstep::before{content:"";position:absolute;top:-6px;left:0;width:10px;height:10px;background:#2E3A48;border-radius:1px}
+.tlstep:nth-child(1)::before{background:#E9B949}
+.tltime{font-family:var(--mono);font-size:.78rem;color:#E9B949;font-weight:500;display:block;margin-bottom:.25rem}
+.tltxt{font-size:.86rem;line-height:1.4;color:#AEBCCB;font-family:var(--sans)}
+@media (max-width:820px){.tlgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.tlgrid{grid-template-columns:1fr}}
+
+/* ================= SECTION / TOPIC ================= */
+.partbreak{margin:4.5rem 0 2.5rem;padding-top:2rem;border-top:3px solid var(--ink)}
+.partbreak .pk{font-family:var(--mono);font-size:.66rem;letter-spacing:.19em;text-transform:uppercase;color:var(--seal);font-weight:600}
+.partbreak h2{font-family:var(--sans);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.15rem);letter-spacing:-.022em;margin:.5rem 0 .5rem;line-height:1.12}
+.partbreak p{color:var(--ink2);max-width:62ch;margin:0}
+
+.topic{scroll-margin-top:1.2rem;padding:2.6rem 0 0;border-top:1px solid var(--rule);margin-top:2.6rem}
+.topic:first-of-type{border-top:0;margin-top:0}
+.exhibit{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin-bottom:.85rem}
+.exno{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.1em;background:var(--tagbg);color:var(--tag);border:1px solid var(--tagline);padding:.24rem .55rem;border-radius:2px}
+.exsrc{font-family:var(--mono);font-size:.66rem;color:var(--ink3);letter-spacing:.03em}
+.topic h3{font-family:var(--sans);font-weight:700;font-size:clamp(1.42rem,3vw,2rem);letter-spacing:-.022em;line-height:1.14;margin:0 0 .7rem;text-wrap:balance}
+.lede{font-size:1.06rem;color:var(--ink2);max-width:66ch;margin:0 0 1.4rem}
+h4{font-family:var(--sans);font-weight:700;font-size:1.02rem;letter-spacing:-.008em;margin:1.8rem 0 .7rem}
+h5{font-family:var(--sans);font-weight:700;font-size:.85rem;letter-spacing:.02em;margin:0 0 .5rem;text-transform:none}
+
+/* ================= PANELS & CARDS ================= */
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.25rem;margin:1.1rem 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media (max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.05rem 1.1rem}
+.card h5{font-size:.95rem;margin-bottom:.4rem}
+.card p{font-size:.94rem;margin:0;color:var(--ink2)}
+.card .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:.4rem}
+.card--risk{background:var(--sealbg);border-color:var(--sealline)}
+.card--risk h5{color:var(--seal)}
+.card--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.card--safe h5{color:var(--verify)}
+.card--cust{background:var(--custodybg);border-color:var(--custodyline)}
+.card--cust h5{color:var(--custody)}
+.card--dark{background:var(--ink);border-color:var(--ink)}
+.card--dark h5{color:#E9B949}
+.card--dark p,.card--dark li{color:#C2CEDA}
+.card--dark .k{color:#A2B0C0}
+
+/* notes */
+.note{border-radius:6px;padding:1rem 1.1rem 1rem 1.15rem;margin:1.2rem 0;border:1px solid;font-size:.95rem}
+.note .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:.35rem}
+.note p:last-child{margin-bottom:0}
+.note--case{background:var(--custodybg);border-color:var(--custodyline)}
+.note--case .nk{color:var(--custody)}
+.note--real{background:var(--tagbg);border-color:var(--tagline)}
+.note--real .nk{color:var(--tag)}
+.note--risk{background:var(--sealbg);border-color:var(--sealline)}
+.note--risk .nk{color:var(--seal)}
+.note--safe{background:var(--verifybg);border-color:var(--verifyline)}
+.note--safe .nk{color:var(--verify)}
+
+/* exam pointer */
+.exam{display:flex;gap:.8rem;align-items:flex-start;margin:1.3rem 0 .3rem;padding:.75rem .95rem;background:var(--panel2);border-left:3px solid var(--ink);border-radius:0 4px 4px 0;font-size:.92rem}
+.exam b{font-family:var(--mono);font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);flex:0 0 auto;padding-top:.16rem}
+.exam span{color:var(--ink2)}
+
+/* lists */
+ul.clean,ol.clean{margin:.4rem 0 1rem;padding-left:1.15rem}
+ul.clean li,ol.clean li{margin-bottom:.42rem;font-size:.97rem}
+ul.clean li::marker{color:var(--custody2)}
+ol.clean li::marker{font-family:var(--mono);font-size:.82rem;color:var(--custody2)}
+ul.ticks{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.ticks li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.ticks li::before{content:"";position:absolute;left:0;top:.52em;width:.62rem;height:.62rem;border:2px solid var(--verify);border-radius:1px}
+ul.crosses{list-style:none;margin:.4rem 0 1rem;padding:0}
+ul.crosses li{position:relative;padding-left:1.5rem;margin-bottom:.45rem;font-size:.96rem}
+ul.crosses li::before{content:"\00d7";position:absolute;left:.06rem;top:-.05em;color:var(--seal);font-weight:700;font-size:1.1rem}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:1.1rem 0;font-size:.93rem;background:var(--panel);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.tbl th{font-family:var(--sans);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;text-align:left;background:var(--ink);color:#DCE4EC;padding:.6rem .8rem;font-weight:600}
+.tbl td{padding:.65rem .8rem;border-top:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+.tbl td:first-child{font-family:var(--sans);font-weight:600;color:var(--ink);font-size:.9rem}
+.tbl tr:nth-child(even) td{background:var(--panel2)}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* mono chip */
+.mono{font-family:var(--mono);font-size:.86em;background:var(--panel3);padding:.1em .38em;border-radius:3px;color:var(--ink)}
+.hash{font-family:var(--mono);font-size:.8rem;letter-spacing:.02em}
+
+/* pull quote */
+.pull{border-left:3px solid var(--tag);padding:.3rem 0 .3rem 1.1rem;margin:1.4rem 0;font-size:1.1rem;line-height:1.5;color:var(--ink);font-style:italic}
+.pull cite{display:block;font-style:normal;font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-top:.5rem}
+</style>
+<style>
+/* ================= GUI WINDOW CHROME (signature) ================= */
+.app{border:1px solid #9AA6B4;border-radius:6px;overflow:hidden;margin:1.2rem 0;
+  box-shadow:0 4px 18px rgba(15,22,32,.13);background:#F3F5F8;font-family:var(--sans)}
+.app-bar{background:linear-gradient(#3E4A5A,#2C3644);color:#EAF0F6;padding:.42rem .7rem;
+  display:flex;align-items:center;gap:.55rem;font-size:.78rem;font-weight:600}
+.app-bar .dots{display:flex;gap:.28rem;margin-right:.3rem}
+.app-bar .dots i{width:.62rem;height:.62rem;border-radius:50%;background:#6B7787;display:block}
+.app-bar .dots i:nth-child(1){background:#E0655F}
+.app-bar .dots i:nth-child(2){background:#E0B35F}
+.app-bar .dots i:nth-child(3){background:#5FBF7A}
+.app-menu{background:#E7EBF0;border-bottom:1px solid #C6CFDA;padding:.3rem .7rem;
+  display:flex;gap:1rem;font-size:.73rem;color:#3C4854}
+.app-menu span.on{color:var(--custody);font-weight:600;border-bottom:2px solid var(--custody)}
+.app-body{padding:.85rem .9rem;background:#F8FAFC;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.app-split{display:grid;grid-template-columns:11rem 1fr;gap:0}
+@media (max-width:640px){.app-split{grid-template-columns:1fr}}
+.app-pane{background:#EEF2F6;border-right:1px solid #C6CFDA;padding:.7rem .6rem;font-size:.76rem}
+.app-pane .tw{padding:.18rem 0 .18rem .8rem;position:relative;color:#3C4854}
+.app-pane .tw::before{content:"\25B8";position:absolute;left:0;color:#7A899A;font-size:.7rem}
+.app-pane .tw.open::before{content:"\25BE"}
+.app-pane .tw.sub{padding-left:1.7rem}
+.app-pane .tw.sel{background:var(--custody);color:#fff;border-radius:3px}
+.app-pane .tw.sel::before{color:#fff}
+.app-status{background:#E7EBF0;border-top:1px solid #C6CFDA;padding:.28rem .7rem;
+  font-family:var(--mono);font-size:.66rem;color:#5A6673;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+
+.chk{display:flex;align-items:center;gap:.45rem;padding:.2rem 0;font-size:.78rem;color:#25303C}
+.chk i{width:.82rem;height:.82rem;border:1.5px solid #7A899A;border-radius:2px;background:#fff;
+  display:inline-block;position:relative;flex:0 0 auto}
+.chk.on i{background:var(--custody);border-color:var(--custody)}
+.chk.on i::after{content:"";position:absolute;left:.22rem;top:.02rem;width:.19rem;height:.4rem;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chk.off{color:#8A96A4}
+.btnrow{display:flex;gap:.4rem;justify-content:flex-end;margin-top:.7rem;flex-wrap:wrap}
+.wbtn{font-family:var(--sans);font-size:.75rem;padding:.32rem .85rem;border-radius:3px;
+  border:1px solid #9AA6B4;background:linear-gradient(#FDFEFF,#E9EEF3);color:#25303C}
+.wbtn.pri{background:var(--custody);border-color:var(--custody);color:#fff;font-weight:600}
+.field{display:flex;align-items:center;gap:.5rem;margin:.35rem 0;font-size:.77rem;flex-wrap:wrap}
+.field label{color:#3C4854;min-width:6.5rem}
+.field .inp{flex:1;min-width:8rem;background:#fff;border:1px solid #A9B4C0;border-radius:3px;
+  padding:.28rem .45rem;font-family:var(--mono);font-size:.72rem;color:#25303C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.field .inp.mono-out{background:#F2F5F8;color:var(--custody);font-weight:600}
+.tblmini{width:100%;border-collapse:collapse;font-size:.74rem;background:#fff;border:1px solid #C6CFDA}
+.tblmini th{background:#E7EBF0;text-align:left;padding:.32rem .5rem;font-weight:600;color:#3C4854;border-bottom:1px solid #C6CFDA}
+.tblmini td{padding:.3rem .5rem;border-bottom:1px solid #EAEFF4;font-family:var(--mono);font-size:.71rem;color:#3C4854}
+.tblmini tr.hi td{background:var(--custodybg);color:var(--custody);font-weight:600}
+.caption{font-family:var(--mono);font-size:.66rem;color:var(--ink3);text-align:center;margin:-.6rem 0 1.3rem}
+
+/* disk management strip */
+.dmstrip{display:flex;gap:2px;margin:.6rem 0 .3rem;height:3.4rem;border:1px solid #C6CFDA;background:#C6CFDA}
+.dmpart{background:#fff;display:flex;flex-direction:column;justify-content:center;padding:.3rem .5rem;font-size:.7rem}
+.dmpart b{font-family:var(--sans);font-size:.74rem;color:#25303C}
+.dmpart span{font-family:var(--mono);font-size:.66rem;color:#5A6673}
+.dmpart .bar{height:.3rem;background:var(--custody);border-radius:2px;margin-top:.25rem}
+.dmpart.hidden{background-color:#FBEDEE;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0) 0 7px,rgba(174,32,42,.10) 7px 14px)}
+.dmpart.hidden b{color:var(--seal)}
+.dmpart.hidden span{color:#8E1A22}
+.dmpart.hidden .bar{background:var(--seal)}
+
+/* bit shift lab */
+.lab{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.15rem 1.2rem;margin:1.2rem 0}
+.lab h5{font-size:.96rem;margin-bottom:.25rem}
+.lab .hint{font-size:.86rem;color:var(--ink3);margin:0 0 .8rem}
+.labrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:.7rem 0}
+.labrow input[type=text]{flex:1;min-width:12rem;font-family:var(--mono);font-size:.85rem;
+  padding:.45rem .6rem;border:1px solid var(--rule2);border-radius:4px;background:#fff;color:var(--ink)}
+.byteview{font-family:var(--mono);font-size:.78rem;background:#0F1620;color:#9FD4C4;
+  padding:.7rem .8rem;border-radius:5px;overflow-x:auto;white-space:pre;line-height:1.6;margin:.5rem 0}
+.byteview .lbl{color:#7A899A}
+.byteview .chg{color:#E9B949}
+.hashout{display:grid;grid-template-columns:6.5rem 1fr;gap:.5rem .7rem;align-items:baseline;
+  font-size:.8rem;margin-top:.7rem}
+@media (max-width:560px){.hashout{grid-template-columns:1fr}}
+.hashout .k{font-family:var(--sans);font-weight:600;color:var(--ink2)}
+.hashout .v{font-family:var(--mono);font-size:.74rem;word-break:break-all;color:var(--custody)}
+.hashout .v.changed{color:var(--seal)}
+.verdict{margin-top:.8rem;padding:.6rem .85rem;border-radius:5px;font-size:.88rem;
+  background:var(--verifybg);border:1px solid var(--verifyline);color:var(--verify)}
+.verdict.bad{background:var(--sealbg);border-color:var(--sealline);color:var(--seal)}
+
+/* decision tree */
+.tree{margin:1.2rem 0}
+.tnode{background:var(--panel);border:1.5px solid var(--rule2);border-radius:6px;padding:.75rem .9rem;margin:0 auto;max-width:34rem;text-align:center}
+.tnode b{font-family:var(--sans);font-size:.92rem;display:block}
+.tsplit{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.7rem}
+@media (max-width:620px){.tsplit{grid-template-columns:1fr}}
+.tbranch{border-radius:6px;padding:.75rem .85rem;font-size:.86rem}
+.tbranch .lb{font-family:var(--mono);font-size:.65rem;letter-spacing:.11em;text-transform:uppercase;display:block;margin-bottom:.3rem}
+.tbranch.a{background:var(--verifybg);border:1.5px solid var(--verifyline)}
+.tbranch.a .lb{color:var(--verify)}
+.tbranch.b{background:var(--tagbg);border:1.5px solid var(--tagline)}
+.tbranch.b .lb{color:var(--tag)}
+.tarrow{text-align:center;font-family:var(--mono);color:var(--ink3);margin:.35rem 0;font-size:1.1rem}
+
+/* modern-practice callout */
+.now{background:#0F1620;border-radius:6px;padding:1rem 1.15rem;margin:1.2rem 0;color:#C2CEDA;font-size:.92rem}
+.now .nk{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:#5FBF9A;display:block;margin-bottom:.4rem;font-weight:600}
+.now p:last-child{margin-bottom:0}
+.now strong{color:#fff}
+.now a{color:#7FC7E8}
+
+/* annotated log line */
+.annot{background:#0F1620;border-radius:6px;padding:1rem 1.1rem;margin:1.1rem 0;overflow-x:auto}
+.annot code{font-family:var(--mono);font-size:.82rem;color:#DCE4EC;display:block;white-space:pre;line-height:1.9}
+.annot .p1{color:#E9B949}.annot .p2{color:#7FC7E8}.annot .p3{color:#9FD4C4}
+.annot .p4{color:#E58F8F}.annot .p5{color:#C9A6E0}
+.annotkey{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin-top:.7rem;font-family:var(--mono);font-size:.68rem}
+.annotkey span{color:#8A98A9}
+.annotkey b{font-weight:500}
+
+/* TCP header */
+.tcph{border:1.5px solid var(--ink);border-radius:5px;overflow-x:auto;margin:1rem 0;font-family:var(--mono);font-size:.72rem}
+.tcprow{display:flex;border-top:1px solid var(--rule2);min-width:23rem}
+.tcprow:first-child{border-top:0}
+.tcprow div{flex:1;padding:.42rem .5rem;text-align:center;border-left:1px solid var(--rule2);background:var(--panel)}
+.tcprow div:first-child{border-left:0}
+.tcprow div.flag{flex:0 0 2rem;background:var(--panel2);font-weight:600}
+.tcprow div.flag.syn{background:var(--seal);color:#fff}
+.tcprow div.hd{background:var(--ink);color:#DCE4EC;font-weight:600}
+
+/* steps with GUI */
+.gsteps{counter-reset:g;list-style:none;margin:1rem 0;padding:0}
+.gsteps li{counter-increment:g;position:relative;padding:.55rem 0 .55rem 2.4rem;font-size:.94rem;border-top:1px solid var(--rule)}
+.gsteps li:first-child{border-top:0}
+.gsteps li::before{content:counter(g);position:absolute;left:0;top:.6rem;width:1.55rem;height:1.55rem;
+  border-radius:4px;background:var(--custody);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-family:var(--mono);font-size:.75rem;font-weight:600}
+.gsteps li .path{font-family:var(--mono);font-size:.8rem;background:var(--panel3);padding:.08em .4em;border-radius:3px}
+
+
+/* ================= SUB-HEADING SYSTEM ================= */
+.sub{border-left:2px solid var(--rule);padding:0 0 0 1.1rem;margin:1.5rem 0}
+.sub:hover{border-left-color:var(--custody2)}
+.subhead{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.45rem}
+.subno{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--custody);
+  background:var(--custodybg);border:1px solid var(--custodyline);border-radius:3px;
+  padding:.12rem .42rem;flex:0 0 auto}
+.subhead h4{font-family:var(--sans);font-weight:700;font-size:1.04rem;letter-spacing:-.01em;
+  margin:0;line-height:1.25;color:var(--ink)}
+.sub > p{font-size:.97rem;margin:0 0 .7rem}
+.eg{background:var(--tagbg);border:1px solid var(--tagline);border-radius:5px;
+  padding:.6rem .8rem;font-size:.92rem;margin:.6rem 0 0}
+.eg > span{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tag);font-weight:600;display:block;margin-bottom:.25rem}
+.eg p{margin:0}
+.eg p + p{margin-top:.4rem}
+
+/* topic map */
+.tmap{background:var(--panel);border:1px solid var(--rule);border-radius:8px;
+  padding:1.15rem 1.3rem;margin:1.4rem 0}
+.tmap h4{font-family:var(--mono);font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink3);font-weight:500;margin:0 0 .8rem}
+.tmap ol{list-style:none;margin:0;padding:0;counter-reset:tm}
+.tmap > ol > li{margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid var(--rule)}
+.tmap > ol > li:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.tmap a.tl{font-family:var(--sans);font-weight:700;font-size:.95rem;color:var(--ink);
+  text-decoration:none;display:inline-block}
+.tmap a.tl:hover{color:var(--custody);text-decoration:underline}
+.tmap a.tl .tn{font-family:var(--mono);font-size:.72rem;color:var(--custody2);margin-right:.45rem}
+.tmap ul{list-style:none;margin:.35rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem .5rem}
+.tmap ul li{font-size:.82rem;color:var(--ink2);background:var(--panel2);
+  border:1px solid var(--rule);border-radius:3px;padding:.16rem .48rem}
+.tmap ul li b{font-family:var(--mono);font-size:.7rem;color:var(--custody2);font-weight:500;margin-right:.25rem}
+
+/* part intro list */
+.partlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.6rem;margin:1.1rem 0}
+.partlist a{display:block;background:var(--panel);border:1px solid var(--rule);border-radius:5px;
+  padding:.6rem .75rem;text-decoration:none;color:var(--ink);font-family:var(--sans);font-size:.88rem;font-weight:600}
+.partlist a:hover{border-color:var(--custody2);color:var(--custody)}
+.partlist a span{font-family:var(--mono);font-size:.7rem;color:var(--custody2);display:block;font-weight:500}
+.partlist a small{display:block;font-family:var(--sans);font-size:.75rem;font-weight:400;color:var(--ink3);margin-top:.2rem}
+
+/* ===== shared components ===== */
+/* flow diagram */
+.flow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:stretch;margin:1.1rem 0}
+.fstep{flex:1 1 8rem;background:var(--panel);border:1px solid var(--rule);border-radius:5px;padding:.65rem .7rem;position:relative}
+.fstep .fn{font-family:var(--mono);font-size:.6rem;color:var(--custody2);letter-spacing:.1em}
+.fstep b{display:block;font-family:var(--sans);font-size:.86rem;font-weight:700;margin:.2rem 0 .18rem;line-height:1.2}
+.fstep span{font-size:.8rem;color:var(--ink3);line-height:1.35;display:block}
+.fstep--dark{background:var(--ink);border-color:var(--ink)}
+.fstep--dark b{color:#fff}.fstep--dark span{color:#AEBCCB}.fstep--dark .fn{color:#E9B949}
+/* summary table */
+.sumcard{background:var(--ink);border-radius:8px;padding:1.4rem 1.5rem;margin:1.3rem 0;color:#DCE4EC}
+.sumcard h4{color:#fff;margin-top:0}
+.sumrow{display:grid;grid-template-columns:1.5rem 11rem 1fr;gap:.7rem;padding:.6rem 0;border-top:1px solid #232C38;align-items:baseline}
+.sumrow:first-of-type{border-top:0}
+.sumrow .sn{font-family:var(--mono);font-size:.7rem;color:#E9B949}
+.sumrow .st{font-family:var(--sans);font-weight:600;font-size:.86rem;color:#E9B949}
+.sumrow .sd{font-size:.88rem;color:#BCC9D6;line-height:1.45}
+@media (max-width:700px){.sumrow{grid-template-columns:1.5rem 1fr}.sumrow .sd{grid-column:2}}
+/* footer */
+.foot{margin:5rem calc(-1*clamp(1rem,3.2vw,3rem)) 0;background:var(--ink);color:#A2B0C0;padding:2.4rem clamp(1rem,3.2vw,3rem)}
+.foot-in{max-width:900px;margin:0 auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;line-height:1.8}
+.foot b{color:#DCE4EC;font-weight:500}
+/* print */
+@media print{
+  .rail,.mobar,.progress,.cocbtn,.btn,.quiz{display:none!important}
+  .shell{grid-template-columns:1fr}
+  body{background:#fff;font-size:11pt}
+  .hero,.foot{background:#fff;color:#000;margin:0;padding:0 0 1rem}
+  .hero h1{color:#000}.hero .lede{color:#333}
+  .topic{break-inside:avoid;page-break-inside:avoid}
+  .volitem .why{display:block!important}
+}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);transform:translateX(-102%);transition:transform .28s ease;box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .rail.open{transform:none}
+  .mobar{display:flex}
+  .scrim{position:fixed;inset:0;background:rgba(6,10,15,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.on{opacity:1;pointer-events:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" id="prog"></div>
+
+<div class="mobar">
+  <div><small>Digital Forensics</small><br><b>Unit IV — Tools, E-Mail &amp; Mobile</b></div>
+  <button class="menubtn" id="menubtn" aria-expanded="false" aria-controls="rail">Contents</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Unit IV contents">
+  <div class="railhead">
+    <div class="railkick">20CS41020 · Unit IV</div>
+    <div class="railtitle">Forensic Tools, E-Mail &amp; Mobile Device Forensics</div>
+    <div class="railsub">B.Tech CSE (AIML) · AR22</div>
+    <div class="railseal"><span class="dot"></span><span class="txt" id="sealtxt">0 / 11 sections</span></div>
+  </div>
+  <div class="railscroll">
+    <div class="railpart">A · Current Digital Forensic Tools</div>
+    <ul class="chain" id="chain">
+      <li><a href="#t01"><span class="n">01</span><span>Evaluating Digital Forensic Tool Needs</span></a></li>
+      <li><a href="#t02"><span class="n">02</span><span>Digital Forensics Software Tools</span></a></li>
+      <li><a href="#t03"><span class="n">03</span><span>Digital Forensics Hardware Tools</span></a></li>
+      <li><a href="#t04"><span class="n">04</span><span>Validating and Testing Forensics Software</span></a></li>
+    </ul>
+    <div class="railpart">B · E-Mail Investigations</div>
+    <ul class="chain">
+      <li><a href="#t05"><span class="n">05</span><span>Role of E-mail in Investigations</span></a></li>
+      <li><a href="#t06"><span class="n">06</span><span>Roles of the Client and Server</span></a></li>
+      <li><a href="#t07"><span class="n">07</span><span>Investigating E-mail Crimes</span></a></li>
+      <li><a href="#t08"><span class="n">08</span><span>Understanding E-mail Servers</span></a></li>
+      <li><a href="#t09"><span class="n">09</span><span>Specialized E-mail Forensic Tools</span></a></li>
+    </ul>
+    <div class="railpart">C · Mobile Devices &amp; the Internet of Anything</div>
+    <ul class="chain">
+      <li><a href="#t10"><span class="n">10</span><span>Understanding Mobile Device Forensics</span></a></li>
+      <li><a href="#t11"><span class="n">11</span><span>Acquisition Procedures for Mobile Devices</span></a></li>
+    </ul>
+    <div class="railpart">Revision</div>
+    <ul class="chain">
+      <li><a href="#summary"><span class="n">S</span><span>Full Sub-heading Outline</span></a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main" id="main">
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="filebar">
+      <span class="stamp">Case File</span>
+      <span>Ref: DF/U-IV/AR22</span>
+      <span>Subject: 20CS41020 Digital Forensics</span>
+      <span>Source: Nelson et al. 6e, Ch. 6, 11, 12</span>
+    </div>
+    <h1>The evidence is only as good<br>as <em>the tool that lifted it.</em></h1>
+    <p class="lede">Unit IV is about instruments. Which tool to buy and why, what a write-blocker actually does, how to prove in court that your software works, how e-mail leaves a trail through headers and server logs, and how a locked phone is opened when the whole device is encrypted.</p>
+    <div class="herometa">
+      <span class="pill">11 topics</span>
+      <span class="pill">Recreated tool screens</span>
+      <span class="pill">Header-by-header walkthrough</span>
+      <span class="pill">BFU / AFU explained</span>
+      <span class="pill">Aligned to Nelson 6e</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="v">5 fns</span><span class="l">acquisition · validation and verification · extraction · reconstruction · reporting</span></div>
+      <div class="stat"><span class="v">Bottom&nbsp;up</span><span class="l">the direction you read an e-mail header — the newest hop is first</span></div>
+      <div class="stat"><span class="v">AFU</span><span class="l">the phone state in which most user data is still reachable</span></div>
+      <div class="stat"><span class="v">CFTT</span><span class="l">the NIST programme that publishes independent tool test reports</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="tmap">
+  <h4>Unit IV at a glance — 3 main topics, 11 topics</h4>
+  <ol>
+    <li>
+      <a class="tl" href="#partA"><span class="tn">MAIN TOPIC 1</span>Current Digital Forensic Tools</a>
+      <ul>
+        <li><b>01</b>Evaluating Digital Forensic Tool Needs</li>
+        <li><b>02</b>Digital Forensics Software Tools</li>
+        <li><b>03</b>Digital Forensics Hardware Tools</li>
+        <li><b>04</b>Validating and Testing Forensics Software</li>
+      </ul>
+    </li>
+    <li>
+      <a class="tl" href="#partB"><span class="tn">MAIN TOPIC 2</span>E-Mail and Social Media Investigations</a>
+      <ul>
+        <li><b>05</b>Exploring the Role of E-mail in Investigations</li>
+        <li><b>06</b>Exploring the Roles of the Client and Server in E-mail</li>
+        <li><b>07</b>Investigating E-mail Crimes and Violations</li>
+        <li><b>08</b>Understanding E-mail Servers</li>
+        <li><b>09</b>Using Specialized E-mail Forensic Tools</li>
+      </ul>
+    </li>
+    <li>
+      <a class="tl" href="#partC"><span class="tn">MAIN TOPIC 3</span>Mobile Device Forensics and the Internet of Anything</a>
+      <ul>
+        <li><b>10</b>Understanding Mobile Device Forensics</li>
+        <li><b>11</b>Understanding Acquisition Procedures for Cell Phones and Mobile Devices</li>
+      </ul>
+    </li>
+  </ol>
+</div>
+
+<div class="partbreak" id="partA">
+  <div class="pk">Main Topic 1 · Chapter 6</div>
+  <h2>Current Digital Forensic Tools</h2>
+  <p>Tools are not neutral. The one you choose decides what you can see, what you can prove, and how easily a defence expert can take your findings apart. Main Topic 1 covers how to decide what you need, what software and hardware exist, and how to demonstrate that the tool did what you say it did.</p>
+  <div class="partlist">
+    <a href="#t01"><span>Topic 01</span>Evaluating Digital Forensic Tool Needs<small>Platforms, five functions, NTSC, buying decisions</small></a>
+    <a href="#t02"><span>Topic 02</span>Digital Forensics Software Tools<small>Command-line, GUI, Autopsy, FTK, AXIOM, EnCase</small></a>
+    <a href="#t03"><span>Topic 03</span>Digital Forensics Hardware Tools<small>Workstations, write-blockers, imagers, lifespan</small></a>
+    <a href="#t04"><span>Topic 04</span>Validating and Testing Forensics Software<small>NIST CFTT, reference sets, your own validation</small></a>
+  </div>
+</div>
+
+<!-- ============================== TOPIC 01 ============================== -->
+<section class="topic" id="t01">
+  <div class="exhibit"><span class="exno">TOPIC 01</span><span class="exsrc">Nelson et al. 6e, Ch. 6 · pp. 268–283</span></div>
+  <h3>Evaluating Digital Forensic Tool Needs</h3>
+  <p class="lede">Before buying anything, you decide what the tool must do. A tool that produces a beautiful report but cannot read the file system on your suspect drive is worthless, and a tool nobody has heard of is a gift to the opposing expert.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.1</span><h4>What to ask before you buy</h4></div>
+    <p>Tool selection is driven by the cases you actually get. A laboratory that mostly handles employee-misconduct cases on Windows laptops needs something very different from one handling seized Android phones. The questions that decide the purchase:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Question</th><th>Why it decides the purchase</th></tr></thead>
+      <tbody>
+        <tr><td><b>Which operating systems and file systems?</b></td><td>NTFS, FAT, exFAT, ext4, APFS, HFS+, YAFFS2. A tool that cannot mount APFS cannot examine a modern Mac at all.</td></tr>
+        <tr><td><b>Can it read the image formats you receive?</b></td><td>Raw (<span class="mono">dd</span>), Expert Witness (<span class="mono">.E01</span>), SMART (<span class="mono">.S01</span>), AFF, virtual machine disks.</td></tr>
+        <tr><td><b>Is it accepted in court?</b></td><td>A widely used tool with published test results survives challenge. An obscure one invites a <i>Daubert</i>-style attack on reliability.</td></tr>
+        <tr><td><b>What is the total cost?</b></td><td>Licence, annual maintenance, dongles, training and certification. Training is often the larger number.</td></tr>
+        <tr><td><b>Does it produce a usable report?</b></td><td>The report is what the court reads. A tool whose output cannot be explained to a layman has failed at the last step.</td></tr>
+        <tr><td><b>How often is it updated?</b></td><td>New phone models and OS versions appear constantly. An unmaintained tool goes blind within a year.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.2</span><h4>The five functions every forensics tool performs</h4></div>
+    <p>However different two tools look, both are doing the same five things. Learn this list and you can evaluate any product on the market, including one released after you graduate.</p>
+    <p>When testing new tools it helps to follow the guidelines set by NIST's <b>Computer Forensics Tool Testing (CFTT)</b> program, <b>ASTM International's E2678 standard</b>, and the <b>International Organization on Computer Evidence (IOCE)</b>. In addition, <b>ISO standard 27037</b> states that <b>Digital Evidence First Responders (DEFRs)</b> should use validated tools — and that the most important factors in data acquisition are the DEFR's competency and the use of validated tools. What matters most throughout is <b>documenting what was done and why</b>.</p>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 128" role="img" aria-label="The five functions of a forensics tool in sequence: acquisition, validation and verification, extraction, reconstruction, reporting">
+        <defs><marker id="a5" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><polygon points="0,0 7,3.2 0,6.4" fill="#5A6673"/></marker></defs>
+        <g>
+          <rect x="6" y="30" width="118" height="44" rx="5" fill="#23456E"/>
+          <text x="65" y="50" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">1 Acquisition</text>
+          <text x="65" y="65" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">make the copy</text>
+          <rect x="140" y="30" width="126" height="44" rx="5" fill="#0B6E5A"/>
+          <text x="203" y="48" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">2 Validation &amp;</text>
+          <text x="203" y="62" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">Verification</text>
+          <rect x="282" y="30" width="118" height="44" rx="5" fill="#8F6206"/>
+          <text x="341" y="50" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">3 Extraction</text>
+          <text x="341" y="65" text-anchor="middle" fill="#FBEEC9" style="font:9px var(--sans)">recover the data</text>
+          <rect x="416" y="30" width="126" height="44" rx="5" fill="#5B3E7A"/>
+          <text x="479" y="50" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">4 Reconstruction</text>
+          <text x="479" y="65" text-anchor="middle" fill="#DFD3EA" style="font:9px var(--sans)">rebuild the events</text>
+          <rect x="558" y="30" width="116" height="44" rx="5" fill="#AE202A"/>
+          <text x="616" y="50" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">5 Reporting</text>
+          <text x="616" y="65" text-anchor="middle" fill="#F5CDD0" style="font:9px var(--sans)">explain it in court</text>
+        </g>
+        <line x1="124" y1="52" x2="136" y2="52" stroke="#5A6673" stroke-width="1.4" marker-end="url(#a5)"/>
+        <line x1="266" y1="52" x2="278" y2="52" stroke="#5A6673" stroke-width="1.4" marker-end="url(#a5)"/>
+        <line x1="400" y1="52" x2="412" y2="52" stroke="#5A6673" stroke-width="1.4" marker-end="url(#a5)"/>
+        <line x1="542" y1="52" x2="554" y2="52" stroke="#5A6673" stroke-width="1.4" marker-end="url(#a5)"/>
+        <text x="340" y="16" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">every forensics tool, commercial or free, does these five things</text>
+        <text x="340" y="104" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">a gap in any one of them is a gap in your case</text>
+        <rect x="6" y="112" width="668" height="14" rx="3" fill="#FBEDEE"/>
+        <text x="340" y="122" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">filtering — the related process that separates good data from suspicious data — is what validation and verification make possible</text>
+      </svg>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Function</th><th>What it means in practice</th></tr></thead>
+      <tbody>
+        <tr><td><b>1 Acquisition</b></td><td>Making the copy: physical and logical acquisition, disk-to-disk and disk-to-image, remote and live acquisition, write protection, and data compression.</td></tr>
+        <tr><td><b>2 Validation and verification</b></td><td>Two functions that work hand in hand. <b>Validation</b> confirms the tool is functioning as intended; <b>verification</b> proves two sets of data are identical by calculating hash values. A related process is <b>filtering</b> — sorting and searching findings to separate good data from suspicious data. Validating tools and verifying data are what allow filtering.</td></tr>
+        <tr><td><b>3 Extraction</b></td><td>The recovery step: data viewing, keyword searching, decompressing, carving, decrypting and bookmarking.</td></tr>
+        <tr><td><b>4 Reconstruction</b></td><td>Rebuilding what happened: disk-to-disk copy, image-to-disk copy, partition-to-partition and image-to-partition copies, and timeline building.</td></tr>
+        <tr><td><b>5 Reporting</b></td><td>Log reports, report generators, and bookmark export — producing something a court can read.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="eg"><span>Example — why filtering is what saves the case</span>
+      <p>A 1 TB drive holds roughly four million files. Examining them one by one is impossible. You load the <b>NSRL</b> known-good hash set, and every unmodified Windows and Office file disappears from view — typically 60–80% of the drive gone in one step. You then load a known-bad set, and any file matching it is flagged the moment it is seen. What remains is a few thousand user-created files, which a human can actually read. <b>Without filtering — which validation and verification make possible — the other four functions are unusable at real-world scale.</b></p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.3</span><h4>The subfunctions you are expected to list</h4></div>
+    <p>Each of the five functions breaks down further. The textbook lists these explicitly, and they are the level of detail an examination answer is marked on.</p>
+    <div class="grid3">
+      <div class="card"><span class="k">Function 1</span><h5>Acquisition</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Physical data copy</li><li>Logical data copy</li><li>Data acquisition format</li>
+          <li>Command-line acquisition</li><li>GUI acquisition</li>
+          <li>Remote, live and memory acquisitions</li>
+        </ul></div>
+      <div class="card"><span class="k">Function 3</span><h5>Extraction</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Data viewing</li><li>Keyword searching</li><li>Decompressing or uncompressing</li>
+          <li>Carving</li><li>Decrypting</li><li>Bookmarking or tagging</li>
+        </ul></div>
+      <div class="card"><span class="k">Function 4</span><h5>Reconstruction</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Disk-to-disk copy</li><li>Partition-to-partition copy</li><li>Image-to-disk copy</li>
+          <li>Image-to-partition copy</li><li>Disk-to-image copy</li>
+          <li>Rebuilding files from data runs and carving</li>
+        </ul></div>
+    </div>
+    <p><b>Extraction is described as the recovery task, and the most challenging of all tasks to master.</b> <b>Reconstruction</b> exists to re-create a suspect drive to show what happened during a crime or incident, and to give another investigator a fully functional copy on which to run their own acquisition, test and analysis.</p>
+    <div class="note note--key">
+      <span class="nk">Filtering, and why the NSRL matters</span>
+      <p>Hash values let you build a <b>known good</b> list — a fresh installation of an OS, all applications, and known good images and documents. The investigator then ignores everything on that list and focuses on what is left. The <b>National Software Reference Library (NSRL)</b> publishes exactly such a list, and has been adding hash values for mobile apps on iOS and Android. Organisations such as the National Center for Missing and Exploited Children maintain hash sets in the <b>known bad</b> category. A further refinement is <b>hashing and comparing sectors</b> of data, which identifies fragments in slack and free space that may be partially overwritten.</p>
+    </div>
+    <div class="eg"><span>Example — filtering by file header, not file extension</span>
+      <p>Every file type has a header value associated with its extension, and renaming an extension is a common way to hide data. A file named <span class="mono">Bayshot.docx</span> is examined in a hex editor and its header begins <span class="mono">FF D8</span> — the standard indicator for a graphics file. It is a <b>.jpeg image, not a Word document</b>. Opening it in Word produces an error; opening it in Paint displays the picture. <b>Searching and comparing file headers rather than file extensions is what makes filtering reliable</b>, and it is how deliberately renamed files are caught.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.4</span><h4>Tool comparisons and other considerations</h4></div>
+    <p>Beyond the five functions, the textbook asks you to weigh flexibility, reliability and <b>future expandability</b>. The software you choose should be compatible with the next generation of operating systems, and it is the investigator's own responsibility to track changes in new hardware and software releases — vendors do not always supply adequate information about future file system upgrades.</p>
+    <p>When NTFS was introduced with Windows NT, forensics vendors had to revise their products, and addressing the change took time; investigators had to find alternatives in the meantime. The same pattern repeated moving from Windows 8.1 to Windows 10.</p>
+    <div class="note note--key">
+      <span class="nk">Keep a software library of older versions</span>
+      <p>A forensics lab should maintain <b>older versions</b> of its forensics utilities, operating systems and other programs alongside the new ones. If a new release fixes one bug but introduces another, the previous version lets you work around it. This is a lab-management point that is easy to overlook and frequently examined.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">1.5</span><h4>Software and hardware platforms, and the NTSC question</h4></div>
+    <p>Tools come as <b>software</b> (command-line or GUI) and <b>hardware</b> (write-blockers, imagers, complete workstations). Many products are both — a hardware imager runs forensic software inside it.</p>
+    <p>One point students frequently miss: forensics workstations sometimes need to display video from a seized device, and video standards differ by region. <b>NTSC</b> is used in North America and Japan; <b>PAL</b> in most of Europe, India and Australia. A capture card that only handles one standard cannot read a tape or camera recorded in the other, so a laboratory handling international cases needs multi-standard capability.</p>
+    <div class="note note--key">
+      <span class="nk">A practical rule for the examination and the job</span>
+      <p><b>Use two tools wherever it matters.</b> If a commercial suite and an independent tool both report the same finding, the finding is far harder to challenge. The defence must then argue that two independently written programs made the same mistake. This is called <b>dual-tool verification</b> and it costs very little once the image exists.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 02 ============================== -->
+<section class="topic" id="t02">
+  <div class="exhibit"><span class="exno">TOPIC 02</span><span class="exsrc">Nelson et al. 6e, Ch. 6 · pp. 283–287</span></div>
+  <h3>Digital Forensics Software Tools</h3>
+  <p class="lede">Software tools split into command-line tools, which are small, fast and scriptable, and GUI suites, which are far easier to learn and produce the reports courts expect. Serious laboratories use both.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">2.1</span><h4>Command-line forensics tools</h4></div>
+    <p>The first tools that analysed and extracted data from floppy disks and hard disks were <b>MS-DOS tools for IBM PC file systems</b>. One of the first used for digital investigations was <b>Norton DiskEdit</b>, which relied on manual processes and required investigators to spend considerable time on what was then a typical 500 MB drive. Programs were later developed for DOS, Windows, Apple, NetWare and UNIX. Early ones could extract data from slack and free disk space or retrieve deleted files; current programs search for specific words, import keyword lists, calculate hash values, recover deleted items and conduct both physical and logical analyses.</p>
+    <p><b>The advantage of command-line tools is that they require few system resources</b>, being designed to run in minimal configurations — most fit on bootable media such as USB drives, CDs and DVDs. The approach also stays transparent: every action is a typed command you can put in your notes and repeat exactly. On Linux, the standard set is <b>The Sleuth Kit</b>, which is also the engine inside Autopsy.</p>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Terminal — The Sleuth Kit on an acquired image</div>
+      <div class="app-body">
+        <pre class="code"><span class="ln"><span class="no">1</span><span class="src">$ <b>mmls</b> suspect.dd                 <span class="cm"># list the partition layout</span></span></span><span class="ln"><span class="no">2</span><span class="src">      Slot      Start        End          Length       Description</span></span><span class="ln"><span class="no">3</span><span class="src">002:  000:000   0000002048   0976771071   0976769024   NTFS / exFAT (0x07)</span></span><span class="ln"><span class="no">4</span><span class="src"></span></span><span class="ln"><span class="no">5</span><span class="src">$ <b>fsstat</b> -o 2048 suspect.dd        <span class="cm"># file system details</span></span></span><span class="ln"><span class="no">6</span><span class="src">File System Type: NTFS   Cluster Size: 4096   Total Cluster Range: 0 - 122096127</span></span><span class="ln"><span class="no">7</span><span class="src"></span></span><span class="ln"><span class="no">8</span><span class="src">$ <b>fls</b> -o 2048 -r -d suspect.dd      <span class="cm"># list DELETED files, recursively</span></span></span><span class="ln"><span class="no">9</span><span class="src">r/r * 8123-128-1:  Users/ravi/Documents/quotation_final.xlsx</span></span><span class="ln"><span class="no">10</span><span class="src">r/r * 8331-128-1:  Users/ravi/Downloads/keygen.exe</span></span><span class="ln"><span class="no">11</span><span class="src"></span></span><span class="ln"><span class="no">12</span><span class="src">$ <b>icat</b> -o 2048 suspect.dd 8123 &gt; recovered.xlsx   <span class="cm"># carve it back out</span></span></span><span class="ln"><span class="no">13</span><span class="src">$ <b>md5sum</b> recovered.xlsx</span></span><span class="ln"><span class="no">14</span><span class="src">d41d8cd98f00b204e9800998ecf8427e  recovered.xlsx</span></span></pre>
+      </div>
+      <div class="app-status"><span>Image: suspect.dd</span><span>Offset: 2048</span><span>Read-only</span></div>
+    </div>
+    <p class="caption">Recreated: four Sleuth Kit commands take you from raw image to a recovered deleted file</p>
+    <div class="note note--key">
+      <span class="nk">Linux forensics tools named in the textbook</span>
+      <p><b>SMART</b> is designed to be installed on numerous Linux versions — Gentoo, Fedora, SUSE, Debian, Knoppix, Ubuntu and Slackware — and analyses a wide variety of file systems. It includes several plug-in utilities, and that modular approach makes components easy to upgrade. <b>Kali Linux</b> and <b>DEFT</b> are the other distributions the book points to. Linux tools work well on Windows systems too, so the platform you prefer does not limit what you can examine.</p>
+    </div>
+
+    <div class="eg"><span>Reading the output — the asterisk matters</span>
+      <p>In the <span class="mono">fls</span> listing the <b>*</b> marks a <b>deleted</b> entry. <span class="mono">r/r</span> means a regular file, and <span class="mono">8123-128-1</span> is the MFT entry number with its attribute identifiers. That number is what you hand to <span class="mono">icat</span> to extract the content. Every step is a typed command, so your notes reproduce the examination exactly — which is precisely what a court wants to hear.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">2.2</span><h4>GUI forensics tools</h4></div>
+    <p>GUI tools do not require the same understanding of the Windows command line and file systems that command-line tools do, so they simplify investigations and simplify training for beginning examiners. Most are put together as <b>suites</b>. The textbook names <b>PassMark Software OSForensics</b>, <b>X-Ways Forensics</b>, <b>Guidance Software EnCase</b>, <b>Magnet Forensics AXIOM</b> and <b>AccessData FTK</b> as GUI tools designed to perform most forensics acquisition and analysis functions.</p>
+    <div class="grid2">
+      <div class="card card--ok"><h5>Advantages</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Ease of use</li>
+          <li>Capability to perform multiple tasks</li>
+          <li>No requirement to learn older operating systems</li>
+        </ul></div>
+      <div class="card card--warn"><h5>Disadvantages</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Excessive resource requirements — large amounts of RAM</li>
+          <li>Inconsistent results depending on the OS used</li>
+          <li>They create <b>dependence on a single tool</b></li>
+        </ul></div>
+    </div>
+    <p>The book is explicit about the trade-off: <b>you should continue to learn and use command-line tools, because some GUI tools might miss critical evidence.</b></p>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Autopsy 4.23 — Case: GCET-2026-014</div>
+      <div class="app-menu"><span>File</span><span>Edit</span><span class="on">View</span><span>Tools</span><span>Window</span><span>Help</span></div>
+      <div class="app-split">
+        <div class="app-pane">
+          <div class="tw open">Data Sources</div>
+          <div class="tw sub open">suspect.E01</div>
+          <div class="tw sub sel">vol3 (NTFS)</div>
+          <div class="tw open">Views</div>
+          <div class="tw sub">File Types</div>
+          <div class="tw sub">Deleted Files</div>
+          <div class="tw sub">MB Size Files</div>
+          <div class="tw open">Results</div>
+          <div class="tw sub">Extracted Content</div>
+          <div class="tw sub">Keyword Hits</div>
+          <div class="tw sub">Hashset Hits</div>
+          <div class="tw sub">E-Mail Messages</div>
+          <div class="tw">Tags</div>
+          <div class="tw">Reports</div>
+        </div>
+        <div class="app-body">
+          <table class="tblmini">
+            <tr><th>Name</th><th>Modified</th><th>Size</th><th>Flags</th></tr>
+            <tr><td>quotation_final.xlsx</td><td>2026-02-11 14:02</td><td>48,128</td><td>Deleted</td></tr>
+            <tr class="hi"><td>keygen.exe</td><td>2026-02-09 23:41</td><td>1,204,736</td><td>Hashset hit</td></tr>
+            <tr><td>notes.txt</td><td>2026-02-12 09:15</td><td>1,204</td><td>Allocated</td></tr>
+            <tr><td>$Recycle.Bin/…/\$I3F2A.xlsx</td><td>2026-02-11 14:07</td><td>544</td><td>Allocated</td></tr>
+          </table>
+          <div class="btnrow"><span class="wbtn">Tag file</span><span class="wbtn">Extract</span><span class="wbtn pri">Add to report</span></div>
+        </div>
+      </div>
+      <div class="app-status"><span>4,112,880 files indexed</span><span>Hashset hits: 3</span><span>Ingest complete</span></div>
+    </div>
+    <p class="caption">Recreated: the Autopsy tree — Data Sources, Views, Results — with a known-bad hashset hit highlighted</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Tool</th><th>Type</th><th>Notes for 2026</th></tr></thead>
+      <tbody>
+        <tr><td><b>Autopsy / The Sleuth Kit</b></td><td>Open source, GUI + CLI</td><td>Version <b>4.23.1</b> (May 2026). Added <b>BitLocker support</b> in 4.22 and an <b>MCP server</b> in 4.23 for AI-assisted querying. Reads NTFS, FAT, exFAT, ext2/3/4, APFS, HFS+, YAFFS2, ISO 9660.</td></tr>
+        <tr><td><b>FTK / FTK Imager</b></td><td>Commercial (Exterro)</td><td>FTK Imager remains free and is the most widely used acquisition tool in teaching laboratories. Full FTK adds indexed searching across very large data sets.</td></tr>
+        <tr><td><b>EnCase Forensic</b></td><td>Commercial (OpenText)</td><td>The long-standing law-enforcement standard; EnScript allows custom automation. The <span class="mono">.E01</span> format it introduced is now universal.</td></tr>
+        <tr><td><b>Magnet AXIOM</b></td><td>Commercial</td><td>Strong on artifacts — chat apps, cloud accounts, mobile extractions. Ingests GrayKey and Cellebrite output directly.</td></tr>
+        <tr><td><b>X-Ways / WinHex</b></td><td>Commercial</td><td>Very small, very fast, runs from a USB stick. The hex editor of choice for sector-level work.</td></tr>
+        <tr><td><b>Volatility</b></td><td>Open source</td><td>The standard tool for analysing a RAM capture — processes, network connections, injected code.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The trap in a one-click tool</span>
+      <p>A GUI suite will happily report <i>"0 deleted files found"</i> when the real reason is that the ingest module for that file system was never enabled. The tool is not lying; it answered the question it was configured to ask. <b>Always check what modules ran</b> before you report a negative finding — a negative is a finding too, and you will be cross-examined on it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 03 ============================== -->
+<section class="topic" id="t03">
+  <div class="exhibit"><span class="exno">TOPIC 03</span><span class="exsrc">Nelson et al. 6e, Ch. 6 · pp. 287–290</span></div>
+  <h3>Digital Forensics Hardware Tools</h3>
+  <p class="lede">Hardware matters for one reason above all others: a <strong>write-blocker</strong> is the physical guarantee that you did not alter the original. Software can be argued about; a device that electrically refuses write commands is harder to dispute.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.1</span><h4>Forensic workstations</h4></div>
+    <div class="grid3">
+      <div class="card"><span class="k">Type 1</span><h5>Stationary workstation</h5><p>A tower with many bays and adapters for every drive interface. Most capable, least portable. The laboratory's main machine.</p></div>
+      <div class="card"><span class="k">Type 2</span><h5>Portable workstation</h5><p>A laptop with a built-in LCD and external bays. The compromise most field examiners actually carry.</p></div>
+      <div class="card"><span class="k">Type 3</span><h5>Lightweight workstation</h5><p>A laptop with an external bay only. Easiest to carry, most limited — but it goes where the evidence is.</p></div>
+    </div>
+    <p>Hardware forensics tools range from <b>simple, single-purpose components to complete computer systems and servers</b>. The textbook's examples: the <b>Tableau T35es-R2 SATA/IDE eSATA bridge</b> is a single-purpose component that makes it possible to access a SATA or an IDE drive with one device; complete systems include <b>Digital Intelligence F.R.E.D.</b>, <b>DIBS Advanced Forensic Workstations</b>, <b>Forensic Computers' Forensic Examination Stations</b>, and <b>Ace Laboratory systems</b>, the last designed for data recovery of failed drives.</p>
+    <p>The more peripherals you add, the more potential problems you may have — <b>you must balance what you actually need against what the system can handle</b>, and remember that RAM and storage need updating as technology advances. A police laboratory needs as many options as possible and ideally two or three hardware configurations; a private-sector lab should streamline to the types of systems used in that business. Keep a <b>hardware inventory</b> alongside your software library.</p>
+    <div class="note note--key">
+      <span class="nk">Recommendations for a forensic workstation</span>
+      <p>Decide first <b>where your acquisitions will take place</b>. For field work, streamline: a write-blocking device and a laptop is enough. For a stationary workstation choose a <b>full tower</b> to allow expansion devices, as much memory and processor power as the budget allows, and different sizes of hard drives. Add a 400-watt or better power supply with battery backup, extra power and data cables, external ports, an assortment of drive adapter bridges to connect SATA to IDE (PATA), an ergonomic keyboard and mouse, and a good video card with at least a 17-inch monitor — dual monitors if you will conduct many investigations.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">3.2</span><h4>Write-blockers — the single most important device</h4></div>
+    <p>A write-blocker sits between the suspect drive and your workstation and allows read commands through while blocking every write command. Without one, simply connecting a drive to a running Windows machine will modify it: Windows writes a recycle bin, updates access times and may create a System Volume Information folder — all before you have looked at anything.</p>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 660 150" role="img" aria-label="Diagram showing a suspect drive connected through a write blocker to a workstation, with write commands blocked">
+        <defs><marker id="wb" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><polygon points="0,0 7,3.2 0,6.4" fill="#0B6E5A"/></marker>
+               <marker id="wbx" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><polygon points="0,0 7,3.2 0,6.4" fill="#AE202A"/></marker></defs>
+        <rect x="14" y="40" width="130" height="56" rx="5" fill="#E9EEF5" stroke="#23456E" stroke-width="1.4"/>
+        <text x="79" y="63" text-anchor="middle" fill="#23456E" style="font:600 11px var(--sans)">SUSPECT DRIVE</text>
+        <text x="79" y="80" text-anchor="middle" fill="#5A6673" style="font:9px var(--sans)">the original — must not change</text>
+
+        <rect x="230" y="34" width="150" height="68" rx="5" fill="#0B6E5A"/>
+        <text x="305" y="58" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">WRITE-BLOCKER</text>
+        <text x="305" y="74" text-anchor="middle" fill="#CDE9E1" style="font:9px var(--sans)">reads pass through</text>
+        <text x="305" y="88" text-anchor="middle" fill="#CDE9E1" style="font:9px var(--sans)">writes are refused</text>
+
+        <rect x="466" y="40" width="180" height="56" rx="5" fill="#E9EEF5" stroke="#23456E" stroke-width="1.4"/>
+        <text x="556" y="63" text-anchor="middle" fill="#23456E" style="font:600 11px var(--sans)">FORENSIC WORKSTATION</text>
+        <text x="556" y="80" text-anchor="middle" fill="#5A6673" style="font:9px var(--sans)">imaging software runs here</text>
+
+        <line x1="144" y1="58" x2="226" y2="58" stroke="#0B6E5A" stroke-width="1.8" marker-end="url(#wb)"/>
+        <text x="185" y="52" text-anchor="middle" style="font:9px var(--sans);fill:#0B6E5A">READ</text>
+        <line x1="380" y1="58" x2="462" y2="58" stroke="#0B6E5A" stroke-width="1.8" marker-end="url(#wb)"/>
+
+        <line x1="462" y1="86" x2="384" y2="86" stroke="#AE202A" stroke-width="1.8" marker-end="url(#wbx)" stroke-dasharray="4 3"/>
+        <text x="423" y="102" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">WRITE</text>
+        <text x="305" y="120" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">blocked here — never reaches the original</text>
+        <text x="330" y="20" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">the write-blocker is the physical proof that the original was not altered</text>
+        <text x="79" y="140" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">hash before</text>
+        <text x="556" y="140" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">hash after — must match</text>
+      </svg>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Category</th><th>Examples and notes</th></tr></thead>
+      <tbody>
+        <tr><td><b>Hardware write-blockers</b></td><td>Act as a <b>bridge between the suspect drive and the forensic workstation</b>, and are ideal for GUI forensics tools. You connect the evidence drive and start the OS as usual; they prevent Windows or Linux writing to the blocked drive. Tableau, WiebeTech, CRU.</td></tr>
+        <tr><td><b>Software write-blockers</b></td><td>Typically run in a shell mode. <b>PDBlock</b> from Digital Intelligence changes <b>interrupt-13</b> of the workstation's BIOS to prevent writing to the specified drive, and sounds an alarm if a write is attempted. Note the limitation: PDBlock <b>can run only in true DOS mode, not in a Windows command line</b>.</td></tr>
+        <tr><td><b>Standalone imagers</b></td><td>Tableau TD-series, Logicube Falcon. Drive in, drive out, no computer needed; they hash as they copy and print a log.</td></tr>
+        <tr><td><b>Adapters</b></td><td>SATA, SAS, IDE, NVMe/M.2, USB-C. NVMe adapters are now the common gap in older kits.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The behaviour that surprises every student — writes go to null</span>
+      <p>With a hardware write-blocker installed, the blocked drive <b>appears in Windows like any other attached disk</b>. You can browse it in File Explorer and open files in Word. And if you copy data to it, or save an update to a file, <b>Windows reports that the write succeeded</b> — but the write-blocker has discarded the data. In other words, <b>data is written to null</b>. The operating system is not aware anything was blocked, so never take Windows' confirmation as evidence that the blocker failed; equally, never rely on the absence of an error message as proof that a blocker is present. <b>Verify any tool with a built-in software write-blocker</b> to make sure evidence has not been altered.</p>
+    </div>
+
+    <div class="eg"><span>Real example — the case lost at the first connection</span>
+      <p>An investigator connects a seized USB drive directly to a Windows laptop to "just check whether it has anything on it". Windows immediately writes a <span class="mono">System Volume Information</span> folder and updates last-access times. The hash of the drive is now different from the hash recorded at seizure. In court the defence asks a single question: <i>"Can you prove the drive you examined is in the same state as the one you seized?"</i> The answer is no. <b>A device costing a few thousand rupees would have prevented it.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 04 ============================== -->
+<section class="topic" id="t04">
+  <div class="exhibit"><span class="exno">TOPIC 04</span><span class="exsrc">Nelson et al. 6e, Ch. 6 · pp. 290–293</span></div>
+  <h3>Validating and Testing Forensics Software</h3>
+  <p class="lede">You will be asked, under oath, how you know the tool worked. "It is a well-known product" is not an answer. Validation means having documented evidence that the tool produces correct results on data whose correct answer is already known.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.1</span><h4>Using national reference programmes</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Programme</th><th>Run by</th><th>What it gives you</th></tr></thead>
+      <tbody>
+        <tr><td><b>CFTT</b> — Computer Forensics Tool Testing</td><td>NIST</td><td>Independent, published test reports for imaging tools, write-blockers, mobile extraction tools and more. Citing a CFTT report is the strongest short answer to a reliability challenge.</td></tr>
+        <tr><td><b>NSRL</b> — National Software Reference Library</td><td>NIST</td><td>The known-good hash set: hashes of millions of commercial software files, used to filter them out of view.</td></tr>
+        <tr><td><b>CFReDS</b> — Computer Forensic Reference Data Sets</td><td>NIST</td><td>Prepared disk images with known contents, so you can test whether your tool finds what is documented to be there.</td></tr>
+        <tr><td><b>SWGDE</b></td><td>Scientific Working Group</td><td>Best-practice documents and validation guidance adopted widely by laboratories.</td></tr>
+        <tr><td><b>ISO/IEC 17025</b></td><td>International</td><td>The accreditation standard for testing laboratories; increasingly expected of forensic labs, and it requires documented method validation.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.2</span><h4>NIST's criteria your laboratory must meet</h4></div>
+    <p>NIST publishes articles, provides tools and creates procedures for testing and validating forensics software, and sponsors the <b>CFTT</b> project to manage research on forensics tools. <b>CFReDS</b> provides data sets for tools, training and hardware testing. NIST also created criteria for testing forensics tools in the article <b>"General Test Methodology for Computer Forensic Tools"</b>, which addresses the lack of specifications for what forensics tools should do and the importance of tools meeting judicial scrutiny. The criteria are based on standard testing methods and <b>ISO 17025</b> criteria for testing where no current standards exist.</p>
+    <p>Your lab must meet these criteria and <b>keep accurate records</b>, so that when new software and hardware become available the testing standards are already in place:</p>
+    <ol class="gsteps">
+      <li><b>Establish categories for digital forensics tools</b> — group the software according to categories such as the function it performs.</li>
+      <li><b>Identify the forensics category requirements</b> — for each category, describe the technical features a tool must have.</li>
+      <li><b>Develop test assertions</b> — statements of what the tool must do, based on those requirements.</li>
+      <li><b>Identify test cases</b> — decide what to test and how the results will be produced.</li>
+      <li><b>Establish a test method</b> — taking into account the tool's purpose and the features being tested.</li>
+      <li><b>Report the results</b> — and retain them.</li>
+    </ol>
+    <p>Validation images for both desktop and mobile devices are posted on the CFTT and <b>SWGDE</b> sites, and they <b>tell you what the tool should find</b> on the drive. They also give ranges of results, so you can establish that a tool works well for acquiring Linux images but has problems with older Windows versions. <b>After validating a tool, make sure all forensic copies of a device have the same hash value.</b></p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.3</span><h4>Using validation protocols — the two-tool rule</h4></div>
+    <p>After retrieving and examining evidence with one tool, <b>you verify your results by performing the same tasks with another similar tool</b>. This may feel unnecessary until you are asked, on the witness stand, <i>"how did you verify your results?"</i> The book is specific: <b>you need at least two tools to validate software or hardware upgrades</b>, and the tool you use to validate should itself be well tested and documented.</p>
+    <p>Investigators must be confident in a tool's capability to produce consistent and accurate findings, and <b>understanding how the tool works is equally important — you might not have vendor support in a courtroom</b>. One way to compare results and verify a new tool is with a <b>disk editor</b> such as Hex Workshop or WinHex, viewing the data in its raw format. Disk editors show files, file headers, file slack and other data on the physical disk; they are not flashy, but they are reliable and can access sectors directly to confirm your findings.</p>
+    <div class="note note--err">
+      <span class="nk">The limit of a disk editor</span>
+      <p>A disk editor gives the most flexibility in testing, but it <b>may not be capable of examining the contents of a compressed file</b> such as a <span class="mono">.zip</span>. Where compression is involved, the raw view will not answer the question and you need a tool that decompresses.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">4.4</span><h4>Validating a tool yourself — the procedure</h4></div>
+    <p>National test reports cover the general case. Your laboratory still has to show the tool works <b>in your hands, on your hardware</b>. This is the procedure, and it is examinable.</p>
+    <ol class="gsteps">
+      <li><b>Obtain or build a reference data set</b> whose contents you already know — a CFReDS image, or a drive you prepared yourself with a documented list of files, including deleted and hidden ones.</li>
+      <li><b>Record the expected result.</b> Write down, before testing, exactly what the tool should find. Deciding afterwards what counts as success is not validation.</li>
+      <li><b>Run the tool</b> under normal laboratory conditions, on the workstation you actually use, with the settings you actually use.</li>
+      <li><b>Compare found against expected.</b> Note every difference — missed files, false positives, timestamps reported in the wrong time zone.</li>
+      <li><b>Repeat with a second, independent tool.</b> Agreement between two tools is the practical standard of proof; disagreement tells you to investigate before you rely on either.</li>
+      <li><b>Document and date the result</b>, and retain it. Re-validate after every significant tool update — an update can change behaviour.</li>
+    </ol>
+    <div class="eg"><span>Example — validating a write-blocker in ten minutes</span>
+      <p>Hash a test drive: <span class="mono">sha256sum /dev/sdb</span>. Connect it through the write-blocker. Deliberately attempt a write: <span class="mono">sudo touch /mnt/test/probe.txt</span> — it must fail. Copy a file <i>from</i> the drive to prove reads work. Hash the drive again. <b>The two hashes must be identical.</b> Record both hashes, the date, the blocker's model and firmware version, and your name. That single page is what you produce in court if the blocker is ever questioned.</p>
+    </div>
+    <div class="note note--key">
+      <span class="nk">The answer to give in the witness box</span>
+      <p>Asked <i>"how do you know your tool is reliable?"</i>, the complete answer has three parts: <b>(1)</b> the tool has been independently tested and the report is published by NIST CFTT; <b>(2)</b> we validated it ourselves against a reference set with known contents, and here is the dated record; <b>(3)</b> the critical findings in this case were confirmed with a second, independently developed tool.</p>
+    </div>
+  </div>
+</section>
+
+<div class="partbreak" id="partB">
+  <div class="pk">Main Topic 2 · Chapter 11</div>
+  <h2>E-Mail and Social Media Investigations</h2>
+  <p>E-mail is the most commonly investigated artefact in corporate cases, because almost every dispute leaves a trail in someone's mailbox. Main Topic 2 covers what e-mail can prove, how client and server divide the evidence between them, how to read a header to find the real sender, and the tools that do it at scale.</p>
+  <div class="partlist">
+    <a href="#t05"><span>Topic 05</span>Exploring the Role of E-mail in Investigations<small>Crimes, civil matters, spoofing, phishing</small></a>
+    <a href="#t06"><span>Topic 06</span>Roles of the Client and Server<small>SMTP, POP3, IMAP, webmail, where evidence lives</small></a>
+    <a href="#t07"><span>Topic 07</span>Investigating E-mail Crimes and Violations<small>Reading headers line by line, tracing the origin</small></a>
+    <a href="#t08"><span>Topic 08</span>Understanding E-mail Servers<small>Exchange, EDB/STM, transaction logs, Linux mail</small></a>
+    <a href="#t09"><span>Topic 09</span>Using Specialized E-mail Forensic Tools<small>Autopsy e-mail parser, AXIOM, MailXaminer</small></a>
+  </div>
+</div>
+
+<!-- ============================== TOPIC 05 ============================== -->
+<section class="topic" id="t05">
+  <div class="exhibit"><span class="exno">TOPIC 05</span><span class="exsrc">Nelson et al. 6e, Ch. 11 · p. 454</span></div>
+  <h3>Exploring the Role of E-mail in Investigations</h3>
+  <p class="lede">E-mail appears in almost every kind of case. In criminal matters it supports investigations into fraud, harassment, narcotics and child exploitation; in civil and corporate matters it is the main evidence in harassment complaints, wrongful termination, breach of contract and theft of intellectual property.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">5.1</span><h4>Why e-mail is such productive evidence</h4></div>
+    <p>Three properties make e-mail unusually valuable:</p>
+    <div class="grid3">
+      <div class="card"><span class="k">1</span><h5>It is written down</h5><p>Unlike a conversation, e-mail records the exact words, the time, and who was copied. People write things in e-mail they would never say in a meeting.</p></div>
+      <div class="card"><span class="k">2</span><h5>It exists in many copies</h5><p>Sender's mailbox, recipient's mailbox, both servers, backups, mobile devices. Deleting your own copy does not delete the others.</p></div>
+      <div class="card"><span class="k">3</span><h5>It carries routing metadata</h5><p>The header records every server the message passed through, with timestamps and IP addresses — information the sender usually does not know exists.</p></div>
+    </div>
+    <div class="note note--key">
+      <span class="nk">The investigator's advantage</span>
+      <p>A suspect who deletes a message from their Outlook has deleted <b>one</b> of at least six copies. The recipient still has it, both mail servers may retain it, the journal archive almost certainly does, and a phone that synced before the deletion holds another. <b>In e-mail cases, the first question is not "is it recoverable" but "which copy is easiest to obtain lawfully".</b></p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">5.2</span><h4>Spoofing, phishing and what the investigation must establish</h4></div>
+    <p>E-mail was designed in an era of mutual trust and has no built-in authentication of the <span class="mono">From:</span> line. Anyone can type anything there. This is <b>spoofing</b>, and it means the visible sender address proves nothing on its own.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Term</th><th>What it is</th><th>What the examiner looks for</th></tr></thead>
+      <tbody>
+        <tr><td><b>Spoofing</b></td><td>Forging the From address</td><td>Mismatch between the <span class="mono">From:</span> domain and the <span class="mono">Received:</span> chain; failing SPF/DKIM/DMARC results in the header</td></tr>
+        <tr><td><b>Phishing</b></td><td>A message designed to harvest credentials</td><td>Display name versus actual address; link target versus link text; a reply-to on a different domain</td></tr>
+        <tr><td><b>Spear phishing</b></td><td>Phishing aimed at one named person using real details</td><td>Evidence of prior reconnaissance; correct internal names and project references</td></tr>
+        <tr><td><b>Business e-mail compromise</b></td><td>An invoice or bank-detail change sent from a genuine or look-alike account</td><td>Look-alike domains (<span class="mono">rn</span> for <span class="mono">m</span>); mailbox rules created to hide replies; unfamiliar sign-in locations</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="eg"><span>Real example — the look-alike domain</span>
+      <p>An accounts clerk receives an e-mail apparently from the managing director, <span class="mono">md@geethanjaIi-corp.com</span>, approving an urgent payment to a new bank account. The domain looks correct at a glance. On examination the eighth character is a capital <b>I</b> rather than a lowercase <b>l</b> — a different domain entirely, registered eleven days earlier. The <span class="mono">Received:</span> chain shows the message never touched the company's mail servers, and the header records <span class="mono">dmarc=fail</span>. <b>The visible From line was honest about a dishonest domain; the header is what proved it.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 06 ============================== -->
+<section class="topic" id="t06">
+  <div class="exhibit"><span class="exno">TOPIC 06</span><span class="exsrc">Nelson et al. 6e, Ch. 11 · pp. 455–457</span></div>
+  <h3>Exploring the Roles of the Client and Server in E-mail</h3>
+  <p class="lede">E-mail is a client–server system, and knowing which half holds which evidence tells you where to look and what you can still recover after a deletion.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.1</span><h4>Client/server architecture</h4></div>
+    <p>You can send and receive e-mail in two environments: <b>via the Internet</b>, or <b>via an intranet</b> — an internal network. In both, messages are distributed from a central server to many connected client computers, a configuration called <b>client/server architecture</b>. The server runs an e-mail server program such as <b>Microsoft Exchange Server</b> or <b>Sendmail</b>; client computers use e-mail programs, also called <b>e-mail clients</b>, such as <b>Microsoft Outlook</b> or <b>Evolution</b>, to contact the server and send and retrieve messages.</p>
+    <p>Regardless of the operating system or e-mail program, users access their e-mail <b>based on permissions the e-mail server administrator grants</b>. These permissions are what prevent users from reading each other's mail, and to retrieve messages a user must identify themselves to the server, as when logging on to the network. For the investigator this matters twice over: the permission model is why a lawful request to the administrator is often the fastest route to evidence, and the logon is itself a logged event.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.2</span><h4>How a message actually travels</h4></div>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 680 190" role="img" aria-label="Diagram of an e-mail travelling from sender client through sending and receiving servers to the recipient client, showing which protocols are used at each stage">
+        <defs><marker id="em" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><polygon points="0,0 7,3.2 0,6.4" fill="#23456E"/></marker></defs>
+        <rect x="8" y="46" width="118" height="52" rx="5" fill="#E9EEF5" stroke="#23456E" stroke-width="1.3"/>
+        <text x="67" y="68" text-anchor="middle" fill="#23456E" style="font:600 10.5px var(--sans)">SENDER CLIENT</text>
+        <text x="67" y="84" text-anchor="middle" fill="#5A6673" style="font:9px var(--sans)">Outlook / Thunderbird</text>
+
+        <rect x="178" y="46" width="130" height="52" rx="5" fill="#23456E"/>
+        <text x="243" y="68" text-anchor="middle" fill="#fff" style="font:600 10.5px var(--sans)">SENDING SERVER</text>
+        <text x="243" y="84" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">MTA — outbound queue</text>
+
+        <rect x="360" y="46" width="140" height="52" rx="5" fill="#23456E"/>
+        <text x="430" y="68" text-anchor="middle" fill="#fff" style="font:600 10.5px var(--sans)">RECEIVING SERVER</text>
+        <text x="430" y="84" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">mailbox store + logs</text>
+
+        <rect x="552" y="46" width="120" height="52" rx="5" fill="#E9EEF5" stroke="#23456E" stroke-width="1.3"/>
+        <text x="612" y="68" text-anchor="middle" fill="#23456E" style="font:600 10.5px var(--sans)">RECIPIENT</text>
+        <text x="612" y="84" text-anchor="middle" fill="#5A6673" style="font:9px var(--sans)">client or webmail</text>
+
+        <line x1="126" y1="62" x2="174" y2="62" stroke="#23456E" stroke-width="1.6" marker-end="url(#em)"/>
+        <text x="150" y="40" text-anchor="middle" style="font:600 9px var(--mono);fill:#0B6E5A">SMTP</text>
+        <line x1="308" y1="62" x2="356" y2="62" stroke="#23456E" stroke-width="1.6" marker-end="url(#em)"/>
+        <text x="332" y="40" text-anchor="middle" style="font:600 9px var(--mono);fill:#0B6E5A">SMTP</text>
+        <line x1="500" y1="62" x2="548" y2="62" stroke="#23456E" stroke-width="1.6" marker-end="url(#em)"/>
+        <text x="524" y="40" text-anchor="middle" style="font:600 9px var(--mono);fill:#8F6206">POP3 / IMAP</text>
+
+        <text x="340" y="20" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">SMTP carries mail OUT and BETWEEN servers · POP3 and IMAP bring it DOWN to a client</text>
+
+        <rect x="8" y="118" width="664" height="30" rx="4" fill="#FCF3DE" stroke="#E8D5A4"/>
+        <text x="340" y="131" text-anchor="middle" style="font:600 9.5px var(--sans);fill:#8F6206">every hop adds a Received: line to the header — newest at the TOP</text>
+        <text x="340" y="144" text-anchor="middle" style="font:9px var(--sans);fill:#8F6206">so you read a header from the BOTTOM UP to follow the message forwards in time</text>
+        <rect x="8" y="156" width="664" height="28" rx="4" fill="#E7F3F0" stroke="#B7DBD2"/>
+        <text x="340" y="174" text-anchor="middle" style="font:9px var(--sans);fill:#0B6E5A">a copy may survive at any of the four boxes above — deleting one does not delete the others</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.3</span><h4>POP3 against IMAP — and why it changes your search</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Point</th><th>POP3</th><th>IMAP</th><th>Webmail</th></tr></thead>
+      <tbody>
+        <tr><td>Where the master copy lives</td><td><b>The client</b> — usually downloaded and removed from the server</td><td><b>The server</b> — the client shows a synchronised view</td><td>The server, entirely</td></tr>
+        <tr><td>Local evidence file</td><td>Large — <span class="mono">.pst</span>, <span class="mono">.ost</span>, <span class="mono">mbox</span></td><td>A cache, often complete</td><td>Browser cache, temporary files, sometimes nothing</td></tr>
+        <tr><td>If the suspect deletes on the phone</td><td>Desktop copy usually survives</td><td>Deletion syncs everywhere</td><td>Deletion is immediate, but server-side retention may hold it</td></tr>
+        <tr><td>Where to look first</td><td>The seized machine</td><td>The server or the account</td><td>Legal process to the provider</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="eg"><span>Example — same case, two protocols, two very different investigations</span>
+      <p>A suspect's laptop is seized. If the account was <b>POP3</b>, the <span class="mono">.pst</span> file on that laptop may hold years of mail that no longer exists anywhere else — the evidence is in your hands. If the account was <b>IMAP</b> and the suspect deleted the messages from their phone last night, the laptop cache may be empty and the server already purged. <b>The protocol determines whether you examine a disk or draft a preservation request to the provider.</b> Establish it in the first hour.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">6.4</span><h4>Where client-side evidence is stored</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Client</th><th>File</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Outlook</td><td><span class="mono">.pst</span> (local store), <span class="mono">.ost</span> (offline cache of a server mailbox)</td><td>Deleted items often remain recoverable inside the file long after the user emptied the folder.</td></tr>
+        <tr><td>Thunderbird</td><td><span class="mono">mbox</span> files, one per folder, plus <span class="mono">.msf</span> indexes</td><td>Plain text — deleted messages are commonly still present in the file until it is compacted.</td></tr>
+        <tr><td>Apple Mail</td><td><span class="mono">.emlx</span>, one file per message</td><td>Easy to hash individually, convenient for evidence.</td></tr>
+        <tr><td>Webmail</td><td>Browser cache, cookies, history, page files</td><td>Fragmentary but often enough to prove an account was accessed from that machine at a given time.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 07 ============================== -->
+<section class="topic" id="t07">
+  <div class="exhibit"><span class="exno">TOPIC 07</span><span class="exsrc">Nelson et al. 6e, Ch. 11 · pp. 457–466</span></div>
+  <h3>Investigating E-mail Crimes and Violations</h3>
+  <p class="lede">The central skill of this topic is reading an e-mail header. Everything the sender chose to show you can be false; the routing information added by the servers is far harder to forge.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.1</span><h4>The general procedure</h4></div>
+    <ol class="gsteps">
+      <li><b>Obtain a copy of the message with full headers.</b> A printout or a forwarded copy is not enough — forwarding rewrites the headers. Export the original (<span class="mono">.eml</span> or <span class="mono">.msg</span>) and hash it immediately.</li>
+      <li><b>Examine the header from the bottom up</b> to follow the message forward in time, noting every <span class="mono">Received:</span> hop, its IP address and its timestamp.</li>
+      <li><b>Identify the originating IP address</b> — the earliest <span class="mono">Received:</span> line that you can trust, i.e. the first one added by a server you have reason to believe.</li>
+      <li><b>Check the authentication results</b> — SPF, DKIM and DMARC verdicts recorded by the receiving server.</li>
+      <li><b>Trace the IP address</b> to its owner using WHOIS and a geolocation lookup, remembering that this identifies a network, not a person.</li>
+      <li><b>Obtain the server logs</b> through the proper legal process, to tie the IP address to a subscriber and a session.</li>
+      <li><b>Document everything</b> — the message, its hash, the header analysis, the lookups with the date they were performed, and the log extracts.</li>
+    </ol>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.2</span><h4>Understanding forensic linguistics</h4></div>
+    <p><b>Forensic linguistics</b> is where language and the law intersect. The <b>International Association of Forensic Linguists</b> divides the field into four categories: <b>language and law</b>, <b>language in the legal process</b>, <b>language as evidence</b>, and <b>research and teaching</b>. For digital forensics, <b>language as evidence</b> is the important one.</p>
+    <p>The intuition behind it is familiar. When you receive e-mail from someone you know, the words carry their manner — and you can usually tell when a message <i>does not sound like them</i>, which may indicate they did not write it. Forensic linguistics formalises that: practitioners are trained to read writings known to be by a particular person and judge whether that person wrote the message in question, and to listen to voice recordings to determine who is speaking.</p>
+    <div class="note note--key">
+      <span class="nk">Where it fits in an e-mail investigation</span>
+      <p>Header analysis tells you <b>which machine</b> sent a message. Forensic linguistics addresses a different question — <b>which person wrote it</b> — and is therefore useful precisely where the technical trail runs out: a spoofed message from a genuine account, or a disputed authorship where the account was shared. Treat it as supporting evidence: it is an opinion discipline, and a linguist testifies as an expert, not as a producer of certainties.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.3</span><h4>Viewing and examining e-mail headers</h4></div>
+    <p>The procedure is mechanical and worth knowing exactly. After copying and printing the message, use the e-mail program that created it to display the header, then <b>copy and paste the header into a text document</b> so it can be read in a text editor — Notepad on Windows, vim on Linux, Nano on UNIX, TextEdit on macOS.</p>
+    <p>Two practical warnings from the book. First, <b>install and become familiar with as many e-mail programs as possible</b>: more than one is often installed on a machine and you must find out which the suspect actually used. Second, <b>most people now have one or more web-based accounts</b> such as Gmail or Yahoo!, so you must also look for evidence of those.</p>
+    <p>When examining the saved header, <b>the main piece of information you are looking for is the originating domain address or IP address</b>. Other useful items are the date and time the message was sent, the filenames of any attachments, and the unique message number if one is supplied. Modern headers also carry <b>DKIM-Signature</b> — DomainKeys Identified Mail — which lets a receiving server verify that the message really came from the claimed domain and was not altered in transit.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.4</span><h4>Reading a header, line by line</h4></div>
+    <p>This is the skill examiners are tested on. Below is a header with the tell-tale signs of a spoofed message. Read it upwards from the bottom.</p>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Message source — suspect_invoice.eml</div>
+      <div class="app-body">
+        <pre class="code"><span class="ln"><span class="no">1</span><span class="src"><b>Received:</b> from mx.geethanjali.ac.in (10.4.2.9) by MBX01.geethanjali.ac.in</span></span><span class="ln"><span class="no">2</span><span class="src">        with SMTP; <b>Tue, 10 Feb 2026 14:22:11 +0530</b>          <span class="cm">&larr; LAST hop (ours)</span></span></span><span class="ln"><span class="no">3</span><span class="src"><b>Received:</b> from unknown-host (<b>203.0.113.77</b>) by mx.geethanjali.ac.in</span></span><span class="ln"><span class="no">4</span><span class="src">        with SMTP; Tue, 10 Feb 2026 14:22:04 +0530        <span class="cm">&larr; FIRST trusted hop</span></span></span><span class="ln"><span class="no">5</span><span class="src"><b>Received:</b> from mail.corp-invoice.example (127.0.0.1)              <span class="cm">&larr; FORGED: loopback</span></span></span><span class="ln"><span class="no">6</span><span class="src">        by unknown-host; Tue, 10 Feb 2026 08:51:59 -0000  <span class="cm">&larr; time goes BACKWARDS</span></span></span><span class="ln"><span class="no">7</span><span class="src"><b>Authentication-Results:</b> mx.geethanjali.ac.in;</span></span><span class="ln"><span class="no">8</span><span class="src">        <b>spf=fail</b> (domain does not designate 203.0.113.77 as permitted sender)</span></span><span class="ln"><span class="no">9</span><span class="src">        <b>dkim=none</b>  <b>dmarc=fail</b></span></span><span class="ln"><span class="no">10</span><span class="src"><b>Message-ID:</b> &lt;20260210.4471@corp-invoice.example&gt;</span></span><span class="ln"><span class="no">11</span><span class="src"><b>From:</b> "Accounts Dept" &lt;accounts@geethanjali.ac.in&gt;     <span class="cm">&larr; claims to be internal</span></span></span><span class="ln"><span class="no">12</span><span class="src"><b>Reply-To:</b> billing@corp-invoice.example               <span class="cm">&larr; replies go ELSEWHERE</span></span></span><span class="ln"><span class="no">13</span><span class="src"><b>To:</b> finance@geethanjali.ac.in</span></span><span class="ln"><span class="no">14</span><span class="src"><b>Subject:</b> URGENT: revised bank details for February payment</span></span><span class="ln"><span class="no">15</span><span class="src"><b>X-Mailer:</b> PHPMailer 6.8.0                            <span class="cm">&larr; bulk script, not Outlook</span></span></span></pre>
+      </div>
+      <div class="app-status"><span>SHA-256 recorded at export</span><span>Read-only copy</span></div>
+    </div>
+    <p class="caption">Recreated: five independent indicators of spoofing in a single header</p>
+    <div class="eg"><span>What this header proves, and what it does not</span>
+      <p><b>Five indicators, any one of which is suspicious:</b> <b>(1)</b> <span class="mono">spf=fail</span> and <span class="mono">dmarc=fail</span> — the sending IP is not authorised for the claimed domain. <b>(2)</b> The <span class="mono">From:</span> claims an internal address, yet the message entered from outside at 203.0.113.77 — an internal message would never arrive through the external gateway. <b>(3)</b> The bottom <span class="mono">Received:</span> line claims to come from <span class="mono">127.0.0.1</span>, the loopback address, which cannot be a real remote hop — it was forged by the sender. <b>(4)</b> The timestamps go backwards as you read down, which real routing never does. <b>(5)</b> <span class="mono">Reply-To</span> points to a different domain, so replies leave the organisation.</p>
+      <p style="margin-top:.4rem"><b>What it does not prove:</b> who sat at the keyboard. 203.0.113.77 identifies a network interface at a moment in time. Tying it to a person needs the ISP's logs, obtained lawfully, and even then it identifies a subscriber account rather than a human being.</p>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The commonest student error</span>
+      <p>Reading the header <b>top down</b> and reporting the first IP address found as the sender. The top <span class="mono">Received:</span> line is the <i>last</i> hop — usually your own mail server. Reporting your own gateway as the attacker's address is an error that will be noticed immediately.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.5</span><h4>Tracing an e-mail message</h4></div>
+    <p>Determining a message's origin is referred to as <b>tracing</b>. If a company is named in the e-mail address, you can visit its site to find who administers the domain. If the point of contact is not listed, or the domain has no website, you use a registry site:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Site</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">www.arin.net</span></td><td>The <b>American Registry for Internet Numbers</b> — map an IP address to a domain name and find the domain's point of contact.</td></tr>
+        <tr><td><span class="mono">www.internic.com</span></td><td>Also used to find a domain's IP address and point of contact.</td></tr>
+        <tr><td><span class="mono">www.google.com</span></td><td>Search engines, to look for further information and additional postings on discussion boards.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The caution the book attaches to tracing</span>
+      <p>Using these sites you may find the suspect's full e-mail address and contact information — but <b>keep in mind that the suspect might have posted false information</b>. Registration details are self-declared and are not verified. A trace narrows the field; it does not identify a person on its own.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">7.6</span><h4>Using network e-mail logs</h4></div>
+    <p>Network administrators keep logs of the inbound and outbound traffic their <b>routers</b> handle. Routers have rules allowing or denying traffic based on source or destination IP address, and in most cases a router is set up to track all traffic flowing through its ports. <b>Using these logs you can determine the path a transmitted e-mail has taken</b> — review them for the victim's e-mail and look for the unique ID number.</p>
+    <p>Administrators also maintain <b>firewall logs</b>, which track Internet traffic destined for other networks or for the network the firewall protects. These <b>help verify whether a message passed through the firewall</b>. Firewall logs can usually be opened in an ordinary text editor such as Notepad or vim, though some firewalls require their own program to read them.</p>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 08 ============================== -->
+<section class="topic" id="t08">
+  <div class="exhibit"><span class="exno">TOPIC 08</span><span class="exsrc">Nelson et al. 6e, Ch. 11 · pp. 466–470</span></div>
+  <h3>Understanding E-mail Servers</h3>
+  <p class="lede">The server is where the evidence survives after the user has tidied up. Server logs record what was sent and received even when no message remains, and mailbox databases retain deleted items long after the user believes they are gone.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.1</span><h4>What a mail server keeps</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Artefact</th><th>What it contains</th><th>Value to the investigation</th></tr></thead>
+      <tbody>
+        <tr><td><b>Mailbox store</b></td><td>The messages themselves</td><td>Content — the words actually written</td></tr>
+        <tr><td><b>Transaction / transport logs</b></td><td>Every message accepted, relayed or rejected: sender, recipient, size, time, result</td><td><b>Proves a message existed even when every copy has been deleted</b></td></tr>
+        <tr><td><b>Connection logs</b></td><td>Which IP connected, when, and whether authentication succeeded</td><td>Places a session at a network address and time</td></tr>
+        <tr><td><b>Journal / archive</b></td><td>An automatic copy of all mail, kept for compliance</td><td>Often the only untampered copy, and the easiest to obtain internally</td></tr>
+        <tr><td><b>Backups</b></td><td>Point-in-time copies of the store</td><td>Recovers the state of a mailbox <i>before</i> the deletions</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.2</span><h4>Microsoft Exchange</h4></div>
+    <p>Exchange uses an Exchange database based on the <b>Microsoft Extensible Storage Engine (ESE)</b>, which uses several files in different combinations to provide e-mail service. The files most useful to an investigation are <b>.edb database files, checkpoint files and temporary files</b>.</p>
+    <p>An <span class="mono">.edb</span> file is responsible for messages formatted with <b>MAPI — Messaging Application Programming Interface</b>, a Microsoft system that enables different e-mail applications to work together. As a database server, Exchange logs information about changes to its data — called <b>transactions</b> — in a transaction log. To prevent loss of data since the most recent backup, a <b>checkpoint file</b>, or marker, is inserted in the transaction log to mark the last point at which the database was written to disk. With these files, administrators can recover lost or deleted messages after a disaster such as a power failure. Exchange also creates <span class="mono">.tmp</span> files to prevent loss while it is busy converting binary data to readable text.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>File</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">.edb</span></td><td>The database itself — messages, folders, attachments.</td></tr>
+        <tr><td><span class="mono">.stm</span></td><td>Streaming file used in older versions for native internet content (removed from Exchange 2007 onwards).</td></tr>
+        <tr><td><span class="mono">.log</span></td><td><b>Transaction logs</b>, written before the database is updated. Because they are written first, they can contain evidence of messages that never reached the final store.</td></tr>
+        <tr><td><span class="mono">.chk</span></td><td><b>Checkpoint file</b> — the marker showing the last point at which the database was written to disk. It tells you how much of the transaction log had not yet been committed.</td></tr>
+        <tr><td><span class="mono">.tmp</span></td><td>Temporary files created while converting binary data to readable text; they can survive a crash and hold message content.</td></tr>
+        <tr><td><span class="mono">tracking.log</span></td><td>Message tracking — the per-message audit trail of what the server did with each item.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Exchange Admin Center — Message Trace</div>
+      <div class="app-menu"><span>Recipients</span><span>Permissions</span><span class="on">Mail flow</span><span>Mobile</span><span>Compliance</span></div>
+      <div class="app-body">
+        <div class="field"><label>Date range</label><span class="inp">09 Feb 2026 00:00 &ndash; 11 Feb 2026 23:59</span></div>
+        <div class="field"><label>Sender</label><span class="inp">*@corp-invoice.example</span></div>
+        <div class="field"><label>Recipient</label><span class="inp">finance@geethanjali.ac.in</span></div>
+        <table class="tblmini">
+          <tr><th>Time</th><th>Sender</th><th>Recipient</th><th>Subject</th><th>Status</th></tr>
+          <tr class="hi"><td>10 Feb 14:22</td><td>accounts@…ac.in</td><td>finance@…ac.in</td><td>URGENT: revised bank…</td><td>Delivered</td></tr>
+          <tr><td>10 Feb 14:31</td><td>finance@…ac.in</td><td>billing@corp-invoice…</td><td>RE: URGENT: revised…</td><td>Delivered</td></tr>
+          <tr><td>10 Feb 16:04</td><td>finance@…ac.in</td><td>billing@corp-invoice…</td><td>RE: payment made</td><td>Delivered</td></tr>
+        </table>
+        <div class="btnrow"><span class="wbtn">Export CSV</span><span class="wbtn pri">View message events</span></div>
+      </div>
+      <div class="app-status"><span>3 results</span><span>Retention: 90 days</span></div>
+    </div>
+    <p class="caption">Recreated: a message trace showing the fraudulent message and the two replies that followed it</p>
+    <div class="eg"><span>Example — the log that survived the deletion</span>
+      <p>The finance officer, realising the mistake, deletes the entire thread from Outlook and empties Deleted Items. Nothing remains in the mailbox. The <b>message trace</b> above still shows all three messages, with times, recipients and subjects — because the log is written by the server as the mail flows, and the user has no access to it. <b>The content is gone; the fact of the correspondence is proved.</b> Combined with the journal archive, the content usually comes back too.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">8.3</span><h4>UNIX and Linux mail servers</h4></div>
+    <p>More than a dozen UNIX e-mail server programs exist, and most produce similar log files. <b>Postfix</b> and <b>Sendmail</b> are the two common ones; Sendmail is the default for FreeBSD systems such as CentOS. Both the log files and the configuration files provide helpful information, and all are plain text — easy to examine and easy to <span class="mono">grep</span>:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Path</th><th>Contains</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">/var/log/maillog</span> or <span class="mono">/var/log/mail.log</span></td><td>The transaction log — every message accepted, relayed, deferred or bounced.</td></tr>
+        <tr><td><span class="mono">/var/spool/mail/&lt;user&gt;</span></td><td>The user's mbox — all messages concatenated in one text file.</td></tr>
+        <tr><td><span class="mono">/var/spool/mqueue</span></td><td>The outbound queue — messages not yet delivered, sometimes including ones the sender tried to recall.</td></tr>
+        <tr><td><span class="mono">/etc/mail/sendmail.cf</span></td><td>The Sendmail configuration file. It helps you determine <b>where log files are stored</b>, and Sendmail refers to it to decide what to do with an e-mail after receiving it — a line here can tell the server to discard mail from an unsolicited site.</td></tr>
+        <tr><td><span class="mono">/etc/syslog.conf</span></td><td>Includes the e-mail logging instructions, so you can determine how Sendmail is set up to log events and <b>which events are logged</b>. It contains three pieces of information about each logged e-mail: <b>the event, the priority level of concern, and the action taken</b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--key">
+      <span class="nk">Always read the configuration first</span>
+      <p>Before concluding that something was not logged, read the configuration file. Logging levels vary, and a message you cannot find may simply have been below the configured threshold. <b>"Not in the log" and "did not happen" are different statements</b>, and you will be asked to distinguish them.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 09 ============================== -->
+<section class="topic" id="t09">
+  <div class="exhibit"><span class="exno">TOPIC 09</span><span class="exsrc">Nelson et al. 6e, Ch. 11 · pp. 470–478</span></div>
+  <h3>Using Specialized E-mail Forensic Tools</h3>
+  <p class="lede">For many e-mail investigations you can rely on the message files, the headers and the server logs. Specialised tools become necessary when <b>you cannot find an e-mail administrator willing to help</b>, or when you meet a <b>highly customised e-mail environment</b> — and because manual examination does not scale.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">9.1</span><h4>What these tools do that manual examination cannot</h4></div>
+    <div class="grid2">
+      <div class="card card--ok"><h5>Recover deleted messages</h5><p>Reading inside the <span class="mono">.pst</span> or <span class="mono">.ost</span> structure to retrieve items the user deleted and the client no longer shows.</p></div>
+      <div class="card card--ok"><h5>Index and search at scale</h5><p>Keyword and regular-expression search across every mailbox at once, including attachment contents.</p></div>
+      <div class="card card--ok"><h5>Rebuild conversations</h5><p>Threading by <span class="mono">Message-ID</span> and <span class="mono">In-Reply-To</span>, so the exchange is read in order rather than as scattered items.</p></div>
+      <div class="card card--ok"><h5>Report in a court-ready form</h5><p>Exporting selected messages with their headers, hashes and a chain-of-custody record attached.</p></div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">9.2</span><h4>The tools in current use</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Tool</th><th>Type</th><th>Strength</th></tr></thead>
+      <tbody>
+        <tr><td><b>Autopsy — E-mail Parser module</b></td><td>Open source</td><td>Free, reads <span class="mono">.pst</span>, <span class="mono">.ost</span>, <span class="mono">mbox</span> and <span class="mono">.eml</span> straight from a disk image and lists them under <i>Results &rarr; E-Mail Messages</i>. The practical choice for teaching and for most academic work.</td></tr>
+        <tr><td><b>Magnet AXIOM</b></td><td>Commercial</td><td>Correlates e-mail with chat, cloud and mobile artefacts in one timeline.</td></tr>
+        <tr><td><b>MailXaminer</b></td><td>Commercial</td><td>Purpose-built for e-mail; supports a very wide range of mailbox formats and produces litigation-ready exports.</td></tr>
+        <tr><td><b>FTK</b></td><td>Commercial</td><td>Indexed search across enormous mail sets; strong de-duplication.</td></tr>
+        <tr><td><b>DataNumen</b></td><td>Commercial</td><td>For Outlook and Outlook Express — recovery of corrupted or deleted mail stores.</td></tr>
+        <tr><td><b>FINALeMAIL</b></td><td>Commercial</td><td>For Outlook Express and Eudora.</td></tr>
+        <tr><td><b>Sawmill — Novell GroupWise</b></td><td>Commercial</td><td>Log analysis for the GroupWise Post Office Agent.</td></tr>
+        <tr><td><b>OSForensics</b></td><td>Commercial</td><td>Reads and indexes data from Microsoft <span class="mono">.pst</span> and <span class="mono">.ost</span> files.</td></tr>
+        <tr><td><b>Aid4Mail</b></td><td>Commercial</td><td>Format conversion and filtered extraction, widely used in e-discovery.</td></tr>
+        <tr><td><b>MessageHeader / MXToolbox</b></td><td>Free online</td><td>Quick header parsing and SPF/DKIM/DMARC checking. Useful for triage — <b>never paste case material into a public website.</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> Autopsy — Results &rsaquo; E-Mail Messages</div>
+      <div class="app-split">
+        <div class="app-pane">
+          <div class="tw open">Results</div>
+          <div class="tw sub open">E-Mail Messages</div>
+          <div class="tw sub sel">Default (ravi@…)/Inbox</div>
+          <div class="tw sub">Default (ravi@…)/Sent</div>
+          <div class="tw sub">Default (ravi@…)/Deleted</div>
+          <div class="tw sub">Keyword Hits</div>
+        </div>
+        <div class="app-body">
+          <table class="tblmini">
+            <tr><th>From</th><th>Subject</th><th>Sent</th><th>State</th></tr>
+            <tr class="hi"><td>accounts@…ac.in</td><td>URGENT: revised bank details</td><td>10 Feb 14:22</td><td>Deleted — recovered</td></tr>
+            <tr><td>hr@…ac.in</td><td>Leave approval</td><td>09 Feb 11:05</td><td>Allocated</td></tr>
+            <tr><td>vendor@…com</td><td>Quotation Q-4471</td><td>08 Feb 17:44</td><td>Allocated</td></tr>
+          </table>
+          <div class="btnrow"><span class="wbtn">View source</span><span class="wbtn">Tag</span><span class="wbtn pri">Add to report</span></div>
+        </div>
+      </div>
+      <div class="app-status"><span>Module: Email Parser</span><span>1,284 messages · 37 recovered from deleted</span></div>
+    </div>
+    <p class="caption">Recreated: the fraudulent message recovered from Deleted Items by the Autopsy e-mail parser</p>
+    <div class="note note--key">
+      <span class="nk">Carving e-mail with a hex editor</span>
+      <p>When no tool supports the mailbox format, you fall back to a <b>hex editor</b> and carve the messages out by hand. E-mail messages carry recognisable text structure — the header field names themselves (<span class="mono">Received:</span>, <span class="mono">Message-ID:</span>, <span class="mono">From:</span>) act as the signature you search for, and the message body follows the blank line after the header. This is slow, but it works on any format, and it is the technique that survives when the vendor's parser does not.</p>
+    </div>
+
+    <div class="eg"><span>Example — a complete e-mail investigation in six steps</span>
+      <p><b>1.</b> Image the laptop with a write-blocker and record the hash. <b>2.</b> Load the image into Autopsy and enable the <b>Email Parser</b> and <b>Keyword Search</b> ingest modules. <b>3.</b> Search for the vendor domain; 1,284 messages are indexed and 37 deleted items recovered. <b>4.</b> Open the suspect message and read its <b>full header</b>, noting <span class="mono">spf=fail</span> and the external originating IP. <b>5.</b> Request the <b>message trace</b> and the <b>journal archive</b> from the mail administrator, which confirm delivery and the two replies. <b>6.</b> Export the message with its header and hash, and write the report. <b>Client-side recovery told you what was said; server-side logs proved it happened.</b></p>
+    </div>
+  </div>
+</section>
+
+<div class="partbreak" id="partC">
+  <div class="pk">Main Topic 3 · Chapter 12</div>
+  <h2>Mobile Device Forensics and the Internet of Anything</h2>
+  <p>The phone is now the richest evidence source in most investigations, and the hardest to acquire. Everything is encrypted, the operating system changes twice a year, and the device fights back. Main Topic 3 covers what is on the device, where it is stored, and how it is lawfully extracted.</p>
+  <div class="partlist">
+    <a href="#t10"><span>Topic 10</span>Understanding Mobile Device Forensics<small>Storage locations, SIM, what the phone knows, challenges</small></a>
+    <a href="#t11"><span>Topic 11</span>Acquisition Procedures for Mobile Devices<small>Isolation, BFU/AFU, the five extraction levels, tools</small></a>
+  </div>
+</div>
+
+<!-- ============================== TOPIC 10 ============================== -->
+<section class="topic" id="t10">
+  <div class="exhibit"><span class="exno">TOPIC 10</span><span class="exsrc">Nelson et al. 6e, Ch. 12 · pp. 494–500</span></div>
+  <h3>Understanding Mobile Device Forensics</h3>
+  <p class="lede">A modern phone records where its owner went, who they spoke to, what they searched for, what they photographed and when they were asleep. It is a more complete record of a person's life than any computer, which is exactly why it is both valuable and legally sensitive.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">10.1</span><h4>Mobile phone basics — generations and networks</h4></div>
+    <p>By the end of 2008 mobile phones had gone through three generations: <b>analog</b>, <b>digital personal communications service (PCS)</b>, and <b>third generation (3G)</b>. 3G introduced capabilities that had been unheard of, such as downloading while walking or in a moving vehicle. Sprint Nextel introduced <b>4G</b> in 2009, and <b>5G</b> networks incorporate the ever-expanding cloud and device-to-device networks.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Digital network</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><b>CDMA</b> — Code Division Multiple Access</td><td>Developed during the Second World War and patented by Qualcomm afterwards. One of the most common digital networks; it <b>uses the full radio frequency spectrum to define channels</b>.</td></tr>
+        <tr><td><b>GSM</b> — Global System for Mobile Communications</td><td>The other common network, and <b>the standard in Europe and Asia</b>, including India.</td></tr>
+        <tr><td><b>TDMA</b> — Time Division Multiple Access</td><td>Divides a radio frequency into <b>time slots</b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>The authoritative reference the book points to is NIST <b>Special Publication 800-101 Revision 1, "Guidelines on Mobile Device Forensics"</b>.</p>
+    <div class="note note--err">
+      <span class="nk">Riley v. California — why you need a warrant</span>
+      <p>Because mobile devices are seized at the time of arrest, police once looked through them as a routine matter. The Supreme Courts of Oregon and Ohio ruled that a search warrant is needed, and in <b>2014 the U.S. Supreme Court ruled unanimously in <i>Riley v. California</i> that a search warrant is required before an arresting officer can begin examining a phone's contents</b>. Further, because phones often contain private or sensitive information, <b>anything that does not pertain to the case must be redacted from the public record</b>.</p>
+    </div>
+    <p>Two structural problems make this field hard: <b>no single standard exists for how and where phones store messages</b>, and new phones appear about every six months and are rarely compatible with previous models — so cables, software and accessories used for acquisitions <b>become obsolete in a short time</b>.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">10.2</span><h4>Inside mobile devices</h4></div>
+    <p>The hardware consists of a <b>microprocessor, ROM, RAM, a digital signal processor, a radio module, a microphone and speaker, hardware interfaces</b> such as keypads, cameras and GPS, and an <b>LCD display</b>. Many have removable memory cards, and Bluetooth and Wi-Fi are included in most devices.</p>
+    <p>Most basic phones run a proprietary operating system, while smartphones use the same operating systems as PCs, or stripped-down versions of them — Windows Mobile, RIM OS, <b>Android</b> (based on Linux) and <b>iOS</b>.</p>
+    <div class="note note--key">
+      <span class="nk">EEPROM, and why it matters to an examiner</span>
+      <p>Phones typically store system data in <b>electronically erasable programmable read-only memory (EEPROM)</b>, which lets service providers reprogram phones <b>without physically accessing the memory chips</b>. Users take advantage of this to add features or switch providers. The forensic consequence: a phone's system data <i>can</i> have been altered in ways that leave no physical trace, so do not treat firmware-level data as automatically trustworthy. <b>The OS is stored in ROM, which is non-volatile</b>, so it and other data survive a loss of power.</p>
+    </div>
+    <p><b>SIM cards</b> are usually found in GSM devices and consist of a microprocessor and internal memory. They resemble standard memory cards except that the connectors are aligned differently; iPhones and many Android phones use micro SIM and nano SIM. GSM refers to phones as <b>mobile stations</b>, divided into two parts — the <b>equipment</b> and the <b>subscriber</b>, which is exactly the IMEI / IMSI distinction below.</p>
+    <p>Peripheral memory cards you may meet: <b>Compact Flash (CF)</b>, <b>MultiMediaCard (MMC)</b> — designed for mobile phones — and <b>Secure Digital (SD)</b>, similar to MMC but with added security features, now used on smartphones.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">10.3</span><h4>Where data is stored on a mobile device</h4></div>
+    <div class="flow-wrap">
+      <svg viewBox="0 0 660 176" role="img" aria-label="Three storage locations on a mobile device: internal flash memory, SIM card and removable media, with what each holds">
+        <rect x="14" y="34" width="190" height="112" rx="6" fill="#23456E"/>
+        <text x="109" y="56" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">INTERNAL MEMORY</text>
+        <text x="109" y="72" text-anchor="middle" fill="#C7D2E4" style="font:9px var(--sans)">eMMC / UFS flash — encrypted</text>
+        <text x="28" y="92" fill="#E6EDF7" style="font:9px var(--sans)">• Messages, chats, call log</text>
+        <text x="28" y="106" fill="#E6EDF7" style="font:9px var(--sans)">• Photos with EXIF and GPS</text>
+        <text x="28" y="120" fill="#E6EDF7" style="font:9px var(--sans)">• App databases (SQLite)</text>
+        <text x="28" y="134" fill="#E6EDF7" style="font:9px var(--sans)">• Location history, health data</text>
+
+        <rect x="222" y="34" width="180" height="112" rx="6" fill="#8F6206"/>
+        <text x="312" y="56" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">SIM / eSIM</text>
+        <text x="312" y="72" text-anchor="middle" fill="#FBEEC9" style="font:9px var(--sans)">small, but identifies the subscriber</text>
+        <text x="236" y="92" fill="#FDF4DE" style="font:9px var(--sans)">• ICCID — the card's serial</text>
+        <text x="236" y="106" fill="#FDF4DE" style="font:9px var(--sans)">• IMSI — the subscriber identity</text>
+        <text x="236" y="120" fill="#FDF4DE" style="font:9px var(--sans)">• Abbreviated dialling numbers</text>
+        <text x="236" y="134" fill="#FDF4DE" style="font:9px var(--sans)">• Last network registered</text>
+
+        <rect x="420" y="34" width="226" height="112" rx="6" fill="#0B6E5A"/>
+        <text x="533" y="56" text-anchor="middle" fill="#fff" style="font:600 11px var(--sans)">REMOVABLE + CLOUD</text>
+        <text x="533" y="72" text-anchor="middle" fill="#CDE9E1" style="font:9px var(--sans)">often overlooked, often decisive</text>
+        <text x="434" y="92" fill="#DFF1EC" style="font:9px var(--sans)">• microSD — image it separately</text>
+        <text x="434" y="106" fill="#DFF1EC" style="font:9px var(--sans)">• iCloud / Google backups</text>
+        <text x="434" y="120" fill="#DFF1EC" style="font:9px var(--sans)">• Synced desktop copies</text>
+        <text x="434" y="134" fill="#DFF1EC" style="font:9px var(--sans)">• Carrier records (CDR)</text>
+
+        <text x="330" y="22" text-anchor="middle" style="font:9px var(--sans);fill:#5A6673">the IMEI identifies the HANDSET · the IMSI identifies the SUBSCRIBER — they are different things</text>
+        <rect x="14" y="156" width="632" height="16" rx="3" fill="#FBEDEE"/>
+        <text x="330" y="167" text-anchor="middle" style="font:9px var(--sans);fill:#AE202A">a cloud backup may be obtainable when the handset itself cannot be opened — always check for one</text>
+      </svg>
+    </div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Identifier</th><th>Identifies</th><th>Where it is found</th></tr></thead>
+      <tbody>
+        <tr><td><b>IMEI</b></td><td>The <b>handset</b></td><td>Dial <span class="mono">*#06#</span>, printed under the battery or on the SIM tray, and on the box</td></tr>
+        <tr><td><b>IMSI</b></td><td>The <b>subscriber</b></td><td>On the SIM; links the account to the network operator</td></tr>
+        <tr><td><b>ICCID</b></td><td>The SIM card itself</td><td>Printed on the card and readable electronically</td></tr>
+        <tr><td><b>MSISDN</b></td><td>The telephone number</td><td>Network records; not necessarily stored on the SIM</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="eg"><span>Why the IMEI / IMSI distinction wins cases</span>
+      <p>A suspect claims the phone is not his. The <b>IMEI</b> shows the handset was the one recorded by the network at the time of the offence; the <b>IMSI</b> shows which SIM was in it. If the SIM was changed but the IMEI stayed constant, the network still tracked the same handset across both numbers. <b>Swapping the SIM does not change the handset's identity</b> — a point suspects routinely misunderstand and examiners routinely rely on.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">10.4</span><h4>What makes mobile forensics hard</h4></div>
+    <div class="grid2">
+      <div class="card card--warn"><h5>Full-device encryption</h5><p>Both iOS and modern Android encrypt everything at rest. Without the passcode, a physical copy of the flash chip is a copy of ciphertext — correct, verifiable, and useless.</p></div>
+      <div class="card card--warn"><h5>The device is never still</h5><p>A running phone receives messages, updates apps and rewrites databases continuously. Unlike a disk, you cannot freeze it without losing state.</p></div>
+      <div class="card card--warn"><h5>Remote wipe</h5><p>If the phone stays on a network, the owner can erase it from anywhere. This is why isolation is the first physical act at the scene.</p></div>
+      <div class="card card--warn"><h5>Fragmentation and change</h5><p>Thousands of models, two major OS families, and security patches every month. Tool support is a moving target — the version that worked last term may not work now.</p></div>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The iOS 18 inactivity reboot — a change examiners had to adapt to</span>
+      <p>From iOS 18 Apple added an <b>inactivity reboot</b>: a device left unused for a period restarts itself, which forces it out of the reachable AFU state back into the locked BFU state. A phone seized in a useful condition can therefore become far harder to acquire simply by sitting in an evidence bag over a weekend. <b>Seize, isolate and acquire without delay</b> — the clock is now part of the threat model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TOPIC 11 ============================== -->
+<section class="topic" id="t11">
+  <div class="exhibit"><span class="exno">TOPIC 11</span><span class="exsrc">Nelson et al. 6e, Ch. 12 · pp. 500–513</span></div>
+  <h3>Understanding Acquisition Procedures for Cell Phones and Mobile Devices</h3>
+  <p class="lede">Mobile acquisition has its own order of operations, and the first decision — made in the first minute at the scene — usually determines how much evidence you will ever obtain.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.1</span><h4>The three main concerns at the scene</h4></div>
+    <p>Search and seizure procedures for mobile devices are as important as those for computers. The textbook names three main concerns:</p>
+    <div class="grid3">
+      <div class="card card--warn"><span class="k">1</span><h5>Loss of power</h5><p>All mobile devices have <b>volatile memory</b>, so making sure they do not lose power before you can retrieve RAM data is critical.</p></div>
+      <div class="card card--warn"><span class="k">2</span><h5>Synchronisation</h5><p>Devices are designed to synchronise with applications on a laptop or tablet, and a scheduled sync can <b>overwrite data on the device</b>.</p></div>
+      <div class="card card--warn"><span class="k">3</span><h5>Remote wiping</h5><p>A device still reachable on a network can be erased from anywhere.</p></div>
+    </div>
+    <p><b>Determine first whether the device is on or off. If it is off, leave it off</b>, but find the charger and attach it as soon as possible — and note this in your log if you cannot determine whether the device was charged at seizure. If it is on, check the display for the current battery charge level.</p>
+    <p><b>Any mobile device attached to a PC or tablet by a USB or micro USB cable should be disconnected immediately</b>, to prevent an automatic scheduled synchronisation overwriting data. Also <b>collect the laptop and any peripheral devices</b>: the hard drive may hold pictures, videos and other files that were transferred from the phone and then deleted.</p>
+    <p>Depending on the warrant or subpoena, <b>the time of seizure may be relevant</b>, and messages received after seizure may or may not be admissible. If you decide the device should be turned off to preserve battery or prevent an attack, <b>note the time and date</b>.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Isolation option</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><b>Airplane mode</b></td><td>If the feature is available and reachable without unlocking.</td></tr>
+        <tr><td><b>A paint can</b></td><td>Preferably one that previously contained radio wave-blocking paint — the improvised option the book actually lists.</td></tr>
+        <tr><td><b>A Faraday bag</b></td><td>One conforming to Faraday wire cage standards. Many allow <b>plugging a unit into a power source</b>.</td></tr>
+        <tr><td><b>Turn the device off</b></td><td>The last resort, and it costs you the volatile data.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--err">
+      <span class="nk">The drawback of every isolation option</span>
+      <p>Isolating a device puts it into <b>roaming mode</b>, in which it searches constantly for a signal — and that <b>accelerates battery drainage</b>. Most devices then shut themselves off or enter a sleep state on reaching a low battery level. This is precisely why a Faraday bag that admits a power lead matters, and why "isolate it and deal with it tomorrow" is not a plan. Handle all components with care and protect them from <b>electromagnetic interference (EMI)</b>.</p>
+    </div>
+    <div class="note note--key">
+      <span class="nk">The SANS DFIR three conditions</span>
+      <p>SANS DFIR sets out a slightly different process based on <b>three conditions</b>. <b>On and unlocked</b> — isolate it from the network, disable the screen lock and remove the passcode. <b>On and locked</b> — what you can do varies by device type. <b>Off</b> — attempt a physical static acquisition, then turn the device on, determine whether it is locked, and follow the matching procedure. Note that on modern devices, <i>turning them off</i> can mean removing the battery.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.2</span><h4>At the scene: the working checklist</h4></div>
+    <ol class="gsteps">
+      <li><b>Photograph the device as found</b>, including the screen if it is lit. A visible notification may itself be evidence, and it may not survive.</li>
+      <li><b>Do not switch it off, and do not switch it on.</b> Powering down may drop the device from AFU to BFU and lose the keys held in memory. Powering up an off device may trigger a passcode requirement or a wipe policy.</li>
+      <li><b>Isolate it from all networks</b> — Faraday bag, Faraday box, or flight mode <i>if</i> you can reach it without unlocking. Isolation prevents remote wipe and stops new data overwriting old.</li>
+      <li><b>Maintain power.</b> A Faraday bag makes the phone search hard for a signal, which drains the battery quickly. Put a charger inside the bag; a device that dies in transit may reboot into BFU.</li>
+      <li><b>Record the state</b> — locked or unlocked, battery level, IMEI via <span class="mono">*#06#</span> if the screen is reachable, and whether a SIM and microSD are present.</li>
+      <li><b>Seize the accessories</b> — cables, chargers, the SIM tray tool, and any computer the phone syncs with. A synced desktop may hold a full backup you can read immediately.</li>
+      <li><b>Acquire as soon as possible.</b> Every hour increases the chance of an inactivity reboot, a battery death or a remote wipe.</li>
+    </ol>
+    <div class="note note--key">
+      <span class="nk">BFU and AFU — the two states that decide everything</span>
+      <p><b>BFU (Before First Unlock)</b> — the device has not been unlocked since it last powered on. Nearly all user data is still encrypted and unreachable. <b>AFU (After First Unlock)</b> — the device has been unlocked at least once since booting, so decryption keys are resident in memory and most user data is accessible to a privileged tool. <b>A phone seized in AFU is enormously more productive than the same phone seized in BFU</b>, and the only thing separating the two states is a reboot. This is the entire reason the rules above insist on not touching the power and on acquiring quickly.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.3</span><h4>The levels of extraction</h4></div>
+    <p>Extraction methods form a ladder. Higher levels recover more, cost more, take longer and require greater expertise — and the top two destroy the device.</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Level</th><th>Method</th><th>What it recovers</th><th>Cost / risk</th></tr></thead>
+      <tbody>
+        <tr><td><b>1</b></td><td><b>Manual</b></td><td>Scrolling the device by hand and photographing the screens. No deleted data.</td><td>Free; slow; risks altering the device with every tap</td></tr>
+        <tr><td><b>2</b></td><td><b>Logical</b></td><td>What the operating system will hand over through its normal interface — contacts, messages, call logs, photos.</td><td>Fast and well supported; misses deleted items</td></tr>
+        <tr><td><b>3</b></td><td><b>File system</b></td><td>The device's files and, crucially, the <b>SQLite databases</b>, whose free pages often still hold deleted records.</td><td>Needs privileged access; recovers much deleted data</td></tr>
+        <tr><td><b>4</b></td><td><b>Full File System (FFS)</b></td><td>The entire file system plus the decrypted <b>keychain</b> (iOS) or keystore (Android). <b>The current gold standard.</b></td><td>Cellebrite Premium or Magnet GrayKey; restricted licensing</td></tr>
+        <tr><td><b>5</b></td><td><b>Physical</b> — JTAG and chip-off</td><td>A bit-for-bit copy of the flash memory.</td><td><b>Destructive</b>; and on a modern encrypted device it yields ciphertext unless the keys are also recovered</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note--err">
+      <span class="nk">Why "physical is always best" is now wrong</span>
+      <p>On older phones a physical acquisition was the ideal, because the flash contents were readable. On a current iOS or Android device, everything at rest is encrypted, so a perfect physical image is a perfect image of unreadable data. <b>Full File System extraction has replaced physical acquisition as the goal</b>, precisely because it obtains the decrypted content and the keychain rather than the raw encrypted blocks. Stating "physical is always superior" in an examination answer is a dated position; explain the encryption reason and you will be right.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.4</span><h4>The tools, and what they are for</h4></div>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Tool</th><th>Purpose</th><th>Notes for 2026</th></tr></thead>
+      <tbody>
+        <tr><td><b>Cellebrite UFED</b> + Physical Analyzer</td><td>Extraction and parsing</td><td>The breadth tool: Android, iOS, legacy feature phones, SIM cards, drones and GPS units. Uses <b>checkm8</b>-based FFS on supported older Apple chipsets.</td></tr>
+        <tr><td><b>Cellebrite Premium</b></td><td>Locked-device access</td><td>Recovers passcodes and performs FFS extraction in BFU and AFU states; restricted licensing.</td></tr>
+        <tr><td><b>Magnet GrayKey</b></td><td>Depth on Apple devices</td><td>Purpose-built for bypassing iOS passcodes. Acquired by Magnet Forensics with Grayshift in <b>March 2024</b>. Capability tracks Apple's patches, so coverage of the newest iOS is never guaranteed.</td></tr>
+        <tr><td><b>Magnet AXIOM</b></td><td>Analysis</td><td>Ingests GrayKey and Cellebrite output; correlates phone, computer and cloud evidence in one timeline.</td></tr>
+        <tr><td><b>Oxygen Forensic Detective, MSAB XRY</b></td><td>Extraction and analysis</td><td>Widely used alternatives, strong on app artefacts.</td></tr>
+        <tr><td><b>ALEAPP / iLEAPP</b></td><td>Open-source parsing</td><td>Free Python parsers for Android and iOS artefacts. The realistic option for a college laboratory.</td></tr>
+        <tr><td><b>Autopsy</b></td><td>Analysis</td><td>Reads Android images and YAFFS2; a practical free starting point for teaching.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="app">
+      <div class="app-bar"><span class="dots"><i></i><i></i><i></i></span> UFED — Extraction Wizard</div>
+      <div class="app-menu"><span>Device</span><span class="on">Extract</span><span>Analyse</span><span>Report</span></div>
+      <div class="app-split">
+        <div class="app-pane">
+          <div class="tw open">1. Identify device</div>
+          <div class="tw open">2. Select method</div>
+          <div class="tw sub sel">Full File System</div>
+          <div class="tw sub">File System</div>
+          <div class="tw sub">Logical</div>
+          <div class="tw">3. Destination</div>
+          <div class="tw">4. Verify</div>
+        </div>
+        <div class="app-body">
+          <div class="field"><label>Device</label><span class="inp">Apple iPhone 13 (A2633) &mdash; iOS 17.4</span></div>
+          <div class="field"><label>State</label><span class="inp mono-out">AFU &mdash; unlocked since last boot</span></div>
+          <div class="field"><label>Method</label><span class="inp">Full File System (includes keychain)</span></div>
+          <div class="field"><label>Destination</label><span class="inp">E:\Cases\GCET-2026-014\iphone_ffs.zip</span></div>
+          <div class="field"><label>Verify</label><span class="inp mono-out">SHA-256 on completion &mdash; enabled</span></div>
+          <div class="chk on"><i></i>Keep device isolated (airplane mode enforced)</div>
+          <div class="chk on"><i></i>Maintain charge during extraction</div>
+          <div class="chk off"><i></i>Attempt passcode recovery &nbsp;<span style="color:#5A6673">(not required &mdash; device is AFU)</span></div>
+          <div class="btnrow"><span class="wbtn">Back</span><span class="wbtn pri">Start extraction &rsaquo;</span><span class="wbtn">Cancel</span></div>
+        </div>
+      </div>
+      <div class="app-status"><span>Case: GCET-2026-014</span><span>Examiner: R. Kumar</span><span>Device isolated</span></div>
+    </div>
+    <p class="caption">Recreated: choosing Full File System extraction on a device seized in the AFU state</p>
+    <div class="eg"><span>Example — the same phone, two outcomes</span>
+      <p><b>Scenario A.</b> The phone is seized unlocked and in use. The officer places it straight into a Faraday bag <i>with a charger</i> and it reaches the laboratory three hours later, still in <b>AFU</b>. A Full File System extraction recovers chats, deleted SQLite records, location history and the decrypted keychain.</p>
+      <p style="margin-top:.5rem"><b>Scenario B.</b> The same phone is seized, the officer presses the power button "to preserve the battery", and it reaches the laboratory in <b>BFU</b>. Nearly everything is encrypted. The examiner must now attempt passcode recovery with specialised equipment that may not support that model and iOS version, and may recover nothing at all.</p>
+      <p style="margin-top:.5rem"><b>The difference between a full case and no case was one button press at the scene.</b></p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.5</span><h4>Mobile forensics equipment and the SIM card reader</h4></div>
+    <p>Back in the laboratory you assess what can be retrieved. To decide between a logical and a physical acquisition you must know where the information is stored:</p>
+    <div class="tblwrap">
+    <table class="tbl">
+      <thead><tr><th>Location to check</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><b>Internal memory</b></td><td>The bulk of user data; often needs the manufacturer's own tools.</td></tr>
+        <tr><td><b>SIM card</b></td><td>Subscriber identity and a small amount of stored data.</td></tr>
+        <tr><td><b>Removable or external memory cards</b></td><td>Image these separately, as you would any removable media.</td></tr>
+        <tr><td><b>Network provider</b></td><td>Because of <b>wiretap laws, checking a provider's servers requires a search warrant or subpoena</b> — for voicemail held by the provider, for backups of contacts, or to establish where a suspect was at the time of a call. Since most newer phones store voicemail on the device, <b>you need a warrant for the device too</b>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>The two acquisition types, in the book's own terms: a <b>logical acquisition</b> involves accessing files and folders as you would see them in File Explorer; a <b>physical acquisition</b> is a <b>bit-by-bit acquisition done to find deleted files or folders</b>.</p>
+    <p><b>The working sequence.</b> Identify the device first — most users do not alter their devices, but some file off serial numbers or change the display to show misleading data, so sources such as phone specification sites are useful. Confirm the forensics software is installed and supports the model. <b>Attach the phone to its power supply and connect the correct cables.</b> Then start the software and begin downloading. If your software does not support the model you may need other tools; <b>your main concern should be that the software is forensically sound.</b></p>
+    <div class="note note--key">
+      <span class="nk">Using a SIM card reader — the general procedure</span>
+      <p>A SIM card reader is a combined hardware and software device. Work in a laboratory <b>equipped with antistatic devices</b>, and note that <b>biological agents such as fingerprints may be present inside the case</b> — consult the lead investigator before proceeding. The steps: <b>(1)</b> remove the device's back panel; <b>(2)</b> remove the battery; <b>(3)</b> remove the SIM card from its holder; <b>(4)</b> insert the SIM into the reader, which goes into your workstation's USB port.</p>
+      <p style="margin-top:.4rem"><b>Two cautions.</b> Some readers are forensically sound and some are not — <b>note which you used in your investigation log</b>. And unread text and SMS messages are a real problem: <b>once you view a message the device marks it as opened</b>, so documenting which messages were unread is critical. A tool that photographs each screen is valuable here as additional documentation.</p>
+    </div>
+    <p>Some vendors offer tools that simply take pictures of screens as you scroll. <b>Forensically this is not the best approach, but you use it if no other alternative is available</b> — and you record why.</p>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.6</span><h4>Forensics in the Internet of Anything</h4></div>
+    <p>The chapter closes by extending mobile forensics to everything else that now carries a radio and a processor — the <b>Internet of Anything (IoA)</b>, the broader form of the Internet of Things. Smartwatches, fitness trackers, vehicle infotainment systems, smart televisions, voice assistants and home automation controllers all record data, and much of it is time-stamped and location-aware.</p>
+    <div class="note note--key">
+      <span class="nk">Why this matters for the investigator</span>
+      <p>These devices frequently <b>corroborate or contradict a phone</b>. A fitness tracker records movement when the suspect says they were asleep; a car records door openings and destinations; a smart speaker records when someone was in the house. They also widen the acquisition problem: each device has its own storage, its own companion app on the phone, and usually its own cloud account — so the evidence may be in three places at once. <b>With the growth of IoT, investigations become more challenging and more specialised tools become essential</b>, which is exactly why the field is projected to keep growing.</p>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">11.7</span><h4>Legal and documentation requirements</h4></div>
+    <div class="note note--key">
+      <span class="nk">Scope applies to phones with particular force</span>
+      <p>A phone holds medical records, photographs of family, banking, religious and political material. A warrant to search for evidence of financial fraud does not authorise reading a person's entire life. Define the scope in writing, extract only what falls within it, and document the decision. Courts worldwide have become markedly less tolerant of "we imaged the whole phone and then looked". In India, electronic evidence is governed by <b>Section 63 of the Bharatiya Sakshya Adhiniyam 2023</b>, which replaced Section 65B of the Evidence Act and requires the accompanying certificate.</p>
+    </div>
+    <p>Record, at minimum: the device make, model and IMEI; its state when seized and when acquired; the isolation method used; the tool, version and extraction level; the hash of the extraction; and the name of the examiner. If the device state changed between seizure and acquisition — a reboot, a battery death — <b>record that too</b>, because it explains any gap in what you recovered.</p>
+  </div>
+</section>
+
+<!-- ============================== SUMMARY ============================== -->
+<section class="topic" id="summary">
+  <div class="exhibit"><span class="exno">REVISION</span><span class="exsrc">Unit IV in one page</span></div>
+  <h3>Full Sub-heading Outline</h3>
+  <p class="lede">The complete structure of Unit IV, with the one idea to carry away from each topic.</p>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">S.1</span><h4>One line per topic</h4></div>
+    <div class="sumcard">
+      <div class="sumrow"><span class="sn">01</span><span class="st">Evaluating tool needs</span><span class="sd">Every tool performs five functions: acquisition, validation and verification, extraction, reconstruction, reporting. Validation confirms the tool works; verification proves two data sets are identical; filtering is what they make possible.</span></div>
+      <div class="sumrow"><span class="sn">02</span><span class="st">Software tools</span><span class="sd">Command-line tools need few resources and fit on bootable media; GUI suites are easier but create dependence on one tool and may miss critical evidence. Use both.</span></div>
+      <div class="sumrow"><span class="sn">03</span><span class="st">Hardware tools</span><span class="sd">Hardware write-blockers bridge the suspect drive and the workstation; writes are discarded to null while Windows still reports success. Software blockers such as PDBlock change interrupt-13 and run only in true DOS mode.</span></div>
+      <div class="sumrow"><span class="sn">04</span><span class="st">Validating software</span><span class="sd">NIST CFTT and CFReDS, the General Test Methodology criteria and ISO 17025. You need at least two tools to validate, and a disk editor to check raw data — though it cannot read inside a compressed file.</span></div>
+      <div class="sumrow"><span class="sn">05</span><span class="st">Role of e-mail</span><span class="sd">E-mail is written, exists in many copies and carries routing metadata. The From line proves nothing; the header does.</span></div>
+      <div class="sumrow"><span class="sn">06</span><span class="st">Client and server roles</span><span class="sd">SMTP carries mail out and between servers; POP3 and IMAP bring it down. POP3 puts the evidence on the seized machine, IMAP and webmail put it on the server.</span></div>
+      <div class="sumrow"><span class="sn">07</span><span class="st">Investigating e-mail crimes</span><span class="sd">Read the header from the bottom up. Look for SPF/DKIM/DMARC failures, impossible hops, backwards timestamps and a Reply-To on another domain.</span></div>
+      <div class="sumrow"><span class="sn">08</span><span class="st">E-mail servers</span><span class="sd">Transaction logs prove a message existed even when every copy is deleted. Exchange uses .edb, .stm, .log and .chk; Linux uses maillog and mbox.</span></div>
+      <div class="sumrow"><span class="sn">09</span><span class="st">Specialized tools</span><span class="sd">They recover deleted mail from .pst and .ost, index at scale, rebuild threads and export with hashes. Autopsy's E-mail Parser does this free.</span></div>
+      <div class="sumrow"><span class="sn">10</span><span class="st">Mobile device forensics</span><span class="sd">Generations analog, PCS, 3G, 4G, 5G; networks CDMA, GSM, TDMA. Hardware includes EEPROM for system data and ROM for the OS. Riley v. California requires a warrant before examining a phone.</span></div>
+      <div class="sumrow"><span class="sn">11</span><span class="st">Acquisition procedures</span><span class="sd">Three concerns: loss of power, synchronisation, remote wiping. If it is off leave it off; isolate by airplane mode, paint can or Faraday bag — all of which cause roaming and drain the battery. Check internal memory, SIM, removable cards and the provider.</span></div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <div class="subhead"><span class="subno">S.2</span><h4>The errors that cost most marks</h4></div>
+    <div class="grid2">
+      <div class="card card--warn"><h5>Procedural errors</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Connecting a suspect drive without a write-blocker</li>
+          <li>Reading an e-mail header from the top down</li>
+          <li>Reporting a forwarded copy as the original message</li>
+          <li>Powering a seized phone off — or on</li>
+          <li>Sealing a phone in a Faraday bag with no charger</li>
+          <li>Reporting a negative finding without checking which modules ran</li>
+          <li>Trusting a Windows "write succeeded" message behind a write-blocker</li>
+          <li>Opening unread SMS messages before documenting that they were unread</li>
+        </ul></div>
+      <div class="card card--warn"><h5>Conceptual errors</h5>
+        <ul class="clean" style="margin-bottom:0">
+          <li>Claiming physical acquisition is always superior on a modern phone</li>
+          <li>Calling function 2 "discrimination" — it is validation and verification</li>
+          <li>Treating the From address as proof of the sender</li>
+          <li>Confusing IMEI with IMSI</li>
+          <li>Saying "not in the log" when you mean "did not happen"</li>
+          <li>Treating an IP address as identifying a person</li>
+          <li>Imaging an entire phone under a narrowly drawn warrant</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer class="foot">
+  <div class="foot-in">
+    <b>Digital Forensics · 20CS41020 · Unit IV</b><br>
+    Current Digital Forensic Tools · E-Mail and Social Media Investigations · Mobile Device Forensics<br>
+    B.Tech CSE (AIML), IV Year I Sem · AR22 · Geethanjali College of Engineering and Technology<br><br>
+    <b>Primary text:</b> Nelson, Phillips &amp; Steuart, <i>Guide to Computer Forensics and Investigations</i>, Chapters 6, 11 and 12 (Sixth Edition). Sub-heading hierarchy follows the textbook's own table of contents.<br>
+    <b>Syllabus references drawn on:</b> Jones, Bejtlich &amp; Rose, <i>Real Digital Forensics</i> · Sammes &amp; Jenkinson, <i>Forensic Computing: A Practitioner's Guide</i> · Brown, <i>Computer Evidence Collection &amp; Presentation</i> · Mena, <i>Homeland Security Techniques &amp; Technologies</i> · Slade, <i>Software Forensics</i> · Steel, <i>Windows Forensics</i>.<br>
+    <b>Current-practice notes</b> draw on NIST SP 800-86, ISO/IEC 27037, the Honeynet Project, Zeek, Arkime, Velociraptor and Volatility documentation, and the Bharatiya Sakshya Adhiniyam 2023.<br>
+    Tool screens are recreations for teaching, not screenshots. Named cases are real; scenarios are teaching illustrations.
+  </div>
+</footer>
+
+</main>
+</div><!-- /shell -->
+
+<script>
+(function(){
+  "use strict";
+
+  var rail=document.getElementById('rail'),
+      scrim=document.getElementById('scrim'),
+      menubtn=document.getElementById('menubtn');
+  function setNav(open){
+    rail.classList.toggle('open',open);
+    scrim.classList.toggle('on',open);
+    menubtn.setAttribute('aria-expanded',open?'true':'false');
+  }
+  menubtn.addEventListener('click',function(){setNav(!rail.classList.contains('open'));});
+  scrim.addEventListener('click',function(){setNav(false);});
+  rail.addEventListener('click',function(e){ if(e.target.closest('a')) setNav(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') setNav(false); });
+
+  var links=Array.prototype.slice.call(document.querySelectorAll('.chain a')),
+      sections=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}),
+      /* count only the numbered topics, not the Summary entry */
+      TOTAL=links.filter(function(a){return /^#t\d+$/.test(a.getAttribute('href'));}).length,
+      prog=document.getElementById('prog'),
+      sealtxt=document.getElementById('sealtxt'),
+      ticking=false;
+  function update(){
+    ticking=false;
+    var doc=document.documentElement, max=doc.scrollHeight-doc.clientHeight,
+        y=window.scrollY||doc.scrollTop;
+    prog.style.width=(max>0?(y/max*100):0)+'%';
+    var current=-1;
+    for(var i=0;i<sections.length;i++){
+      if(!sections[i]) continue;
+      if(sections[i].getBoundingClientRect().top<=140) current=i;
+    }
+    for(var j=0;j<links.length;j++){
+      var li=links[j].parentNode;
+      li.classList.toggle('seen', j<=current);
+      li.classList.toggle('here', j===current);
+    }
+    sealtxt.textContent=Math.max(0,Math.min(current+1,TOTAL))+' / '+TOTAL+' topics';
+  }
+  function onScroll(){ if(!ticking){ ticking=true; window.requestAnimationFrame(update); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  update();
+
+  function fallbackHash(str){
+    var h1=0x811c9dc5, h2=0x01000193, out='';
+    for(var i=0;i<str.length;i++){
+      h1=(h1^str.charCodeAt(i))>>>0; h1=Math.imul(h1,16777619)>>>0;
+      h2=(h2+Math.imul(h1^str.charCodeAt(i),2654435761))>>>0;
+    }
+    for(var k=0;k<8;k++){
+      h1=Math.imul(h1^(h1>>>15),2246822507)>>>0;
+      h2=Math.imul(h2^(h2>>>13),3266489909)>>>0;
+      out+=((h1^h2)>>>0).toString(16).padStart(8,'0');
+    }
+    return out;
+  }
+  function sha256(str){
+    if(window.crypto && window.crypto.subtle && window.isSecureContext){
+      var data=new TextEncoder().encode(str);
+      return window.crypto.subtle.digest('SHA-256',data).then(function(buf){
+        return Array.prototype.map.call(new Uint8Array(buf),function(b){
+          return b.toString(16).padStart(2,'0');}).join('');
+      });
+    }
+    return Promise.resolve(fallbackHash(str));
+  }
+
+  /* ---------------------------------------------------------------
+     The two interactive labs below belong to Unit III only. Other
+     units reuse this script, so run them only when their markup
+     is actually present on the page.
+     --------------------------------------------------------------- */
+  if(document.getElementById('bsInput') && document.getElementById('hInput')){
+  /* bit-shift lab */
+  var bsInput=document.getElementById('bsInput'),
+      bsView=document.getElementById('bsView'),
+      bsCount=document.getElementById('bsCount'),
+      bsHashOrig=document.getElementById('bsHashOrig'),
+      bsHashNow=document.getElementById('bsHashNow'),
+      bsVerdict=document.getElementById('bsVerdict'),
+      shift=0;
+  function bytesOf(str){ var a=[]; for(var i=0;i<str.length;i++) a.push(str.charCodeAt(i)&0xFF); return a; }
+  function applyShift(bytes,n){
+    if(n===0) return bytes.slice();
+    return bytes.map(function(b){
+      var v=b;
+      for(var i=0;i<Math.abs(n);i++){ v = n>0 ? ((v<<1)&0xFF) : (v>>1); }
+      return v;
+    });
+  }
+  function hex(b){ return b.toString(16).padStart(2,'0').toUpperCase(); }
+  function printable(b){ return (b>=32&&b<=126)?String.fromCharCode(b):'.'; }
+  function bsRender(){
+    var base=bytesOf(bsInput.value||''), cur=applyShift(base,shift);
+    var l1='<span class="lbl">original  </span>', l2='<span class="lbl">current   </span>', l3='<span class="lbl">as text   </span>';
+    for(var i=0;i<base.length;i++){
+      l1+=hex(base[i])+' ';
+      l2+=(base[i]===cur[i]?hex(cur[i]):'<span class="chg">'+hex(cur[i])+'</span>')+' ';
+      l3+=' '+(base[i]===cur[i]?printable(cur[i]):'<span class="chg">'+printable(cur[i])+'</span>')+' ';
+    }
+    bsView.innerHTML=l1+'\n'+l2+'\n'+l3;
+    bsCount.textContent=shift;
+    var origStr=base.map(function(b){return String.fromCharCode(b);}).join('');
+    var curStr=cur.map(function(b){return String.fromCharCode(b);}).join('');
+    Promise.all([sha256(origStr),sha256(curStr)]).then(function(r){
+      bsHashOrig.textContent=r[0];
+      bsHashNow.textContent=r[1];
+      var same=(r[0]===r[1]);
+      bsHashNow.classList.toggle('changed',!same);
+      bsVerdict.classList.toggle('bad',!same);
+      bsVerdict.textContent = same
+        ? 'Hashes match — the bytes are back to their original values.'
+        : 'Hashes differ — the file now looks like meaningless binary, and no hash-based tool will recognise it.';
+    });
+  }
+  document.getElementById('bsLeft').addEventListener('click',function(){ if(shift<4){shift++; bsRender();} });
+  document.getElementById('bsRight').addEventListener('click',function(){ if(shift>-4){shift--; bsRender();} });
+  document.getElementById('bsReset').addEventListener('click',function(){ shift=0; bsRender(); });
+  bsInput.addEventListener('input',function(){ bsRender(); });
+  bsRender();
+
+  /* live hash lab */
+  var hInput=document.getElementById('hInput'),
+      hBase=document.getElementById('hBase'),
+      hNow=document.getElementById('hNow'),
+      hLen=document.getElementById('hLen'),
+      hVerdict=document.getElementById('hVerdict'),
+      baseline=null;
+  function hRender(){
+    hLen.textContent=hInput.value.length;
+    sha256(hInput.value).then(function(h){
+      hNow.textContent=h;
+      if(baseline===null){ baseline=h; hBase.textContent=h; }
+      var same=(h===baseline);
+      hNow.classList.toggle('changed',!same);
+      hVerdict.classList.toggle('bad',!same);
+      hVerdict.textContent = same
+        ? 'Hashes match — evidence integrity verified.'
+        : 'Hashes differ — the data has changed since the baseline was taken.';
+    });
+  }
+  document.getElementById('hSnap').addEventListener('click',function(){
+    sha256(hInput.value).then(function(h){ baseline=h; hBase.textContent=h; hRender(); });
+  });
+  hInput.addEventListener('input',hRender);
+  hRender();
+  }
+
+})();
+</script>
+</body>
+</html>
